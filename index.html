@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBE Course Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --primary:#0f6b5c; --primary-dark:#0a4a40; --primary-light:#e6f2f0;
+  --accent:#c98a1b; --bg:#f4f6f8; --card:#ffffff; --text:#1f2d3d; --muted:#6b7a8d;
+  --border:#dde4ea; --danger:#c0392b; --ok:#1e8e3e; --warn:#e67e22;
+  --radius:10px; --shadow:0 1px 3px rgba(16,36,52,.08),0 4px 14px rgba(16,36,52,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
+.app-header{background:var(--primary);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.app-header h1{font-size:19px;font-weight:600;letter-spacing:.2px}
+.app-header .sub{font-size:12px;opacity:.85;display:block;margin-top:1px}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.course-select{padding:7px 10px;border-radius:8px;border:none;font-size:14px;min-width:220px;max-width:340px}
+.tabs{display:flex;gap:2px;background:var(--primary-dark);padding:0 14px;overflow-x:auto}
+.tab-btn{background:transparent;border:none;color:#cfe3df;padding:11px 15px;font-size:14px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit}
+.tab-btn:hover{color:#fff}
+.tab-btn.active{color:#fff;border-bottom-color:var(--accent);font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:22px 18px 60px}
+section.tab{display:none}
+section.tab.active{display:block}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
+.card h2{font-size:17px;margin-bottom:4px;color:var(--primary-dark)}
+.card h3{font-size:15px;margin:14px 0 8px;color:var(--primary-dark)}
+.card .hint{font-size:13px;color:var(--muted);margin-bottom:14px}
+.grid{display:grid;gap:12px}
+.grid.c2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.grid.c3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+label.fld{display:block;font-size:13px;color:var(--muted);font-weight:600}
+label.fld input,label.fld select,label.fld textarea{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;color:var(--text);background:#fff}
+label.fld textarea{resize:vertical;min-height:64px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);outline-offset:0;border-color:var(--primary)}
+.btn{display:inline-block;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:600}
+.btn:hover{background:var(--primary-dark)}
+.btn.secondary{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}
+.btn.secondary:hover{background:var(--primary-light)}
+.btn.danger{background:#fff;color:var(--danger);border:1.5px solid var(--danger)}
+.btn.danger:hover{background:#fdf0ee}
+.btn.small{padding:5px 10px;font-size:12.5px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px;background:#fff}
+table.tbl th{background:var(--primary-light);color:var(--primary-dark);text-align:left;padding:8px 10px;border:1px solid var(--border);font-size:13px}
+table.tbl td{padding:7px 10px;border:1px solid var(--border);vertical-align:top}
+table.tbl tr:nth-child(even) td{background:#fafcfd}
+.tbl-wrap{overflow-x:auto}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:600}
+.badge.green{background:#e3f4e8;color:var(--ok)}
+.badge.amber{background:#fdf1e0;color:var(--warn)}
+.badge.red{background:#fdeae7;color:var(--danger)}
+.badge.grey{background:#eef1f4;color:var(--muted)}
+.badge.blue{background:var(--primary-light);color:var(--primary-dark)}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}
+.stat{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;text-align:center}
+.stat .num{font-size:28px;font-weight:700;color:var(--primary)}
+.stat .lbl{font-size:12.5px;color:var(--muted);margin-top:2px}
+.map-cell{width:44px;text-align:center !important;cursor:pointer;user-select:none;font-weight:700}
+.map-cell.m3{background:#0f6b5c !important;color:#fff}
+.map-cell.m2{background:#5ba396 !important;color:#fff}
+.map-cell.m1{background:#c3ddd8 !important;color:#0a4a40}
+.map-cell.m0{color:#c9d2da}
+.marks-input{width:64px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:13.5px;text-align:center}
+.chart-box{max-width:900px;margin:10px auto}
+.empty{padding:26px;text-align:center;color:var(--muted);font-size:14px}
+.pill-note{font-size:12.5px;color:var(--muted);background:var(--primary-light);border-radius:8px;padding:8px 12px;margin:10px 0;display:inline-block}
+.item-row{display:grid;grid-template-columns:2fr 100px 1fr 36px;gap:8px;margin-bottom:6px;align-items:center}
+.item-row input,.item-row select{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13.5px;font-family:inherit;width:100%}
+.icon-btn{background:none;border:none;color:var(--danger);font-size:17px;cursor:pointer;padding:2px}
+.report-sheet{background:#fff;padding:34px 40px;border-radius:var(--radius);box-shadow:var(--shadow);font-size:13.5px}
+.report-sheet h1{font-size:20px;text-align:center;color:var(--primary-dark)}
+.report-sheet h2{font-size:15px;margin:20px 0 8px;color:var(--primary-dark);border-bottom:2px solid var(--primary);padding-bottom:3px}
+.report-sheet .rpt-head{text-align:center;margin-bottom:6px;color:var(--muted);font-size:13px}
+.report-sheet table{margin-top:6px}
+footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;text-align:center;padding:16px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--primary-dark);color:#fff;padding:10px 22px;border-radius:24px;font-size:14px;box-shadow:var(--shadow);opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+@media print{
+  .app-header,.tabs,.no-print,footer,.toast{display:none !important}
+  body{background:#fff}
+  main{max-width:100%;padding:0}
+  section.tab{display:none !important}
+  section#tab-report{display:block !important}
+  .report-sheet{box-shadow:none;padding:0}
+  .card{box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div>
+    <h1>OBE Course Manager</h1>
+    <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education</span>
+  </div>
+  <div class="header-right">
+    <select id="courseSelect" class="course-select" onchange="switchCourse(this.value)"></select>
+    <button class="btn secondary small" onclick="openNewCourse()">+ New Course</button>
+  </div>
+</header>
+
+<nav class="tabs no-print">
+  <button class="tab-btn" data-tab="dashboard" onclick="showTab('dashboard')">Dashboard</button>
+  <button class="tab-btn" data-tab="course" onclick="showTab('course')">Course Info</button>
+  <button class="tab-btn" data-tab="cos" onclick="showTab('cos')">COs &amp; CO–PO Mapping</button>
+  <button class="tab-btn" data-tab="assess" onclick="showTab('assess')">Assessments</button>
+  <button class="tab-btn" data-tab="marks" onclick="showTab('marks')">Students &amp; Marks</button>
+  <button class="tab-btn" data-tab="attain" onclick="showTab('attain')">Attainment</button>
+  <button class="tab-btn" data-tab="report" onclick="showTab('report')">Course Report</button>
+  <button class="tab-btn" data-tab="data" onclick="showTab('data')">Data &amp; Backup</button>
+</nav>
+
+<main>
+  <section class="tab" id="tab-dashboard"></section>
+  <section class="tab" id="tab-course"></section>
+  <section class="tab" id="tab-cos"></section>
+  <section class="tab" id="tab-assess"></section>
+  <section class="tab" id="tab-marks"></section>
+  <section class="tab" id="tab-attain"></section>
+  <section class="tab" id="tab-report"></section>
+  <section class="tab" id="tab-data"></section>
+</main>
+
+<footer>OBE Course Manager · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ Constants ============ */
+const PO_INFO = {
+  1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
+  4:"Investigation", 5:"Modern Tool Usage", 6:"The Engineer and Society",
+  7:"Environment and Sustainability", 8:"Ethics", 9:"Individual and Team Work",
+  10:"Communication", 11:"Project Management and Finance", 12:"Life-long Learning"
+};
+const N_PO = 12;
+const BLOOMS = ["Remember","Understand","Apply","Analyze","Evaluate","Create"];
+const ASSESS_TYPES = ["Quiz","Class Test","Assignment","Mid Term","Final Exam","Lab/Sessional","Project","Presentation","Viva","Attendance","Other"];
+const STORE_KEY = "obe_course_manager_v1";
+
+/* ============ State ============ */
+let state = { courses: [], activeCourseId: null };
+let charts = {};
+
+function defaultCfg(){ return { itemPass:60, levels:{l3:80,l2:70,l1:60} }; }
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){ state = JSON.parse(raw); }
+  }catch(e){ console.warn("load failed", e); }
+  if(!state || !Array.isArray(state.courses)) state = { courses: [], activeCourseId: null };
+}
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch(e){ toast("Warning: could not save (storage full?)"); }
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function activeCourse(){ return state.courses.find(c=>c.id===state.activeCourseId) || null; }
+function coLabel(course, coId){
+  const i = course.cos.findIndex(c=>c.id===coId);
+  return i>=0 ? "CO"+(i+1) : "—";
+}
+
+/* ============ Navigation ============ */
+function showTab(name){
+  document.querySelectorAll(".tab").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.tab===name));
+  const el = document.getElementById("tab-"+name);
+  if(el) el.classList.add("active");
+  renderTab(name);
+  window._currentTab = name;
+}
+function renderTab(name){
+  const map = { dashboard:renderDashboard, course:renderCourse, cos:renderCOs, assess:renderAssess,
+                marks:renderMarks, attain:renderAttain, report:renderReport, data:renderData };
+  if(map[name]) map[name]();
+}
+function refresh(){ renderCourseSelect(); renderTab(window._currentTab || "dashboard"); }
+
+function renderCourseSelect(){
+  const sel = document.getElementById("courseSelect");
+  if(state.courses.length===0){
+    sel.innerHTML = '<option value="">— no course yet —</option>';
+    return;
+  }
+  sel.innerHTML = state.courses.map(c=>
+    `<option value="${c.id}" ${c.id===state.activeCourseId?"selected":""}>${esc(c.code)} — ${esc(c.title)} (${esc(c.semester||"")})</option>`
+  ).join("");
+}
+function switchCourse(id){
+  state.activeCourseId = id; save(); refresh();
+}
+
+/* ============ Dashboard ============ */
+function renderDashboard(){
+  const el = document.getElementById("tab-dashboard");
+  const c = activeCourse();
+  if(!c){
+    el.innerHTML = `<div class="card"><h2>Welcome</h2>
+      <p class="hint">This app helps you manage a course from the OBE perspective: define Course Outcomes (COs), map them to Program Outcomes (POs), plan CO-based assessments, enter marks, and get CO/PO attainment automatically — ready for accreditation evidence (BAETE / Washington Accord).</p>
+      <p>Start by creating your first course.</p>
+      <div class="btn-row"><button class="btn" onclick="openNewCourse()">+ Create a Course</button>
+      <button class="btn secondary" onclick="loadSample()">Load Sample Course (demo)</button></div></div>`;
+    return;
+  }
+  const nStu = c.students.length;
+  const nItems = c.assessments.reduce((s,a)=>s+a.items.length,0);
+  const marksEntered = Object.values(c.marks||{}).reduce((s,m)=>s+Object.keys(m).length,0);
+  const totalCells = nStu*nItems;
+  const att = computeAttainment(c);
+  const attainedCOs = att.cos.filter(x=>x.pct!==null && x.pct>=c.cfg.levels.l1).length;
+  const unmapped = c.assessments.flatMap(a=>a.items).filter(it=>!c.cos.some(co=>co.id===it.coId)).length;
+  el.innerHTML = `
+  <div class="stat-cards">
+    <div class="stat"><div class="num">${c.cos.length}</div><div class="lbl">Course Outcomes</div></div>
+    <div class="stat"><div class="num">${c.assessments.length}</div><div class="lbl">Assessments (${nItems} items)</div></div>
+    <div class="stat"><div class="num">${nStu}</div><div class="lbl">Students</div></div>
+    <div class="stat"><div class="num">${totalCells? Math.round(marksEntered/totalCells*100) : 0}%</div><div class="lbl">Marks Entered</div></div>
+    <div class="stat"><div class="num">${attainedCOs}/${c.cos.length}</div><div class="lbl">COs Attained</div></div>
+  </div>
+  <div class="card">
+    <h2>${esc(c.code)} — ${esc(c.title)}</h2>
+    <p class="hint">${esc(c.program||"")} ${c.semester? "· "+esc(c.semester):""} ${c.instructor? "· "+esc(c.instructor):""}</p>
+    <h3>Suggested workflow</h3>
+    <table class="tbl"><tbody>
+      <tr><td>1</td><td><b>Course Info</b> — course details, credit hours, instructor</td><td>${c.code? '<span class="badge green">done</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>2</td><td><b>COs &amp; CO–PO Mapping</b> — write COs with Bloom's level, map to POs</td><td>${c.cos.length? '<span class="badge green">'+c.cos.length+' COs</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>3</td><td><b>Assessments</b> — plan quizzes/exams; tag every question/item with a CO</td><td>${nItems? '<span class="badge green">'+nItems+' items</span>':'<span class="badge grey">pending</span>'}${unmapped? ' <span class="badge red">'+unmapped+' item(s) without valid CO</span>':''}</td></tr>
+      <tr><td>4</td><td><b>Students &amp; Marks</b> — add students (or paste from Excel), enter marks</td><td>${nStu? '<span class="badge green">'+nStu+' students</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>5</td><td><b>Attainment</b> — CO/PO attainment computed automatically</td><td>${marksEntered? '<span class="badge green">available</span>':'<span class="badge grey">needs marks</span>'}</td></tr>
+      <tr><td>6</td><td><b>Course Report</b> — print/save the OBE course report (evidence for accreditation)</td><td><span class="badge blue">any time</span></td></tr>
+    </tbody></table>
+    <div class="btn-row">
+      <button class="btn secondary danger" onclick="deleteCourse()">Delete This Course</button>
+    </div>
+  </div>`;
+}
+
+/* ============ Course Info ============ */
+function openNewCourse(){
+  const c = {
+    id: uid(), code:"", title:"", credit:"", semester:"", program:"", instructor:"", section:"",
+    cos:[], assessments:[], students:[], marks:{}, cfg: defaultCfg()
+  };
+  state.courses.push(c);
+  state.activeCourseId = c.id;
+  save(); renderCourseSelect(); showTab("course");
+  toast("New course created — fill in the details");
+}
+function deleteCourse(){
+  const c = activeCourse(); if(!c) return;
+  if(!confirm(`Delete course ${c.code||"(untitled)"} and ALL its data? This cannot be undone.`)) return;
+  state.courses = state.courses.filter(x=>x.id!==c.id);
+  state.activeCourseId = state.courses.length? state.courses[0].id : null;
+  save(); refresh(); toast("Course deleted");
+}
+function renderCourse(){
+  const el = document.getElementById("tab-course");
+  const c = activeCourse();
+  if(!c){ el.innerHTML = `<div class="empty">No course selected. Create one with <b>+ New Course</b>.</div>`; return; }
+  el.innerHTML = `
+  <div class="card">
+    <h2>Course Information</h2>
+    <p class="hint">These details appear on the printable course report.</p>
+    <div class="grid c2">
+      <label class="fld">Course Code <input id="f_code" value="${esc(c.code)}" placeholder="e.g., ME 4011"></label>
+      <label class="fld">Course Title <input id="f_title" value="${esc(c.title)}" placeholder="e.g., Renewable Energy"></label>
+      <label class="fld">Credit Hours <input id="f_credit" value="${esc(c.credit)}" placeholder="e.g., 3.0"></label>
+      <label class="fld">Semester / Session <input id="f_semester" value="${esc(c.semester)}" placeholder="e.g., Spring 2026"></label>
+      <label class="fld">Program <input id="f_program" value="${esc(c.program)}" placeholder="e.g., B.Sc. in Mechanical Engineering"></label>
+      <label class="fld">Section <input id="f_section" value="${esc(c.section)}" placeholder="e.g., A"></label>
+      <label class="fld">Course Teacher <input id="f_instructor" value="${esc(c.instructor)}" placeholder="e.g., Prof. Dr. Mazharul Islam"></label>
+    </div>
+    <div class="btn-row"><button class="btn" onclick="saveCourseInfo()">Save Course Info</button></div>
+  </div>
+  <div class="card">
+    <h2>Attainment Settings</h2>
+    <p class="hint">Used by the attainment engine. A student "attains" a CO if he/she scores at least the pass threshold (%) of the marks allocated to that CO. The CO attainment level depends on what percentage of students attained it.</p>
+    <div class="grid c3">
+      <label class="fld">Student pass threshold per CO (%) <input id="f_itemPass" type="number" min="0" max="100" value="${c.cfg.itemPass}"></label>
+      <label class="fld">Level 3 (Excellent) if ≥ % of students <input id="f_l3" type="number" min="0" max="100" value="${c.cfg.levels.l3}"></label>
+      <label class="fld">Level 2 (Good) if ≥ % of students <input id="f_l2" type="number" min="0" max="100" value="${c.cfg.levels.l2}"></label>
+      <label class="fld">Level 1 (Satisfactory, target) if ≥ % of students <input id="f_l1" type="number" min="0" max="100" value="${c.cfg.levels.l1}"></label>
+    </div>
+    <div class="btn-row"><button class="btn" onclick="saveCourseCfg()">Save Settings</button></div>
+  </div>`;
+}
+function saveCourseInfo(){
+  const c = activeCourse(); if(!c) return;
+  ["code","title","credit","semester","program","section","instructor"].forEach(k=>{
+    c[k] = document.getElementById("f_"+k).value.trim();
+  });
+  save(); renderCourseSelect(); toast("Course info saved");
+}
+function saveCourseCfg(){
+  const c = activeCourse(); if(!c) return;
+  const num = id => Math.max(0, Math.min(100, parseFloat(document.getElementById(id).value)||0));
+  c.cfg.itemPass = num("f_itemPass");
+  c.cfg.levels = { l3:num("f_l3"), l2:num("f_l2"), l1:num("f_l1") };
+  save(); toast("Attainment settings saved");
+}
+
+/* ============ COs & CO-PO Mapping ============ */
+function renderCOs(){
+  const el = document.getElementById("tab-cos");
+  const c = activeCourse();
+  if(!c){ el.innerHTML = `<div class="empty">No course selected.</div>`; return; }
+  const coRows = c.cos.map((co,i)=>`
+    <tr>
+      <td style="white-space:nowrap"><b>CO${i+1}</b></td>
+      <td><textarea onchange="updateCO('${co.id}','statement',this.value)" rows="2" style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px;font-family:inherit;font-size:13.5px">${esc(co.statement)}</textarea></td>
+      <td><select onchange="updateCO('${co.id}','bloom',this.value)" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-family:inherit">
+        ${BLOOMS.map(b=>`<option ${co.bloom===b?"selected":""}>${b}</option>`).join("")}
+      </select></td>
+      <td style="white-space:nowrap">${Object.entries(co.po||{}).filter(([,v])=>v>0).map(([p,v])=>`<span class="badge blue">PO${p}:${v}</span>`).join(" ")||'<span class="badge grey">unmapped</span>'}</td>
+      <td><button class="icon-btn" title="Delete CO" onclick="deleteCO('${co.id}')">✕</button></td>
+    </tr>`).join("");
+  const mapHeader = Array.from({length:N_PO},(_,i)=>`<th class="map-cell" title="${esc(PO_INFO[i+1])}">PO${i+1}</th>`).join("");
+  const mapRows = c.cos.map((co,i)=>{
+    const cells = Array.from({length:N_PO},(_,p)=>{
+      const v = (co.po&&co.po[p+1])||0;
+      return `<td class="map-cell m${v}" title="Click to cycle 0→1→2→3 (${esc(PO_INFO[p+1])})" onclick="cyclePO('${co.id}',${p+1})">${v||"·"}</td>`;
+    }).join("");
+    return `<tr><td style="white-space:nowrap"><b>CO${i+1}</b></td>${cells}</tr>`;
+  }).join("");
+  el.innerHTML = `
+  <div class="card">
+    <h2>Course Outcomes (COs)</h2>
+    <p class="hint">Write measurable CO statements using action verbs and set the Bloom's taxonomy level. Edits save automatically.</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>#</th><th style="min-width:320px">CO Statement</th><th>Bloom's Level</th><th>Mapped POs</th><th></th></tr></thead>
+      <tbody>${coRows || `<tr><td colspan="5" class="empty">No COs yet — add your first CO below.</td></tr>`}</tbody>
+    </table></div>
+    <div class="btn-row"><button class="btn" onclick="addCO()">+ Add CO</button></div>
+  </div>
+  <div class="card">
+    <h2>CO–PO Mapping Matrix</h2>
+    <p class="hint">Click a cell to cycle correlation strength: blank → 1 (weak) → 2 (moderate) → 3 (strong). Hover a PO heading for its Washington Accord graduate attribute name.</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th></th>${mapHeader}</tr></thead>
+      <tbody>${mapRows || `<tr><td colspan="13" class="empty">Add COs first.</td></tr>`}</tbody>
+    </table></div>
+    <span class="pill-note">PO1 Engineering Knowledge · PO2 Problem Analysis · PO3 Design/Development · PO4 Investigation · PO5 Modern Tool Usage · PO6 Engineer &amp; Society · PO7 Environment &amp; Sustainability · PO8 Ethics · PO9 Individual &amp; Team Work · PO10 Communication · PO11 Project Mgmt &amp; Finance · PO12 Life-long Learning</span>
+  </div>`;
+}
+function addCO(){
+  const c = activeCourse(); if(!c) return;
+  c.cos.push({ id: uid(), statement:"", bloom:"Apply", po:{} });
+  save(); renderCOs();
+}
+function updateCO(id, field, val){
+  const c = activeCourse(); if(!c) return;
+  const co = c.cos.find(x=>x.id===id); if(!co) return;
+  co[field] = field==="statement" ? val.trim() : val;
+  save(); toast("Saved");
+}
+function deleteCO(id){
+  const c = activeCourse(); if(!c) return;
+  const used = c.assessments.flatMap(a=>a.items).filter(it=>it.coId===id).length;
+  if(used && !confirm(`${used} assessment item(s) are mapped to this CO. Delete anyway?`)) return;
+  c.cos = c.cos.filter(x=>x.id!==id);
+  save(); renderCOs();
+}
+function cyclePO(coId, po){
+  const c = activeCourse(); if(!c) return;
+  const co = c.cos.find(x=>x.id===coId); if(!co) return;
+  if(!co.po) co.po = {};
+  co.po[po] = ((co.po[po]||0)+1) % 4;
+  if(co.po[po]===0) delete co.po[po];
+  save(); renderCOs();
+}
+
+/* ============ Assessments ============ */
+function renderAssess(){
+  const el = document.getElementById("tab-assess");
+  const c = activeCourse();
+  if(!c){ el.innerHTML = `<div class="empty">No course selected.</div>`; return; }
+  if(!c.cos.length){
+    el.innerHTML = `<div class="card"><h2>Assessments</h2><p class="hint">Define your COs first (in "COs &amp; CO–PO Mapping") — every assessment item must be tagged with a CO.</p></div>`;
+    return;
+  }
+  const coOptions = coId => c.cos.map((co,i)=>`<option value="${co.id}" ${co.id===coId?"selected":""}>CO${i+1}</option>`).join("");
+  const blocks = c.assessments.map(a=>{
+    const rows = a.items.map(it=>`
+      <div class="item-row">
+        <input value="${esc(it.label)}" placeholder="Item / question label (e.g., Q1a)" onchange="updateItem('${a.id}','${it.id}','label',this.value)">
+        <input type="number" min="0" step="0.5" value="${esc(it.max)}" placeholder="Marks" title="Maximum marks" onchange="updateItem('${a.id}','${it.id}','max',this.value)">
+        <select onchange="updateItem('${a.id}','${it.id}','coId',this.value)">
+          <option value="">— CO —</option>${coOptions(it.coId)}
+        </select>
+        <button class="icon-btn" title="Delete item" onclick="deleteItem('${a.id}','${it.id}')">✕</button>
+      </div>`).join("");
+    const total = a.items.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
+    return `
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <input value="${esc(a.name)}" placeholder="Assessment name (e.g., Quiz 1)" style="font-weight:600;font-size:15px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;flex:1;min-width:180px;font-family:inherit" onchange="updateAssessment('${a.id}','name',this.value)">
+        <select style="padding:7px;border:1px solid var(--border);border-radius:8px;font-family:inherit" onchange="updateAssessment('${a.id}','type',this.value)">
+          ${ASSESS_TYPES.map(t=>`<option ${a.type===t?"selected":""}>${t}</option>`).join("")}
+        </select>
+        <span class="badge blue">Total: ${total} marks</span>
+        <button class="btn danger small" onclick="deleteAssessment('${a.id}')">Delete</button>
+      </div>
+      <h3>Items / Questions (each mapped to a CO)</h3>
+      <div class="item-row" style="color:var(--muted);font-size:12px;font-weight:600"><span>Label</span><span>Max marks</span><span>CO</span><span></span></div>
+      ${rows || '<p class="hint">No items yet.</p>'}
+      <div class="btn-row"><button class="btn secondary small" onclick="addItem('${a.id}')">+ Add Item</button></div>
+    </div>`;
+  }).join("");
+  el.innerHTML = `
+  <div class="card">
+    <h2>Assessment Plan</h2>
+    <p class="hint">Create assessments (quizzes, tests, exams, labs...) and break each into items/questions, each tagged with a CO and maximum marks. This drives marks entry and attainment. Edits save automatically.</p>
+    <div class="btn-row" style="margin-top:0"><button class="btn" onclick="addAssessment()">+ Add Assessment</button></div>
+  </div>
+  ${blocks || '<div class="empty">No assessments yet.</div>'}`;
+}
+function addAssessment(){
+  const c = activeCourse(); if(!c) return;
+  c.assessments.push({ id: uid(), name:"", type:"Quiz", items:[] });
+  save(); renderAssess();
+}
+function updateAssessment(id, field, val){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===id); if(!a) return;
+  a[field] = val.trim ? val.trim() : val;
+  save(); toast("Saved");
+}
+function deleteAssessment(id){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===id); if(!a) return;
+  if(!confirm(`Delete "${a.name||"(untitled)"}" and all its marks?`)) return;
+  a.items.forEach(it=>{ Object.values(c.marks).forEach(m=>delete m[it.id]); });
+  c.assessments = c.assessments.filter(x=>x.id!==id);
+  save(); renderAssess();
+}
+function addItem(aid){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===aid); if(!a) return;
+  a.items.push({ id: uid(), label:"Q"+(a.items.length+1), max:10, coId: c.cos[0]?.id || "" });
+  save(); renderAssess();
+}
+function updateItem(aid, iid, field, val){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===aid); if(!a) return;
+  const it = a.items.find(x=>x.id===iid); if(!it) return;
+  it[field] = field==="max" ? (parseFloat(val)||0) : (val.trim ? val.trim() : val);
+  save(); toast("Saved");
+}
+function deleteItem(aid, iid){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===aid); if(!a) return;
+  a.items = a.items.filter(x=>x.id!==iid);
+  Object.values(c.marks).forEach(m=>delete m[iid]);
+  save(); renderAssess();
+}
+/* ============ Students & Marks ============ */
+function allItems(c){
+  return c.assessments.flatMap(a=>a.items.map(it=>({ ...it, aName:a.name||a.type, aId:a.id })));
+}
+function renderMarks(){
+  const el = document.getElementById("tab-marks");
+  const c = activeCourse();
+  if(!c){ el.innerHTML = `<div class="empty">No course selected.</div>`; return; }
+  const items = allItems(c);
+  const groups = c.assessments.filter(a=>a.items.length);
+  const head1 = groups.map(a=>`<th colspan="${a.items.length}" style="text-align:center">${esc(a.name||a.type)}</th>`).join("");
+  const head2 = items.map(it=>`<th style="text-align:center" title="Max ${it.max} · ${coLabel(c,it.coId)}">${esc(it.label)}<br><span style="font-weight:400;color:var(--muted)">${coLabel(c,it.coId)} /${it.max}</span></th>`).join("");
+  const rows = c.students.map((s,si)=>{
+    const cells = items.map(it=>{
+      const v = c.marks[s.id]?.[it.id];
+      return `<td style="text-align:center"><input class="marks-input" type="number" min="0" max="${it.max}" step="0.25" value="${v??""}" onchange="setMark('${s.id}','${it.id}',this.value,${it.max})"></td>`;
+    }).join("");
+    return `<tr><td>${si+1}</td><td style="white-space:nowrap">${esc(s.sid)}</td><td style="white-space:nowrap">${esc(s.name)}</td>${cells}
+      <td><button class="icon-btn" title="Remove student" onclick="deleteStudent('${s.id}')">✕</button></td></tr>`;
+  }).join("");
+  el.innerHTML = `
+  <div class="card">
+    <h2>Students</h2>
+    <p class="hint">Add students one by one, or paste a list from Excel (one student per line: <b>ID [tab or comma] Name</b>).</p>
+    <div class="grid c3" style="align-items:end">
+      <label class="fld">Student ID <input id="s_id" placeholder="e.g., 20250108001"></label>
+      <label class="fld">Name <input id="s_name" placeholder="e.g., Rahim Uddin"></label>
+      <div><button class="btn" onclick="addStudent()">+ Add Student</button></div>
+    </div>
+    <h3>Bulk paste</h3>
+    <textarea id="s_bulk" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px;font-family:inherit;font-size:13.5px" rows="3" placeholder="20250108001, Rahim Uddin&#10;20250108002, Karim Ahmed"></textarea>
+    <div class="btn-row"><button class="btn secondary" onclick="bulkAddStudents()">Import Pasted List</button></div>
+  </div>
+  <div class="card">
+    <h2>Marks Entry</h2>
+    <p class="hint">${items.length? "Enter marks per item. Cells save automatically. Leave blank if absent/not assessed (blank cells are excluded from that CO's calculation for that student only if the student has no marks at all in the CO)." : "Define assessment items first (Assessments tab)."}</p>
+    ${items.length && c.students.length ? `
+    <div class="tbl-wrap"><table class="tbl">
+      <thead>
+        <tr><th rowspan="2">#</th><th rowspan="2">Student ID</th><th rowspan="2">Name</th>${head1}<th rowspan="2"></th></tr>
+        <tr>${head2}</tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="exportMarksCSV()">⬇ Export Marks (CSV)</button>
+      <label class="btn secondary" style="cursor:pointer">⬆ Import Marks (CSV)<input type="file" accept=".csv" style="display:none" onchange="importMarksCSV(this)"></label>
+    </div>` : c.students.length? "" : '<div class="empty">No students yet.</div>'}
+  </div>`;
+}
+function addStudent(){
+  const c = activeCourse(); if(!c) return;
+  const sid = document.getElementById("s_id").value.trim();
+  const name = document.getElementById("s_name").value.trim();
+  if(!sid){ toast("Student ID is required"); return; }
+  if(c.students.some(s=>s.sid===sid)){ toast("Student ID already exists"); return; }
+  c.students.push({ id: uid(), sid, name });
+  save(); renderMarks();
+}
+function bulkAddStudents(){
+  const c = activeCourse(); if(!c) return;
+  const text = document.getElementById("s_bulk").value.trim();
+  if(!text) return;
+  let added = 0;
+  text.split(/\r?\n/).forEach(line=>{
+    const parts = line.split(/\t|,|;/).map(x=>x.trim()).filter(Boolean);
+    if(!parts.length) return;
+    const sid = parts[0], name = parts.slice(1).join(" ");
+    if(sid && !c.students.some(s=>s.sid===sid)){ c.students.push({ id: uid(), sid, name }); added++; }
+  });
+  save(); renderMarks(); toast(added+" student(s) imported");
+}
+function deleteStudent(id){
+  const c = activeCourse(); if(!c) return;
+  const s = c.students.find(x=>x.id===id);
+  if(!confirm(`Remove ${s?.name||s?.sid} and their marks?`)) return;
+  c.students = c.students.filter(x=>x.id!==id);
+  delete c.marks[id];
+  save(); renderMarks();
+}
+function setMark(sid, iid, val, max){
+  const c = activeCourse(); if(!c) return;
+  if(!c.marks[sid]) c.marks[sid] = {};
+  if(val===""){ delete c.marks[sid][iid]; }
+  else{
+    let v = parseFloat(val);
+    if(isNaN(v)) return;
+    v = Math.max(0, Math.min(max, v));
+    c.marks[sid][iid] = v;
+  }
+  save();
+}
+
+/* ============ CSV Import/Export ============ */
+function csvCell(s){ s = String(s ?? ""); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }
+function itemHeader(c, it){ return `${it.aName} :: ${it.label}`; }
+function exportMarksCSV(){
+  const c = activeCourse(); if(!c) return;
+  const items = allItems(c);
+  const head = ["StudentID","Name", ...items.map(it=>itemHeader(c,it))];
+  const lines = [head.map(csvCell).join(",")];
+  c.students.forEach(s=>{
+    const row = [s.sid, s.name, ...items.map(it=>c.marks[s.id]?.[it.id] ?? "")];
+    lines.push(row.map(csvCell).join(","));
+  });
+  downloadFile(`${(c.code||"course").replace(/\s+/g,"_")}_marks.csv`, lines.join("\n"), "text/csv");
+}
+function parseCSV(text){
+  const rows = []; let row = [], cell = "", inQ = false;
+  for(let i=0;i<text.length;i++){
+    const ch = text[i];
+    if(inQ){
+      if(ch==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else inQ=false; }
+      else cell += ch;
+    } else {
+      if(ch==='"') inQ = true;
+      else if(ch===',' ){ row.push(cell); cell=""; }
+      else if(ch==='\n' || ch==='\r'){ if(ch==='\r' && text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=""; }
+      else cell += ch;
+    }
+  }
+  if(cell!=="" || row.length){ row.push(cell); rows.push(row); }
+  return rows.filter(r=>r.some(x=>x.trim()!==""));
+}
+function importMarksCSV(input){
+  const c = activeCourse(); if(!c) return;
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const rows = parseCSV(e.target.result);
+    if(rows.length<2){ toast("CSV appears empty"); return; }
+    const items = allItems(c);
+    const head = rows[0];
+    const colToItem = {};
+    head.forEach((h,ci)=>{
+      const it = items.find(x=>itemHeader(c,x).trim()===h.trim());
+      if(it) colToItem[ci] = it;
+    });
+    let applied = 0, newStu = 0;
+    rows.slice(1).forEach(r=>{
+      const sid = (r[0]||"").trim(); if(!sid) return;
+      let s = c.students.find(x=>x.sid===sid);
+      if(!s){ s = { id: uid(), sid, name:(r[1]||"").trim() }; c.students.push(s); newStu++; }
+      Object.entries(colToItem).forEach(([ci,it])=>{
+        const v = parseFloat(r[ci]);
+        if(!isNaN(v)){
+          if(!c.marks[s.id]) c.marks[s.id] = {};
+          c.marks[s.id][it.id] = Math.max(0, Math.min(it.max, v));
+          applied++;
+        }
+      });
+    });
+    save(); renderMarks();
+    toast(`Imported ${applied} mark(s)` + (newStu? `, ${newStu} new student(s)`:""));
+  };
+  reader.readAsText(file);
+  input.value = "";
+}
+function downloadFile(name, content, mime){
+  const blob = new Blob([content], {type: mime});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ============ Attainment Engine ============ */
+function levelOf(c, pct){
+  if(pct===null) return null;
+  const L = c.cfg.levels;
+  if(pct>=L.l3) return 3;
+  if(pct>=L.l2) return 2;
+  if(pct>=L.l1) return 1;
+  return 0;
+}
+function computeAttainment(c){
+  const items = allItems(c);
+  const cos = c.cos.map((co,i)=>{
+    const coItems = items.filter(it=>it.coId===co.id);
+    const totalMax = coItems.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
+    let considered = 0, attained = 0, sumPct = 0;
+    c.students.forEach(s=>{
+      const m = c.marks[s.id]||{};
+      const graded = coItems.filter(it=> m[it.id]!==undefined);
+      if(!graded.length) return;
+      const gMax = graded.reduce((sm,it)=>sm+(parseFloat(it.max)||0),0);
+      if(gMax<=0) return;
+      const got = graded.reduce((sm,it)=>sm+(m[it.id]||0),0);
+      const pct = got/gMax*100;
+      considered++; sumPct += pct;
+      if(pct >= c.cfg.itemPass) attained++;
+    });
+    const pct = considered? attained/considered*100 : null;
+    return { id:co.id, label:"CO"+(i+1), statement:co.statement, bloom:co.bloom, po:co.po||{},
+             nItems: coItems.length, totalMax, considered, attained,
+             avgScorePct: considered? sumPct/considered : null,
+             pct, level: levelOf(c, considered? attained/considered*100 : null) };
+  });
+  const pos = [];
+  for(let p=1;p<=N_PO;p++){
+    let wSum = 0, wTot = 0; const contrib = [];
+    cos.forEach(co=>{
+      const w = co.po[p]||0;
+      if(w>0 && co.pct!==null){ wSum += co.pct*w; wTot += w; contrib.push(co.label+" (w"+w+")"); }
+      else if(w>0){ contrib.push(co.label+" (w"+w+", no data)"); }
+    });
+    const pct = wTot? wSum/wTot : null;
+    if(contrib.length) pos.push({ po:p, name:PO_INFO[p], contrib, pct, level: levelOf(c,pct) });
+  }
+  return { cos, pos };
+}
+function badgeFor(c, pct, level){
+  if(pct===null) return '<span class="badge grey">no data</span>';
+  const cls = level>=2 ? "green" : level===1 ? "amber" : "red";
+  const names = {3:"Excellent",2:"Good",1:"Satisfactory",0:"Not attained"};
+  return `<span class="badge ${cls}">${pct.toFixed(1)}% · Level ${level} (${names[level]})</span>`;
+}
+function renderAttain(){
+  const el = document.getElementById("tab-attain");
+  const c = activeCourse();
+  if(!c){ el.innerHTML = `<div class="empty">No course selected.</div>`; return; }
+  const att = computeAttainment(c);
+  const coRows = att.cos.map(co=>`
+    <tr>
+      <td><b>${co.label}</b></td>
+      <td>${esc(co.statement)||"<i>—</i>"}</td>
+      <td style="text-align:center">${co.nItems}</td>
+      <td style="text-align:center">${co.totalMax}</td>
+      <td style="text-align:center">${co.considered}</td>
+      <td style="text-align:center">${co.attained}</td>
+      <td style="text-align:center">${co.avgScorePct===null?"—":co.avgScorePct.toFixed(1)+"%"}</td>
+      <td>${badgeFor(c, co.pct, co.level)}</td>
+    </tr>`).join("");
+  const poRows = att.pos.map(p=>`
+    <tr>
+      <td><b>PO${p.po}</b></td>
+      <td>${esc(p.name)}</td>
+      <td>${p.contrib.join(", ")}</td>
+      <td>${badgeFor(c, p.pct, p.level)}</td>
+    </tr>`).join("");
+  el.innerHTML = `
+  <div class="card">
+    <h2>CO Attainment</h2>
+    <p class="hint">A student attains a CO by scoring ≥ ${c.cfg.itemPass}% of the CO's assessed marks. CO attainment = percentage of assessed students who attained it. Target: ≥ ${c.cfg.levels.l1}% (Level 1). Thresholds are editable in Course Info → Attainment Settings.</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>CO</th><th>Statement</th><th>Items</th><th>Marks</th><th>Assessed</th><th>Attained</th><th>Avg Score</th><th>Attainment</th></tr></thead>
+      <tbody>${coRows || '<tr><td colspan="8" class="empty">No COs defined.</td></tr>'}</tbody>
+    </table></div>
+    <div class="chart-box"><canvas id="coChart" height="110"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>PO Attainment (course contribution)</h2>
+    <p class="hint">Weighted average of CO attainment using CO–PO mapping strengths (1–3) as weights. This is this course's contribution towards each PO — aggregate across courses at program level.</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>PO</th><th>Graduate Attribute</th><th>Contributing COs</th><th>Attainment</th></tr></thead>
+      <tbody>${poRows || '<tr><td colspan="4" class="empty">Map COs to POs to see PO attainment.</td></tr>'}</tbody>
+    </table></div>
+    <div class="chart-box"><canvas id="poChart" height="110"></canvas></div>
+  </div>`;
+  drawCharts(c, att);
+}
+function drawCharts(c, att){
+  if(typeof Chart === "undefined") return;
+  const target = c.cfg.levels.l1;
+  const mk = (id, labels, data, label) => {
+    if(charts[id]) charts[id].destroy();
+    const ctx = document.getElementById(id);
+    if(!ctx) return;
+    charts[id] = new Chart(ctx, {
+      type:"bar",
+      data:{ labels,
+        datasets:[
+          { label, data, backgroundColor: data.map(v=>v===null? "#d5dde3" : v>=target? "rgba(15,107,92,.75)" : "rgba(192,57,43,.65)"), borderRadius:6 },
+          { label:"Target "+target+"%", data: labels.map(()=>target), type:"line", borderColor:"#c98a1b", borderDash:[6,4], pointRadius:0, borderWidth:2 }
+        ]},
+      options:{ responsive:true, scales:{ y:{ beginAtZero:true, max:100, title:{display:true,text:"% of students attaining"} } },
+        plugins:{ legend:{ labels:{ boxWidth:14 } } } }
+    });
+  };
+  mk("coChart", att.cos.map(x=>x.label), att.cos.map(x=>x.pct===null?null:+x.pct.toFixed(1)), "CO attainment %");
+  mk("poChart", att.pos.map(x=>"PO"+x.po), att.pos.map(x=>x.pct===null?null:+x.pct.toFixed(1)), "PO attainment %");
+}
+
+/* ============ Course Report ============ */
+function renderReport(){
+  const el = document.getElementById("tab-report");
+  const c = activeCourse();
+  if(!c){ el.innerHTML = `<div class="empty">No course selected.</div>`; return; }
+  const att = computeAttainment(c);
+  const mapHeader = Array.from({length:N_PO},(_,i)=>`<th style="text-align:center">PO${i+1}</th>`).join("");
+  const mapRows = c.cos.map((co,i)=>{
+    const cells = Array.from({length:N_PO},(_,p)=>`<td style="text-align:center">${(co.po&&co.po[p+1])||""}</td>`).join("");
+    return `<tr><td><b>CO${i+1}</b></td>${cells}</tr>`;
+  }).join("");
+  const planRows = c.assessments.map(a=>{
+    const total = a.items.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
+    const cosCovered = [...new Set(a.items.map(it=>coLabel(c,it.coId)))].join(", ");
+    return `<tr><td>${esc(a.name||"—")}</td><td>${esc(a.type)}</td><td style="text-align:center">${a.items.length}</td><td style="text-align:center">${total}</td><td>${cosCovered||"—"}</td></tr>`;
+  }).join("");
+  const coRows = att.cos.map(co=>{
+    const names = {3:"Excellent",2:"Good",1:"Satisfactory",0:"Not attained"};
+    return `<tr><td><b>${co.label}</b></td><td>${esc(co.statement)}</td><td>${esc(co.bloom)}</td>
+      <td style="text-align:center">${co.considered}</td><td style="text-align:center">${co.attained}</td>
+      <td style="text-align:center">${co.pct===null?"—":co.pct.toFixed(1)+"%"}</td>
+      <td style="text-align:center">${co.pct===null?"—":"Level "+co.level+" ("+names[co.level]+")"}</td></tr>`;
+  }).join("");
+  const poRows = att.pos.map(p=>`<tr><td><b>PO${p.po}</b></td><td>${esc(p.name)}</td><td>${p.contrib.join(", ")}</td>
+      <td style="text-align:center">${p.pct===null?"—":p.pct.toFixed(1)+"%"}</td></tr>`).join("");
+  const weak = att.cos.filter(x=>x.pct!==null && x.level<1).map(x=>x.label);
+  el.innerHTML = `
+  <div class="no-print btn-row" style="margin-bottom:14px">
+    <button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+    <span class="pill-note">Tip: in the print dialog choose "Save as PDF" to file this as OBE evidence.</span>
+  </div>
+  <div class="report-sheet">
+    <h1>OBE Course Report</h1>
+    <div class="rpt-head">${esc(c.program||"")}</div>
+    <h2>1. Course Information</h2>
+    <table class="tbl"><tbody>
+      <tr><th style="width:180px">Course Code</th><td>${esc(c.code)}</td><th style="width:160px">Credit Hours</th><td>${esc(c.credit)}</td></tr>
+      <tr><th>Course Title</th><td>${esc(c.title)}</td><th>Section</th><td>${esc(c.section)}</td></tr>
+      <tr><th>Semester / Session</th><td>${esc(c.semester)}</td><th>Enrolled Students</th><td>${c.students.length}</td></tr>
+      <tr><th>Course Teacher</th><td colspan="3">${esc(c.instructor)}</td></tr>
+    </tbody></table>
+    <h2>2. Course Outcomes (COs)</h2>
+    <table class="tbl"><thead><tr><th>CO</th><th>Statement</th><th>Bloom's Level</th></tr></thead>
+      <tbody>${c.cos.map((co,i)=>`<tr><td><b>CO${i+1}</b></td><td>${esc(co.statement)}</td><td>${esc(co.bloom)}</td></tr>`).join("") || '<tr><td colspan="3">—</td></tr>'}</tbody></table>
+    <h2>3. CO–PO Mapping Matrix</h2>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th></th>${mapHeader}</tr></thead><tbody>${mapRows || '<tr><td colspan="13">—</td></tr>'}</tbody></table></div>
+    <p style="font-size:12px;color:var(--muted);margin-top:4px">Correlation: 3 = Strong, 2 = Moderate, 1 = Weak</p>
+    <h2>4. Assessment Plan</h2>
+    <table class="tbl"><thead><tr><th>Assessment</th><th>Type</th><th>Items</th><th>Total Marks</th><th>COs Covered</th></tr></thead>
+      <tbody>${planRows || '<tr><td colspan="5">—</td></tr>'}</tbody></table>
+    <h2>5. CO Attainment Results</h2>
+    <p style="font-size:12.5px">Method: a student attains a CO by scoring ≥ ${c.cfg.itemPass}% of the marks assessed under that CO. Attainment levels: Level 3 ≥ ${c.cfg.levels.l3}%, Level 2 ≥ ${c.cfg.levels.l2}%, Level 1 (target) ≥ ${c.cfg.levels.l1}% of students.</p>
+    <table class="tbl"><thead><tr><th>CO</th><th>Statement</th><th>Bloom</th><th>Assessed</th><th>Attained</th><th>Attainment</th><th>Level</th></tr></thead>
+      <tbody>${coRows || '<tr><td colspan="7">—</td></tr>'}</tbody></table>
+    <h2>6. PO Attainment (course contribution)</h2>
+    <table class="tbl"><thead><tr><th>PO</th><th>Graduate Attribute</th><th>Contributing COs (weights)</th><th>Attainment</th></tr></thead>
+      <tbody>${poRows || '<tr><td colspan="4">—</td></tr>'}</tbody></table>
+    <h2>7. Observations &amp; Continuous Quality Improvement (CQI)</h2>
+    <p style="font-size:12.5px">${weak.length? "COs below target: <b>"+weak.join(", ")+"</b>. Recommended actions: review the teaching-learning activities and assessment alignment for these COs and record corrective actions for the next offering." : "All COs with data met the target level. Record any further improvement actions below."}</p>
+    <textarea class="no-print" placeholder="Write remarks / CQI actions here (saved with the course)" rows="4" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px;font-family:inherit;font-size:13px" onchange="saveRemarks(this.value)">${esc(c.remarks||"")}</textarea>
+    <p style="display:none" class="print-remarks">${esc(c.remarks||"")}</p>
+    <br><br>
+    <table style="width:100%;margin-top:26px;font-size:13px"><tr>
+      <td style="width:45%;border-top:1px solid #555;text-align:center">Signature of Course Teacher</td>
+      <td style="width:10%"></td>
+      <td style="width:45%;border-top:1px solid #555;text-align:center">Signature of Head of the Department</td>
+    </tr></table>
+  </div>
+  <style>@media print{ .print-remarks{display:block !important} }</style>`;
+}
+function saveRemarks(v){
+  const c = activeCourse(); if(!c) return;
+  c.remarks = v; save(); toast("Remarks saved");
+}
+
+/* ============ Data & Backup ============ */
+function renderData(){
+  const el = document.getElementById("tab-data");
+  const c = activeCourse();
+  el.innerHTML = `
+  <div class="card">
+    <h2>Backup &amp; Restore</h2>
+    <p class="hint">All data lives only in this browser (localStorage). Export a JSON backup regularly, and to move data between devices or share a course file with a colleague / OBE committee.</p>
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn" onclick="exportAll()">⬇ Export ALL Courses (JSON)</button>
+      ${c? `<button class="btn secondary" onclick="exportCourse()">⬇ Export Current Course (JSON)</button>`:""}
+      <label class="btn secondary" style="cursor:pointer">⬆ Import JSON<input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Danger Zone</h2>
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn danger" onclick="clearAll()">Erase ALL Data in This Browser</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>About</h2>
+    <p class="hint">OBE Course Manager — a free, single-file web app for outcome-based teaching, learning &amp; assessment management. Works offline after first load. No data ever leaves your device.</p>
+  </div>`;
+}
+function exportAll(){
+  downloadFile("obe_backup_all_"+new Date().toISOString().slice(0,10)+".json",
+    JSON.stringify(state, null, 1), "application/json");
+}
+function exportCourse(){
+  const c = activeCourse(); if(!c) return;
+  downloadFile((c.code||"course").replace(/\s+/g,"_")+"_obe.json",
+    JSON.stringify({ courses:[c] }, null, 1), "application/json");
+}
+function importJSON(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const data = JSON.parse(e.target.result);
+      const incoming = Array.isArray(data.courses)? data.courses : (data.id && data.cos ? [data] : null);
+      if(!incoming) throw new Error("Unrecognized format");
+      let added = 0;
+      incoming.forEach(nc=>{
+        if(!nc.id) nc.id = uid();
+        if(!nc.cfg) nc.cfg = defaultCfg();
+        if(!nc.marks) nc.marks = {};
+        ["cos","assessments","students"].forEach(k=>{ if(!Array.isArray(nc[k])) nc[k]=[]; });
+        const existing = state.courses.findIndex(x=>x.id===nc.id);
+        if(existing>=0){
+          if(confirm(`Course "${nc.code||nc.id}" already exists. Overwrite it?`)) state.courses[existing] = nc;
+        } else { state.courses.push(nc); }
+        added++;
+      });
+      if(!state.activeCourseId && state.courses.length) state.activeCourseId = state.courses[0].id;
+      save(); refresh(); toast(added+" course(s) imported");
+    }catch(err){ alert("Import failed: "+err.message); }
+  };
+  reader.readAsText(file);
+  input.value = "";
+}
+function clearAll(){
+  if(!confirm("Erase ALL courses, students and marks stored in this browser?")) return;
+  if(!confirm("Are you absolutely sure? Consider exporting a JSON backup first.")) return;
+  state = { courses: [], activeCourseId: null };
+  save(); refresh(); toast("All data erased");
+}
+
+/* ============ Sample Course ============ */
+function loadSample(){
+  const co1={id:uid(),statement:"Explain the fundamental principles of renewable energy conversion systems.",bloom:"Understand",po:{1:3,7:2}};
+  const co2={id:uid(),statement:"Analyze the performance of wind and solar energy systems under given conditions.",bloom:"Analyze",po:{2:3,4:2}};
+  const co3={id:uid(),statement:"Design a small-scale renewable energy system for a specified application.",bloom:"Create",po:{3:3,5:2,7:1}};
+  const items=(co,pre,n,max)=>Array.from({length:n},(_,i)=>({id:uid(),label:pre+(i+1),max,coId:co.id}));
+  const q1={id:uid(),name:"Quiz 1",type:"Quiz",items:items(co1,"Q",2,5)};
+  const mid={id:uid(),name:"Mid Term",type:"Mid Term",items:[...items(co1,"Q",1,10),...items(co2,"P",2,10)]};
+  const fin={id:uid(),name:"Final Exam",type:"Final Exam",items:[...items(co2,"Q",2,15),...items(co3,"D",2,20)]};
+  const students=["20250108001 Ayesha Rahman","20250108002 Tanvir Hasan","20250108003 Nusrat Jahan","20250108004 Sabbir Ahmed","20250108005 Farhana Akter","20250108006 Mehedi Hasan","20250108007 Sadia Islam","20250108008 Rakib Hossain"].map(s=>{const [sid,...n]=s.split(" ");return {id:uid(),sid,name:n.join(" ")};});
+  const c={id:uid(),code:"ME 4011",title:"Renewable Energy (Sample)",credit:"3.0",semester:"Spring 2026",program:"B.Sc. in Mechanical Engineering",section:"A",instructor:"Prof. Dr. Mazharul Islam",cos:[co1,co2,co3],assessments:[q1,mid,fin],students,marks:{},cfg:defaultCfg(),remarks:""};
+  const rnd=(max)=>Math.round(Math.max(0,Math.min(max,(0.45+Math.random()*0.6)*max))*2)/2;
+  students.forEach(s=>{c.marks[s.id]={};[q1,mid,fin].forEach(a=>a.items.forEach(it=>{c.marks[s.id][it.id]=rnd(it.max);}));});
+  state.courses.push(c); state.activeCourseId=c.id;
+  save(); refresh(); toast("Sample course loaded — explore each tab");
+}
+
+/* ============ Init ============ */
+load();
+if(state.courses.length && !activeCourse()) state.activeCourseId = state.courses[0].id;
+renderCourseSelect();
+showTab("dashboard");
+</script>
+</body>
+</html>
