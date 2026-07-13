@@ -1,0 +1,72 @@
+==========================================================================
+ OBE Course Manager — Change Log
+ (c) 2026 Prof. Mazharul Islam - CC BY 4.0 International License
+--------------------------------------------------------------------------
+ Versioning convention: major releases increment the whole number (v1, v2);
+ minor changes increment the number after the decimal point (v1.1, v1.2).
+==========================================================================
+
+v1.4 — July 13, 2026 (minor)
+  - Course Info: changed the Cohort field's example text from
+    "e.g., Intake Spring 2023 / 39th batch" to "e.g., ME17".
+
+v1.3 — July 13, 2026 (minor)
+  - Added a "Cohort" field in Course Info (between Section and Course
+    Teacher). The value is copied automatically into the Direct
+    Measurements of COs & POs document (between Section and No. of
+    Students) and the CQI Report (between Semester and Course Teacher).
+  - Faculty User Manual updated accordingly.
+
+v1.2 — July 13, 2026 (minor)
+  - Renamed the "AUST Documents" tab to "Accreditation Documents" to make
+    the tool meaningful beyond a single institution; a note in the tab
+    clarifies that the documents follow the AUST OBE templates
+    (BAETE / Washington Accord framework). Updated in the app, README,
+    and the Faculty User Manual.
+
+v1.1 — July 13, 2026 (minor)
+  - Added copyright notice and Creative Commons Attribution (CC BY) 4.0
+    International License line to the app footer, README, and the
+    Faculty User Manual (cover page and page footer).
+  - Introduced this change log file (change_log.txt).
+
+v1 — July 13, 2026 (first release)
+  Core:
+  - Course management (multiple courses), Course Info, attainment settings.
+  - COs with Bloom's taxonomy (C/A/P) and click-to-set CO-PO mapping matrix
+    (12 Washington Accord Program Outcomes, strengths 1-3).
+  - T&L Activities tab: CQI-aware recommender with a pool of 31 pedagogies
+    (extensible with custom activities), per-CO recommendations filtered by
+    mode and class size, one-click adoption into delivery methods.
+  - Assessment plan: assessments with CO-tagged items and maximum marks.
+  - Students & Marks: individual/bulk enrolment (Excel paste), marks grid,
+    Empty Template (CSV) / Import Marks (CSV) / Export Marks (CSV).
+  Attainment:
+  - Direct measurement following the AUST "Direct CO-PO Calculations"
+    workbook method (Target Pass Marks 40, KPI 50, per-student PO scores
+    weighted by CO allocated marks), with charts.
+  - Indirect measurement via CO Exit Survey (tally grid, Google Forms CSV
+    import, printable survey form), Likert threshold configurable.
+  - Combined attainment with user-editable Direct/Indirect weights
+    (default 80/20).
+  CQI (BAETE Criteria 3.8 & 5.4.3):
+  - Auto-compiled per-CO table of T&L methods, assessment tools, CP/CEA;
+    narrative fields (complex problems, effectiveness, tool design,
+    question moderation).
+  - Six-step CQI-loop status board; action tables two-way linked with
+    Course Report 6.1 and Course Specifications 6.1.
+  - Low Attainment Analysis linked to the Attainment tab: threshold filter
+    for low-scoring students per CO, item-wise average diagnostics,
+    analyses w.r.t. (a) T&L activities and (b) assessment techniques,
+    and comments.
+  - Stakeholder Feedback Register and Annexure H evidence checklist.
+  AUST Documents (auto-filled, printable):
+  - Course Outline, Course Specifications, Final Examination Vetting Form,
+    Direct CO-PO Calculations, CO Exit Survey, Course Report, CQI Report.
+  Data:
+  - Work on a real .json file with auto-save (File System Access API,
+    Chrome/Edge), reconnect flow; localStorage cache; JSON export/import;
+    "Duplicate for New Semester (CQI)" carrying action plans forward.
+  Documentation:
+  - Faculty User Manual (docx) with Appendix A: T&L activity pool
+    descriptions and selection justifications.
