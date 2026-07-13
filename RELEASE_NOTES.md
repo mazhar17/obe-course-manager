@@ -10,9 +10,7 @@ Creative Commons Attribution (CC BY) 4.0 International
 
 ## Highlights
 
-OBE Course Manager is a free tool for managing a course from the Outcome-Based Education (OBE) perspective, in line with the requirements of the Board of Accreditation for Engineering and Technical Education (BAETE) under the Washington Accord framework. It takes a course teacher through the complete OBE cycle — from writing Course Outcomes to printing signed accreditation evidence — and closes the Continuous Quality Improvement (CQI) loop between semesters.
-
-The underlying OBE implementation framework was developed at Ahsanullah University of Science and Technology (AUST) in early 2018 by Prof. Mazharul Islam along with his team from AUST, and has since been refined through OBE implementation across the six engineering programs of AUST, international OBE symposiums, and workshops conducted for the University Grants Commission of Bangladesh and universities across the country. This tool packages that framework into software that any faculty member can use.
+OBE Course Manager is a free tool for managing a course from the Outcome-Based Education (OBE) perspective, in line with the requirements of the Board of Accreditation for Engineering and Technical Education (BAETE) under the Washington Accord framework. It takes a course teacher through the complete OBE cycle — from writing Course Outcomes to printing signed accreditation evidence — and closes the Continuous Quality Improvement (CQI) loop between semesters. The underlying OBE implementation framework was developed at Ahsanullah University of Science and Technology (AUST) in early 2018 by Prof. Mazharul Islam along with his team from AUST. 
 
 The entire application is a single, self-contained HTML file that runs in any modern browser — no installation, no account, no server. All data stays on the user's own device, with the option of working directly on a file for cloud-backed safety.
 
