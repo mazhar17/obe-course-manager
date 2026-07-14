@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.24</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.27</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -186,14 +186,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.24</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.27</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.24";
+const APP_VERSION = "v1.27";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -331,10 +331,35 @@ async function openDataFile(){
     refresh(); updateFileChip(); toast("Now working on file: "+h.name);
   }catch(e){ if(e && e.name!=="AbortError") alert("Could not open file: "+e.message); }
 }
+/* File → New: a fresh workspace (no courses) saved to a brand-new file.
+   The custom T&L Activity Pool is carried over — it is a personal/departmental
+   asset that should not have to be rebuilt per file. */
+async function newDataFile(){
+  try{
+    if(fileHandle && !filePermOk && state.courses.length){
+      if(!confirm("The linked file has not been reconnected this session, so recent changes may exist only in this browser and will NOT be written to it.\n\nContinue creating a new file anyway?")) return;
+    }
+    if(!fileHandle && state.courses.length){
+      if(!confirm("Your current data lives only in this browser and is not linked to any file.\n\nIt will remain in this browser, but the app will switch to the new empty file. Consider File ▸ Save to New File… first if you want to keep it in a file.\n\nCreate the new file anyway?")) return;
+    }
+    if(fileHandle && filePermOk){
+      try{ clearTimeout(fileTimer); await writeFileNow(); }catch(e){ console.warn(e); } // flush the old file first
+    }
+    const h = await window.showSaveFilePicker({ suggestedName: "obe-course-data-new.json", types: FILE_TYPES });
+    const pool = state.customTLA || [];
+    state = { courses: [], activeCourseId: null, customTLA: pool };
+    fileHandle = h; filePermOk = true; fileDirty = false;
+    await idbSet("main", h);
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    await writeFileNow();
+    refresh(); updateFileChip();
+    toast("New data file created: "+h.name+" — your activity pool was carried over");
+  }catch(e){ if(e && e.name!=="AbortError") alert("Could not create file: "+e.message); }
+}
 async function saveAsDataFile(){
   try{
     const h = await window.showSaveFilePicker({
-      suggestedName: "obe-course-data.json", types: FILE_TYPES });
+      suggestedName: fileHandle? fileHandle.name.replace(/\.json$/i,"") + "_copy.json" : "obe-course-data.json", types: FILE_TYPES });
     fileHandle = h; filePermOk = true;
     await idbSet("main", h);
     await writeFileNow();
@@ -388,6 +413,7 @@ function updateFileChip(){
     el.innerHTML = `<span class="file-wrap">
       <button class="file-chip-btn" title="Open an existing data file or save your data to a new file" onclick="toggleFileMenu(event)">📁 File ▾</button>
       ${menu(
+        mi("🆕 New Data File…","newDataFile()") +
         mi("📂 Open Data File…","openDataFile()") +
         mi("💾 Save to New File…","saveAsDataFile()")
       )}</span>`;
@@ -397,14 +423,18 @@ function updateFileChip(){
       <button class="file-chip-btn" style="padding:6px 8px" title="File options" onclick="toggleFileMenu(event)">▾</button>
       ${menu(
         mi("🔗 Reconnect","reconnectFile()") +
+        mi("🆕 New Data File…","newDataFile()") +
         mi("📂 Open Another File…","openDataFile()") +
+        mi("💾 Save As…","saveAsDataFile()") +
         mi("Stop Using File","unlinkFile()","danger sep")
       )}</span>`;
   } else {
     el.innerHTML = `<span class="file-wrap">
       <button class="file-chip-btn" style="${fileDirty? "border-color:#E3A72F;color:#F6DCAB":""}" title="All changes auto-save to this file — click for file options" onclick="toggleFileMenu(event)">💾 ${esc(fileHandle.name)} · ${fileDirty? "saving…" : "saved"} ▾</button>
       ${menu(
+        mi("🆕 New Data File…","newDataFile()") +
         mi("📂 Open Another File…","openDataFile()") +
+        mi("💾 Save As…","saveAsDataFile()") +
         mi("💾 Save Now (Ctrl+S)","saveNowShortcut()") +
         mi("Stop Using File","unlinkFile()","danger sep")
       )}</span>`;
@@ -1476,6 +1506,14 @@ function applySurveyCSV(text){
   if(applied) save();
   return applied;
 }
+function exportSurveyTemplateCSV(){
+  const c = activeCourse(); if(!c) return;
+  if(!c.cos.length){ toast("Define your COs first (COs & CO–PO Mapping tab)"); return; }
+  const head = ["Timestamp", ...c.cos.map((co,i)=>`CO${i+1}: ${co.statement||""}`)];
+  downloadFile(`${(c.code||"course").replace(/\s+/g,"_")}_exit_survey_template.csv`,
+    head.map(csvCell).join(",") + "\n", "text/csv");
+  toast("Template downloaded — one row per respondent, ratings 1–5 per CO");
+}
 function importSurveyCSV(input){
   const file = input.files[0]; if(!file) return;
   const reader = new FileReader();
@@ -1565,14 +1603,15 @@ function indirectCards(c, att){
   return `
   <div class="card">
     <h2>Indirect Measurement — CO Exit Survey</h2>
-    <p class="hint">Students rate each CO on a 5-point Likert scale (5 = Strongly Agree … 1 = Strongly Disagree) at the end of the semester. Enter the count of responses per rating below, or import a CSV from Google Forms (one column per CO — headers containing CO1, CO2, …; ratings 1–5). Indirect attainment = % of responses rated ≥ ${c.cfg.likertPass}. A printable survey form is available under <b>Accreditation Documents → CO Exit Survey</b>.</p>
+    <p class="hint">Students rate each CO on a 5-point Likert scale (5 = Strongly Agree … 1 = Strongly Disagree) at the end of the semester. Enter the count of responses per rating below, or import a survey CSV — download the template and fill it in Excel (one row per respondent, ratings 1–5), or use a Google Forms export (one column per CO — headers containing CO1, CO2, …). Indirect attainment = % of responses rated ≥ ${c.cfg.likertPass}. A printable survey form is available under <b>Accreditation Documents → CO Exit Survey</b>.</p>
     <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th style="width:50px">CO</th><th>Statement</th><th style="width:64px">5 (SA)</th><th style="width:64px">4 (A)</th><th style="width:64px">3 (N)</th><th style="width:64px">2 (D)</th><th style="width:64px">1 (SD)</th><th style="width:60px">n</th><th style="width:70px">Avg</th><th style="width:80px">% ≥ ${c.cfg.likertPass}</th></tr></thead>
       <tbody>${tallyRows || '<tr><td colspan="10" class="empty">Define COs first.</td></tr>'}</tbody>
     </table></div>
     <p style="font-size:11.5px;color:var(--muted);margin-top:4px">Note: the rating columns are ordered 5→1 for entry convenience — the counts are stored per rating value.</p>
     <div class="btn-row">
-      <label class="btn secondary" style="cursor:pointer">⬆ Import Survey CSV (Google Forms)<input type="file" accept=".csv" style="display:none" onchange="importSurveyCSV(this)"></label>
+      <button class="btn secondary" onclick="exportSurveyTemplateCSV()">⬇ Download Survey CSV Template</button>
+      <label class="btn secondary" style="cursor:pointer">⬆ Import Survey CSV<input type="file" accept=".csv" style="display:none" onchange="importSurveyCSV(this)"></label>
       <button class="btn secondary" onclick="showDoc('survey');showTab('docs')">🖨 Printable Survey Form</button>
       <button class="btn danger small" onclick="clearSurvey()">Clear Tallies</button>
     </div>
@@ -1701,14 +1740,23 @@ function buildAIPrompt(c){
       if(x.pct===null){ L.push(`${x.label}: no marks data`); return; }
       L.push(`${x.label}: n=${x.considered}, avg ${x.avgScorePct.toFixed(1)}%, ${x.pct.toFixed(1)}% above pass marks -> ${x.attained? "ATTAINED":"NOT ATTAINED"} (KPI ${c.cfg.kpiTarget}%)`);
     });
-    const weak = d.flatMap(dc=>dc.itemAvgs.filter(it=>it.avg!==null && it.avg<c.cfg.passMarks).map(it=>`${it.aName} ${it.label} (${it.avg.toFixed(0)}%)`));
-    if(weak.length) L.push(`Weakest items (class average below pass marks): ${weak.join(", ")}`);
+    const attemptsOf = id => c.students.filter(s=>(c.marks[s.id]||{})[id]!==undefined).length;
+    const weak = d.flatMap(dc=>dc.itemAvgs.filter(it=>it.avg!==null && it.avg<c.cfg.passMarks)
+      .map(it=>`${it.aName} ${it.label} (avg ${it.avg.toFixed(0)}%, attempted by ${attemptsOf(it.id)} of ${c.students.length} students)`));
+    if(weak.length) L.push(`Weakest items (class average below pass marks): ${weak.join("; ")}`);
     att.cos.forEach((x,i)=>{
       if(x.pct!==null && !x.attained){
         const low = d[i].scores.filter(s=>s.pct<=c.cfg.passMarks).length;
         L.push(`Students at/below pass marks on ${x.label}: ${low} of ${d[i].scores.length}`);
+        const b = [0,0,0,0,0];
+        d[i].scores.forEach(s=>{ b[Math.min(4, Math.floor(s.pct/20))]++; });
+        L.push(`Score distribution on ${x.label} (n=${d[i].scores.length}): 0-20%: ${b[0]}, 20-40%: ${b[1]}, 40-60%: ${b[2]}, 60-80%: ${b[3]}, 80-100%: ${b[4]}`);
       }
     });
+    const GR = ["A+","A","A-","B+","B","B-","C+","C","D","F"];
+    const g = (c.aust.report && c.aust.report.grades) || {};
+    const gTotal = GR.reduce((s,k)=>s+(parseFloat(g[k])||0),0);
+    if(gTotal>0) L.push(`Overall grade distribution (IUMS): ${GR.filter(k=>parseFloat(g[k])>0).map(k=>k+": "+g[k]).join(", ")} (total ${gTotal})`);
   }
   if(ind.n>0){
     L.push("");
@@ -1743,7 +1791,10 @@ function buildAIPrompt(c){
   L.push("Professional accreditation-report tone; every claim traceable to the");
   L.push("evidence above; actions must be specific and feasible for a class of this");
   L.push("size at a Bangladeshi university; if the evidence is insufficient for any");
-  L.push("conclusion, say so explicitly rather than speculating.");
+  L.push("conclusion, say so explicitly rather than speculating. Note: attendance/");
+  L.push("participation data is not tracked by this tool — do not speculate about");
+  L.push("engagement; blank marks mean 'not attempted', entered zeros mean");
+  L.push("'attempted and scored zero'.");
   return L.join("\n");
 }
 function copyAIPrompt(){
@@ -1882,7 +1933,7 @@ function studentCOData(c){
         const m = c.marks[s.id]||{};
         if(countsForStudent(it, m, ctxs[si])){ sum += (m[it.id]||0); n++; }
       });
-      return { label: it.label, aName: it.aName, optional: it.mandatory===false,
+      return { id: it.id, label: it.label, aName: it.aName, optional: it.mandatory===false,
                avg: n>0? sum/n/max*100 : null };
     });
     return { co, i, label:"CO"+(i+1), totalMax, scores, itemAvgs };

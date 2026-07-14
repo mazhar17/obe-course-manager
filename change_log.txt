@@ -6,6 +6,32 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.27 — July 14, 2026 (minor)
+  - Attainment tab, Indirect Measurement: new "Download Survey CSV
+    Template" button — a header-only CSV (Timestamp + one column per CO
+    with the full CO statement, import-compatible by construction) for
+    filling in Excel or designing a Google Form. Import button renamed
+    from "Import Survey CSV (Google Forms)" to "Import Survey CSV".
+
+v1.26 — July 14, 2026 (minor)
+  - File menu completed: "New Data File…" creates a fresh workspace (no
+    courses) saved to a brand-new .json — the custom T&L Activity Pool
+    carries over; the previous file is flushed before switching, and
+    confirmations guard un-linked or un-reconnected data. "Save As…"
+    added to the linked and reconnect states — writes the current data
+    to a newly chosen file (suggested name: <current>_copy.json) and
+    switches auto-saving to it, leaving the old file as a snapshot.
+
+v1.25 — July 14, 2026 (minor)
+  - AI prompt enriched based on field testing: weakest items now include
+    attempt counts ("attempted by x of N students" — distinguishes
+    non-submission from task difficulty); each not-attained CO gains a
+    five-band score distribution (0-20/20-40/40-60/60-80/80-100%);
+    the IUMS grade distribution is included when entered in the Course
+    Report; and the constraints now state explicitly that attendance/
+    participation data is not tracked, with the blank-vs-zero marks
+    convention restated.
+
 v1.24 — July 14, 2026 (minor)
   - CQI tab: new "📋 Copy AI Prompt" button. Assembles a complete, curated
     prompt from the course data — methodology note (with the course's
