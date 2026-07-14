@@ -1,8 +1,8 @@
-# OBE Course Manager — v1.27 (First release: July 13, 2026)
+# OBE Course Manager — v1.29 (First release: July 13, 2026)
 
 > **Deployment note:** upload `aust_logo.svg` alongside `index.html` — the official AUST logo shown on the Accreditation Documents. If the file is absent, the documents simply render without the logo.
 
-See `change_log.txt` for the version history.
+See `change_log_v1.29.txt` for the version history (the log file is renamed with each release).
 
 A free, single-file web app for managing **teaching, learning & assessment from the OBE (Outcome-Based Education) perspective** — built for engineering faculty working under the Washington Accord / BAETE framework.
 
@@ -13,7 +13,8 @@ Everything runs in the browser. No server, no database, no login. All data stays
 - **Course Info** — course code, title, credits, semester, program, teacher; editable attainment thresholds.
 - **COs & CO–PO Mapping** — write CO statements, choose the Bloom's Taxonomy (BT) Domain (Cognitive, Affective, or Psychomotor) with the matching Level (C1–C6, A1–A5, P1–P7); click-to-tick CO–PO mapping matrix (✓) against the 12 Washington Accord Program Outcomes.
 - **T&L Activities (CQI recommender)** — a built-in pool of 31 teaching & learning activities tagged by Bloom's level, mode (in-person/online), and class size. For each CO the app recommends the best-fitting activities, **boosting** ones suggested in the previous semester's CQI recommendations (Course Specifications 6.1 / Course Report 6.1) and **ranking down** ones marked ineffective in the previous Course Report (3.2). One click adopts an activity into the CO's delivery methods, which then flow automatically into the Course Specifications constructive-alignment table — closing the CQI loop. Each CO card also accepts **your own activity** typed directly — with autocomplete suggestions from the Activity Pool as you type (keeping names consistent for CQI tracking), optionally saved to the pool auto-tagged with the CO's domain/level — and a "show all matching" toggle reveals every suitable pool activity. Faculty/departments can extend the pool with custom activities (kept in backups for sharing).
-- **Assessments** — plan quizzes, class tests, mid/final exams, labs, projects; every item/question is tagged with a CO and maximum marks.
+- **Assessments** — plan quizzes, class tests, mid/final exams, labs, projects; every item/question is tagged with a CO, maximum marks, and a Bloom **Level** (inherited from its CO; setting it above the CO's declared level raises a constructive-alignment warning, override-able with a visible ↑ marker).
+- **CA (Constructive Alignment)** — a live Biggs triangle (Course Outcomes / T&L Activities / Assessments, "Knowledge · Skills · Attitudes" at the centre) whose edges are colored by the course's actual alignment state, plus per-CO alignment cards with verified/mismatch/unverified activity indicators and rule-based **suggestions for proper CA**: unassessed COs, missing or level-mismatched activities (one-click Adopt), items exceeding the CO's level, under-assessed COs, high-level COs assessed only by quizzes, and optional-only measurement warnings.
 - **Students & Marks** — add students individually or bulk-paste from Excel; spreadsheet-style marks grid; CSV export/import of the full marks sheet.
 - **Attainment (Direct)** — automatic CO attainment (% of students scoring above the threshold per CO) and PO attainment (weighted by mapping strength), with color-coded tables and charts against the target line.
 - **Indirect Measurement (CO Exit Survey)** — students rate each CO on a 5-point Likert scale at semester end. Enter response counts in a tally grid, or import a survey CSV — download the header-only template and fill it in Excel, or use a Google Forms export (one column per CO). Indirect CO attainment = % of responses rated at/above the threshold (default ≥ 4); indirect PO values are derived through the CO–PO mapping, weighted by CO marks. A printable survey form is included under Accreditation Documents, and the results feed Course Report section 5.1 automatically.

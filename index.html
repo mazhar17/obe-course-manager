@@ -70,7 +70,7 @@ table.tbl tr:nth-child(even) td{background:#fafcfd}
 .chart-box{max-width:900px;margin:10px auto}
 .empty{padding:26px;text-align:center;color:var(--muted);font-size:14px}
 .pill-note{font-size:12.5px;color:var(--muted);background:var(--primary-light);border-radius:8px;padding:8px 12px;margin:10px 0;display:inline-block}
-.item-row{display:grid;grid-template-columns:2fr 90px 1fr 92px 36px;gap:8px;margin-bottom:6px;align-items:center}
+.item-row{display:grid;grid-template-columns:1.7fr 74px 0.9fr 150px 88px 30px;gap:8px;margin-bottom:6px;align-items:center}
 .item-row input,.item-row select{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13.5px;font-family:inherit;width:100%}
 .icon-btn{background:none;border:none;color:var(--danger);font-size:17px;cursor:pointer;padding:2px}
 .report-sheet{background:#fff;padding:34px 40px;border-radius:var(--radius);box-shadow:var(--shadow);font-size:13.5px}
@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.27</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.29</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -164,8 +164,9 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <button class="tab-btn" data-tab="dashboard" onclick="showTab('dashboard')">Dashboard</button>
   <button class="tab-btn" data-tab="course" onclick="showTab('course')">Course Info</button>
   <button class="tab-btn" data-tab="cos" onclick="showTab('cos')">COs &amp; CO–PO Mapping</button>
-  <button class="tab-btn" data-tab="tla" onclick="showTab('tla')">T&amp;L Activities</button>
+  <button class="tab-btn" data-tab="tla" onclick="showTab('tla')">T&amp;L</button>
   <button class="tab-btn" data-tab="assess" onclick="showTab('assess')">Assessments</button>
+  <button class="tab-btn" data-tab="ca" onclick="showTab('ca')">CA</button>
   <button class="tab-btn" data-tab="marks" onclick="showTab('marks')">Students &amp; Marks</button>
   <button class="tab-btn" data-tab="attain" onclick="showTab('attain')">Attainment</button>
   <button class="tab-btn" data-tab="cqi" onclick="showTab('cqi')">CQI</button>
@@ -179,6 +180,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-cos"></section>
   <section class="tab" id="tab-tla"></section>
   <section class="tab" id="tab-assess"></section>
+  <section class="tab" id="tab-ca"></section>
   <section class="tab" id="tab-marks"></section>
   <section class="tab" id="tab-attain"></section>
   <section class="tab" id="tab-cqi"></section>
@@ -186,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.27</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.29</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.27";
+const APP_VERSION = "v1.29";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -220,7 +222,7 @@ function ensureAust(c){
   if(!c.marks) c.marks = {};
   ["cos","assessments","students"].forEach(k=>{ if(!Array.isArray(c[k])) c[k]=[]; });
   c.cos.forEach(co=>{ ["bloomA","bloomP","kp","cep","cea","delivery","assess","modStatement","modPO","modBloom"].forEach(f=>{ if(co[f]===undefined) co[f]=""; }); if(!co.btDomain) co.btDomain="Cognitive"; if(!co.po) co.po={}; });
-  c.assessments.forEach(a=>{ if(a.weightPct===undefined) a.weightPct=""; if(a.chooseK===undefined) a.chooseK=""; a.items.forEach(it=>{ if(it.mandatory===undefined) it.mandatory=true; if(it.group===undefined) it.group=""; }); });
+  c.assessments.forEach(a=>{ if(a.weightPct===undefined) a.weightPct=""; if(a.chooseK===undefined) a.chooseK=""; a.items.forEach(it=>{ if(it.mandatory===undefined) it.mandatory=true; if(it.group===undefined) it.group=""; if(it.level===undefined){ const co=c.cos.find(x=>x.id===it.coId); it.level = co? primeLevelName(co) : ""; } }); });
   c.aust = c.aust || {};
   const a = c.aust;
   a.outline = Object.assign({level:"",faculty:"Engineering",dept:"",programme:"",synopsis:"",type:"Core",prereq:"",room:"",phone:"",email:"",consult:"",refsReq:"",refsRec:"",prepared:"",checked:"",approved:""}, a.outline||{});
@@ -484,7 +486,7 @@ function showTab(name){
 }
 function renderTab(name){
   const map = { dashboard:renderDashboard, course:renderCourse, cos:renderCOs, tla:renderTLA, assess:renderAssess,
-                marks:renderMarks, attain:renderAttain, cqi:renderCQI, docs:renderDocs, data:renderData };
+                ca:renderCA, marks:renderMarks, attain:renderAttain, cqi:renderCQI, docs:renderDocs, data:renderData };
   if(map[name]) map[name]();
 }
 function refresh(){ renderCourseSelect(); renderTab(window._currentTab || "dashboard"); }
@@ -537,12 +539,13 @@ function renderDashboard(){
     <table class="tbl"><tbody>
       <tr><td>1</td><td><b>Course Info</b> — course details, credit hours, instructor</td><td>${c.code? '<span class="badge green">done</span>':'<span class="badge grey">pending</span>'}</td></tr>
       <tr><td>2</td><td><b>COs &amp; CO–PO Mapping</b> — write COs with Bloom's level, map to POs</td><td>${c.cos.length? '<span class="badge green">'+c.cos.length+' COs</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>3</td><td><b>T&amp;L Activities</b> — adopt recommended teaching &amp; learning activities per CO, informed by previous-semester CQI</td><td>${c.cos.some(co=>co.delivery)? '<span class="badge green">adopted</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>4</td><td><b>Assessments</b> — plan quizzes/exams; tag every question/item with a CO</td><td>${nItems? '<span class="badge green">'+nItems+' items</span>':'<span class="badge grey">pending</span>'}${unmapped? ' <span class="badge red">'+unmapped+' item(s) without valid CO</span>':''}</td></tr>
-      <tr><td>5</td><td><b>Students &amp; Marks</b> — add students (or paste from Excel), enter marks</td><td>${nStu? '<span class="badge green">'+nStu+' students</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>6</td><td><b>Attainment</b> — CO/PO attainment computed automatically (AUST Direct Measurement method)</td><td>${marksEntered? '<span class="badge green">available</span>':'<span class="badge grey">needs marks</span>'}</td></tr>
-      <tr><td>7</td><td><b>CQI</b> — BAETE 3.8 &amp; 5.4.3 evidence: narratives, loop status, stakeholder feedback register, Annexure H checklist</td><td>${(c.aust&&c.aust.cqi&&(c.aust.cqi.complex||c.aust.cqi.effective))? '<span class="badge green">in progress</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>8</td><td><b>Accreditation Documents</b> — Course Outline, Course Specifications, Final Exam Vetting Form, Direct CO-PO Calculations, CO Exit Survey, Course Report &amp; CQI Report — auto-filled and printable</td><td><span class="badge blue">any time</span></td></tr>
+      <tr><td>3</td><td><b>T&amp;L</b> — adopt recommended teaching &amp; learning activities per CO, informed by previous-semester CQI</td><td>${c.cos.some(co=>co.delivery)? '<span class="badge green">adopted</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>4</td><td><b>Assessments</b> — plan quizzes/exams; tag every question/item with a CO and Bloom level</td><td>${nItems? '<span class="badge green">'+nItems+' items</span>':'<span class="badge grey">pending</span>'}${unmapped? ' <span class="badge red">'+unmapped+' item(s) without valid CO</span>':''}</td></tr>
+      <tr><td>5</td><td><b>CA</b> — check the constructive alignment of COs, T&amp;L activities and assessments (Biggs triangle) and close any gaps</td><td><span class="badge blue">any time</span></td></tr>
+      <tr><td>6</td><td><b>Students &amp; Marks</b> — add students (or paste from Excel), enter marks</td><td>${nStu? '<span class="badge green">'+nStu+' students</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>7</td><td><b>Attainment</b> — CO/PO attainment computed automatically (AUST Direct Measurement method)</td><td>${marksEntered? '<span class="badge green">available</span>':'<span class="badge grey">needs marks</span>'}</td></tr>
+      <tr><td>8</td><td><b>CQI</b> — BAETE 3.8 &amp; 5.4.3 evidence: narratives, loop status, stakeholder feedback register, Annexure H checklist</td><td>${(c.aust&&c.aust.cqi&&(c.aust.cqi.complex||c.aust.cqi.effective))? '<span class="badge green">in progress</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>9</td><td><b>Accreditation Documents</b> — Course Outline, Course Specifications, Final Exam Vetting Form, Direct CO-PO Calculations, CO Exit Survey, Course Report &amp; CQI Report — auto-filled and printable</td><td><span class="badge blue">any time</span></td></tr>
     </tbody></table>
     <div class="btn-row">
       <button class="btn secondary" onclick="duplicateForNewSemester()">⟳ Duplicate for New Semester (CQI)</button>
@@ -668,6 +671,48 @@ function primeLevelName(co){
   if(d==="Affective")   return co.bloomA || "";
   if(d==="Psychomotor") return co.bloomP || "";
   return co.bloom || "";
+}
+/* ---- Assessment-item Bloom level (constructive alignment guard) ---- */
+function coLevelInfo(co){
+  const d = (co && co.btDomain) || "Cognitive";
+  if(d==="Affective")   return { list: BLOOM_A, idx: BLOOM_A.indexOf(co.bloomA), domain: d, letter: "A" };
+  if(d==="Psychomotor") return { list: BLOOM_P, idx: BLOOM_P.indexOf(co.bloomP), domain: d, letter: "P" };
+  return { list: BLOOMS, idx: BLOOMS.indexOf(co? co.bloom : ""), domain: d, letter: "C" };
+}
+function levelTagOf(info, name){
+  const idx = info.list.indexOf(name);
+  if(idx<0) return "";
+  return info.domain==="Cognitive"? "C"+(idx+1) : lvlTag(name);
+}
+function itemLevelTag(it, co){
+  if(!co) return "";
+  const info = coLevelInfo(co);
+  const t = levelTagOf(info, it.level);
+  return t || primeTag(co);   // unset item level falls back to the CO's level
+}
+function itemExceedsCO(it, co){
+  if(!co) return false;
+  const info = coLevelInfo(co);
+  const iIdx = info.list.indexOf(it.level);
+  return iIdx>=0 && info.idx>=0 && iIdx>info.idx;
+}
+function setItemLevel(aid, iid, val){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===aid); if(!a) return;
+  const it = a.items.find(x=>x.id===iid); if(!it) return;
+  const co = c.cos.find(x=>x.id===it.coId);
+  if(co){
+    const info = coLevelInfo(co);
+    const newIdx = info.list.indexOf(val);
+    if(newIdx>=0 && info.idx>=0 && newIdx>info.idx){
+      const itTag = levelTagOf(info, val), coTag = primeTag(co);
+      if(!confirm(`Warning — constructive alignment: this item's Bloom level (${itTag} — ${val}) EXCEEDS the level declared for ${coLabel(c, co.id)} (${coTag} — ${primeLevelName(co)}).\n\nAssessing above the outcome's level means examining an ability the CO does not promise. Consider raising the CO's level in "COs & CO–PO Mapping" instead.\n\nProceed anyway?`)){
+        renderAssess(); return;
+      }
+    }
+  }
+  it.level = val;
+  save(); renderAssess();
 }
 function updateCODomain(id, val){
   const c = activeCourse(); if(!c) return;
@@ -960,7 +1005,7 @@ function adoptTLA(coId, name){
   const co = c.cos.find(x=>x.id===coId); if(!co) return;
   if((co.delivery||"").toLowerCase().includes(name.toLowerCase())){ toast("Already adopted"); return; }
   co.delivery = co.delivery? co.delivery + ", " + name : name;
-  save(); renderTLA(); toast("Added to CO delivery methods");
+  save(); renderTab(window._currentTab || "tla"); toast("Added to CO delivery methods");
 }
 function addCustomTLA(){
   const n = document.getElementById("tla_n").value.trim();
@@ -989,6 +1034,155 @@ function pullCQI(){
   toast(n? n+" CQI action(s) pulled from the Course Report" : "Nothing new to pull (rows already filled or Report 6.1 empty)");
 }
 
+/* ============ CA — Constructive Alignment (Biggs) ============ */
+function caColor(st){ return st==="green"? "#1e8e3e" : st==="amber"? "#e67e22" : st==="red"? "#c0392b" : "#9ab8b2"; }
+function caWord(st){ return st==="green"? "Aligned" : st==="amber"? "Partially aligned" : st==="red"? "Not aligned" : "No data"; }
+function caWorst(list){
+  if(!list.length) return "grey";
+  if(list.includes("red")) return "red";
+  if(list.includes("amber")) return "amber";
+  return "green";
+}
+function caCoData(c){
+  const items = allItems(c);
+  const totalMax = items.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
+  const poolByName = {};
+  tlaPool().forEach(a=>{ poolByName[a.n.toLowerCase()] = a; });
+  return c.cos.map((co,i)=>{
+    const info = coLevelInfo(co);
+    const del = deliveryList(co);
+    const verified = [], mismatched = [], unverified = [];
+    del.forEach(n=>{
+      const a = poolByName[n.toLowerCase()];
+      if(!a){ unverified.push(n); return; }
+      let ok;
+      if(info.domain==="Cognitive") ok = info.idx>=0 && a.b.includes(info.idx+1);
+      else ok = (a.dom||"").includes(info.letter);
+      (ok? verified : mismatched).push(n);
+    });
+    const tlaStatus = del.length===0? "red" : (verified.length? "green" : "amber");
+    const coItems = items.filter(it=>it.coId===co.id);
+    const coMax = coItems.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
+    const exceeds = coItems.filter(it=>itemExceedsCO(it, co));
+    const allOptional = coItems.length>0 && coItems.every(it=>it.mandatory===false);
+    const assessStatus = coItems.length===0? "red" : ((exceeds.length || allOptional)? "amber" : "green");
+    const base = (tlaStatus==="green" && assessStatus==="green")? "green"
+               : (tlaStatus==="red" || assessStatus==="red")? "red" : "amber";
+    const share = totalMax>0? coMax/totalMax*100 : 0;
+    return { co, i, label:"CO"+(i+1), info, del, verified, mismatched, unverified,
+             tlaStatus, coItems, coMax, share, exceeds, allOptional, assessStatus, base };
+  });
+}
+function caSuggestions(c, d){
+  const s = [];
+  if(!d.coItems.length)
+    s.push({t:"No assessment item measures this CO — add at least one item in the Assessments tab."});
+  if(d.exceeds.length)
+    s.push({t:"Item(s) exceed the CO's declared level: "+d.exceeds.map(it=>`${it.aName} ${it.label} (${itemLevelTag(it,d.co)})`).join(", ")+" — reword/split the item(s), or raise the CO's level if the higher demand is intended."});
+  if(d.allOptional)
+    s.push({t:"This CO is measured only through optional questions — some students can legally avoid it entirely. Add a mandatory item, or offer the choice within this CO."});
+  if(c.cos.length>1 && d.coItems.length && d.share<10)
+    s.push({t:`Possibly under-assessed: this CO carries only ${d.share.toFixed(0)}% of the total marks.`});
+  if(d.info.domain==="Cognitive" && d.info.idx>=4 && d.coItems.length){
+    const types = [...new Set(c.assessments.filter(a=>a.items.some(it=>it.coId===d.co.id)).map(a=>a.type))];
+    if(types.every(t=>t==="Quiz"||t==="Class Test"))
+      s.push({t:`A ${BLOOMS[d.info.idx]}-level CO assessed only through ${types.join("/")} — consider a project, design task, open-ended assignment or presentation item.`});
+  }
+  if(d.tlaStatus!=="green"){
+    const cqi = cqiTexts(c), bad = ineffectiveTLA(c);
+    const recs = tlaPool().map(a=>({a, sc: tlaScore(c, a, d.co, cqi, bad)}))
+      .filter(x=>x.sc>-50).sort((x,y)=>y.sc-x.sc).slice(0,3).map(x=>x.a.n);
+    s.push({t: d.del.length? "No adopted activity verifiably matches this CO's domain/level — suggested additions:" : "No T&L activity adopted for this CO — suggested:", recs});
+  }
+  if(d.unverified.length)
+    s.push({t:"Unverified (free-text) activities — level fit cannot be checked: "+d.unverified.join(", ")+". Matching them to Activity-Pool entries enables verification and CQI tracking."});
+  return s;
+}
+function caDbl(color){
+  return `<svg width="54" height="20" viewBox="0 0 54 20" style="flex-shrink:0">
+    <line x1="10" y1="10" x2="44" y2="10" stroke="${color}" stroke-width="4"/>
+    <polygon points="10,4 10,16 1,10" fill="${color}"/>
+    <polygon points="44,4 44,16 53,10" fill="${color}"/>
+  </svg>`;
+}
+function caTriangle(leftSt, rightSt, baseSt){
+  const lc = caColor(leftSt), rc = caColor(rightSt), bc = caColor(baseSt);
+  return `<svg viewBox="0 0 560 330" style="max-width:560px;width:100%;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="280,85 155,250 405,250" fill="#FFE94D" stroke="#E3C900" stroke-width="1"/>
+    <text x="280" y="192" text-anchor="middle" font-size="40" font-style="italic" font-weight="700" fill="#B22222"><title>KSA = Knowledge, Skills, Attitudes</title>KSA</text>
+    <text x="280" y="40" text-anchor="middle" font-size="21" font-weight="700" fill="#0A4A40">Course Outcomes</text>
+    <text x="88" y="292" text-anchor="middle" font-size="18" font-weight="700" fill="#0A4A40">T&amp;L Activities</text>
+    <text x="472" y="292" text-anchor="middle" font-size="18" font-weight="700" fill="#0A4A40">Assessments</text>
+    <line x1="130" y1="245" x2="235" y2="95" stroke="${lc}" stroke-width="9"/>
+    <polygon points="245,81 222,88 238,105" fill="${lc}"/>
+    <polygon points="120,259 143,252 127,235" fill="${lc}"/>
+    <text x="145" y="155" text-anchor="middle" font-size="13" font-weight="700" fill="${lc}" transform="rotate(-55 145 155)">${caWord(leftSt)}</text>
+    <line x1="430" y1="245" x2="325" y2="95" stroke="${rc}" stroke-width="9"/>
+    <polygon points="315,81 338,88 322,105" fill="${rc}"/>
+    <polygon points="440,259 417,252 433,235" fill="${rc}"/>
+    <text x="418" y="155" text-anchor="middle" font-size="13" font-weight="700" fill="${rc}" transform="rotate(55 418 155)">${caWord(rightSt)}</text>
+    <line x1="185" y1="285" x2="375" y2="285" stroke="${bc}" stroke-width="9"/>
+    <polygon points="171,285 190,276 190,294" fill="${bc}"/>
+    <polygon points="389,285 370,276 370,294" fill="${bc}"/>
+    <text x="280" y="315" text-anchor="middle" font-size="13" font-weight="700" fill="${bc}">${caWord(baseSt)}</text>
+  </svg>`;
+}
+function renderCA(){
+  const el = document.getElementById("tab-ca");
+  const c = activeCourse();
+  if(!c){ el.innerHTML = `<div class="empty">No course selected.</div>`; return; }
+  ensureAust(c);
+  if(!c.cos.length){
+    el.innerHTML = `<div class="card"><h2>Constructive Alignment (CA)</h2>
+      <p class="hint">Define your Course Outcomes first (COs &amp; CO–PO Mapping tab) — CA then visualises how your COs, T&amp;L activities and assessments align (Biggs, 2003).</p></div>`;
+    return;
+  }
+  const data = caCoData(c);
+  const leftAll = caWorst(data.map(d=>d.tlaStatus));
+  const rightAll = caWorst(data.map(d=>d.assessStatus));
+  const baseAll = caWorst(data.map(d=>d.base));
+  const cards = data.map(d=>{
+    const sugg = caSuggestions(c, d);
+    const tlaChips = d.del.length? d.del.map(n=>{
+        const cls = d.verified.includes(n)? "green" : d.unverified.includes(n)? "grey" : "amber";
+        const ti = d.verified.includes(n)? "Verified: suits this CO's domain/level" : d.unverified.includes(n)? "Free-text activity — level fit not verifiable" : "Pool activity, but does not match this CO's domain/level";
+        return `<span class="badge ${cls}" title="${ti}" style="margin:2px 3px 2px 0">${esc(n)}</span>`;
+      }).join("") : '<span class="badge red">none adopted</span>';
+    const itemChips = d.coItems.length? d.coItems.map(it=>{
+        const ex = itemExceedsCO(it, d.co);
+        return `<span class="badge ${ex? "amber":"blue"}" title="${esc(it.aName)} · ${it.max} marks · ${itemLevelTag(it,d.co)}${it.mandatory===false? " · optional":""}${ex? " · exceeds CO level":""}" style="margin:2px 3px 2px 0">${esc(it.label)}${it.mandatory===false?"†":""}${ex?"↑":""}</span>`;
+      }).join("") + `<div style="font-size:11.5px;color:var(--muted);margin-top:4px">${d.coMax} marks · ${d.share.toFixed(0)}% of total</div>`
+      : '<span class="badge red">no items</span>';
+    return `
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 60px 1.3fr 60px 1fr;gap:10px;align-items:center">
+        <div><p style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px">T&amp;L ACTIVITIES</p>${tlaChips}</div>
+        <div style="text-align:center">${caDbl(caColor(d.tlaStatus))}</div>
+        <div style="border:2px solid ${caColor(caWorst([d.tlaStatus,d.assessStatus]))};border-radius:10px;padding:10px;text-align:center">
+          <b>${d.label}</b> <span class="badge blue">${esc(d.info.domain)}${primeTag(d.co)? " · "+primeTag(d.co):""}</span>
+          <p style="font-size:12.5px;margin-top:4px">${esc(d.co.statement)||"<i>(no statement)</i>"}</p>
+        </div>
+        <div style="text-align:center">${caDbl(caColor(d.assessStatus))}</div>
+        <div><p style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px">ASSESSMENT ITEMS</p>${itemChips}</div>
+      </div>
+      ${sugg.length? `<div style="border-top:1px dashed var(--border);margin-top:12px;padding-top:10px">
+        <p style="font-size:12.5px;font-weight:700;color:var(--primary-dark);margin-bottom:6px">Suggestions for proper CA</p>
+        ${sugg.map(x=>`<p style="font-size:12.5px;margin:4px 0">• ${esc(x.t)}${x.recs? "<br>"+x.recs.map(n=>`<span class="badge blue" style="margin:3px 4px 0 0">${esc(n)}</span> <button class="btn small" style="padding:2px 8px;font-size:11.5px" onclick="adoptTLA('${d.co.id}',${JSON.stringify(n).replace(/"/g,"&quot;")})">+ Adopt</button>`).join(" &nbsp;"):""}</p>`).join("")}
+      </div>` : `<p style="font-size:12.5px;color:var(--ok);margin-top:10px">✓ Constructively aligned — outcomes, activities and assessments agree.</p>`}
+    </div>`;
+  }).join("");
+  el.innerHTML = `
+  <div class="card">
+    <h2>Constructive Alignment (CA)</h2>
+    <p class="hint">"In constructive alignment, we start with the outcomes we intend students to learn, and align teaching and assessment to those outcomes" (Biggs). The triangle below is live: each edge is colored by the actual state of this course — green when every CO is aligned on that edge, amber when partially, red when gaps exist. Details and suggestions per CO follow.</p>
+    ${caTriangle(leftAll, rightAll, baseAll)}
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px">
+      KSA = Knowledge, Skills, Attitudes · <span class="badge green">Aligned</span> <span class="badge amber">Partially aligned</span> <span class="badge red">Not aligned</span> · Activity chips: <span class="badge green">verified fit</span> <span class="badge amber">level mismatch</span> <span class="badge grey">unverified free-text</span> · Items: † optional, ↑ exceeds CO level
+    </p>
+  </div>
+  ${cards}`;
+}
+
 /* ============ Assessments ============ */
 function renderAssess(){
   const el = document.getElementById("tab-assess");
@@ -1007,6 +1201,16 @@ function renderAssess(){
         <select onchange="updateItem('${a.id}','${it.id}','coId',this.value)">
           <option value="">— CO —</option>${coOptions(it.coId)}
         </select>
+        ${(()=>{
+          const co = c.cos.find(x=>x.id===it.coId);
+          if(!co) return `<span style="font-size:11.5px;color:var(--muted)">—</span>`;
+          const info = coLevelInfo(co);
+          const exceeds = itemExceedsCO(it, co);
+          return `<span style="display:flex;align-items:center;gap:4px">
+            <select title="This item's Bloom level (defaults to the CO's level; a warning appears if set above it)" onchange="setItemLevel('${a.id}','${it.id}',this.value)" style="flex:1;min-width:0;padding:6px 4px;border:1.5px solid ${exceeds? "var(--warn)":"var(--border)"};border-radius:6px;font-family:inherit;font-size:12px">
+              ${info.list.map(b=>`<option ${it.level===b?"selected":""}>${b}</option>`).join("")}
+            </select>${exceeds? '<span class="badge amber" title="Exceeds the CO\'s declared Bloom level — constructive alignment issue">↑</span>':''}</span>`;
+        })()}
         <label style="font-size:12px;white-space:nowrap;color:var(--muted)" title="Mandatory: a blank mark counts as 0. Optional (unticked): a blank mark means the student legitimately skipped it and is not penalized."><input type="checkbox" ${it.mandatory!==false?"checked":""} onchange="updateItem('${a.id}','${it.id}','mandatory',this.checked)"> Mandatory</label>
         <button class="icon-btn" title="Delete item" onclick="deleteItem('${a.id}','${it.id}')">✕</button>
       </div>`).join("");
@@ -1044,7 +1248,7 @@ function renderAssess(){
         </div>`;
       })()}
       <h3>Items / Questions (each mapped to a CO)</h3>
-      <div class="item-row" style="color:var(--muted);font-size:12px;font-weight:600"><span>Label</span><span>Max marks</span><span>CO</span><span>Mandatory?</span><span></span></div>
+      <div class="item-row" style="color:var(--muted);font-size:12px;font-weight:600"><span>Label</span><span>Max marks</span><span>CO</span><span>Level</span><span>Mandatory?</span><span></span></div>
       ${rows || '<p class="hint">No items yet.</p>'}
       <div class="btn-row"><button class="btn secondary small" onclick="addItem('${a.id}')">+ Add Item</button></div>
     </div>`;
@@ -1088,7 +1292,8 @@ function deleteAssessment(id){
 function addItem(aid){
   const c = activeCourse(); if(!c) return;
   const a = c.assessments.find(x=>x.id===aid); if(!a) return;
-  a.items.push({ id: uid(), label:"Q"+(a.items.length+1), max:10, coId: c.cos[0]?.id || "" });
+  const co0 = c.cos[0];
+  a.items.push({ id: uid(), label:"Q"+(a.items.length+1), max:10, coId: co0? co0.id : "", level: co0? primeLevelName(co0) : "", mandatory:true, group:"" });
   save(); renderAssess();
 }
 function updateItem(aid, iid, field, val){
@@ -1096,6 +1301,12 @@ function updateItem(aid, iid, field, val){
   const a = c.assessments.find(x=>x.id===aid); if(!a) return;
   const it = a.items.find(x=>x.id===iid); if(!it) return;
   it[field] = field==="max" ? (parseFloat(val)||0) : (val.trim ? val.trim() : val);
+  if(field==="coId"){
+    const co = c.cos.find(x=>x.id===it.coId);
+    it.level = co? primeLevelName(co) : "";   // level re-syncs to the new CO's declared level
+    save(); renderAssess(); toast("Saved — item level re-synced to the CO's level");
+    return;
+  }
   save(); toast("Saved");
 }
 function deleteItem(aid, iid){
@@ -1976,7 +2187,7 @@ function lowAttainmentCard(c){
         </div>
       </div>
       <p style="font-size:13px;margin-top:10px"><b>Adopted T&amp;L activities for this CO:</b> ${esc(d.co.delivery)||'<span class="badge grey">none</span>'}
-        <button class="btn secondary small no-print" onclick="showTab('tla')" style="margin-left:8px">Open T&amp;L Activities</button></p>
+        <button class="btn secondary small no-print" onclick="showTab('tla')" style="margin-left:8px">Open T&amp;L</button></p>
       <p style="font-size:13px;margin-top:8px"><b>(a) Analysis w.r.t. Teaching-Learning activities:</b></p>
       ${dta('cqi.lowAnalysis.'+d.co.id+'.tla', an.tla||'', 2, 'e.g., The flipped-classroom videos for this topic were too long; students below the threshold reported not completing pre-class preparation — shorter videos with embedded quizzes planned…')}
       <p style="font-size:13px;margin-top:8px"><b>(b) Analysis w.r.t. Assessment techniques:</b></p>
@@ -2149,9 +2360,9 @@ function docSpec(c){
       <tr><td style="text-align:center"><b>CO${i+1}</b></td>
         <td>${esc(it.aName)} — ${esc(it.label)}${it.mandatory===false? " <i>(optional"+(it.group? ", group "+esc(it.group):"")+")</i>":""}</td>
         <td style="text-align:center">${totalMax? ((parseFloat(it.max)||0)/totalMax*100).toFixed(1):"—"}%</td>
-        <td style="text-align:center">${cLevel(co)}</td>
-        <td style="text-align:center">${lvlTag(co.bloomA)}</td>
-        <td style="text-align:center">${lvlTag(co.bloomP)}</td></tr>`);
+        <td style="text-align:center">${(co.btDomain||"Cognitive")==="Cognitive"? itemLevelTag(it, co) : cLevel(co)}</td>
+        <td style="text-align:center">${(co.btDomain||"Cognitive")==="Affective"? itemLevelTag(it, co) : lvlTag(co.bloomA)}</td>
+        <td style="text-align:center">${(co.btDomain||"Cognitive")==="Psychomotor"? itemLevelTag(it, co) : lvlTag(co.bloomP)}</td></tr>`);
   }).join("");
   const cqiLabels = [["A. CQI Loop for COs","Direct Measurement"],["A. CQI Loop for COs","Indirect Measurement from Surveys (if any)"],["B. CQI Loop for POs","Direct Measurement"],["B. CQI Loop for POs","Indirect Measurement from Surveys (if any)"],["C. CQI Loop for PEOs","Indirect Measurement from Surveys (if any)"]];
   const cqiRows = cqiLabels.map((L,i)=>`
@@ -2214,8 +2425,10 @@ function docVet(c){
   const vetSub = finals.map(()=>`<th style="width:70px;text-align:center">Question</th><th style="width:45px;text-align:center">Level</th>`).join("");
   const vetRows = c.cos.map((co,i)=>{
     const cells = finals.map(a=>{
-      const qs = a.items.filter(it=>it.coId===co.id).map(it=>esc(it.label)+(it.mandatory===false?"†":"")).join(", ");
-      return `<td style="text-align:center">${qs||""}</td><td style="text-align:center">${qs? primeTag(co):""}</td>`;
+      const its = a.items.filter(it=>it.coId===co.id);
+      const qs = its.map(it=>esc(it.label)+(it.mandatory===false?"†":"")).join(", ");
+      const lv = [...new Set(its.map(it=>itemLevelTag(it, co)).filter(Boolean))].join(", ");
+      return `<td style="text-align:center">${qs||""}</td><td style="text-align:center">${qs? (lv||primeTag(co)):""}</td>`;
     }).join("");
     return `<tr><td style="text-align:center"><b>CO${i+1}</b></td><td style="text-align:center" class="cbx">□</td>${cells}<td></td><td></td></tr>`;
   }).join("");
