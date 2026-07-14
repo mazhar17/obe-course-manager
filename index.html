@@ -146,7 +146,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.16</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.17</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -182,14 +182,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.16</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.17</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.16";
+const APP_VERSION = "v1.17";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -814,7 +814,8 @@ function renderTLA(){
     <div class="card">
       <h2>CO${i+1} <span class="badge blue">${esc(co.btDomain||"Cognitive")}${lvlName? " · "+esc(lvlName):""}${tag && (co.btDomain||"Cognitive")==="Cognitive"? " ("+tag+")":""}</span></h2>
       <p class="hint">${esc(co.statement)||"<i>(no statement)</i>"}</p>
-      <p style="font-size:13px"><b>Current delivery methods:</b> ${esc(co.delivery)||'<span class="badge grey">none adopted yet</span>'}</p>
+      <p style="font-size:13px;margin-bottom:2px"><b>Current delivery methods</b> <span style="color:var(--muted);font-size:11.5px">(click × to remove)</span>:</p>
+      <p style="font-size:13px">${deliveryList(co).map((n,k)=>`<span class="badge blue" style="display:inline-flex;align-items:center;gap:6px;margin:2px 4px 2px 0">${esc(n)}<button onclick="removeDelivery('${co.id}',${k})" title="Remove this activity" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:13px;line-height:1">×</button></span>`).join("")||'<span class="badge grey">none adopted yet</span>'}</p>
       <h3>Recommended activities</h3>
       <div class="tbl-wrap"><table class="tbl">
         <thead><tr><th style="width:230px">Activity</th><th>Why / How</th><th style="width:120px">Suits</th><th style="width:90px"></th></tr></thead>
@@ -906,6 +907,19 @@ function addOwnTLA(coId){
   }
   save(); renderTLA();
   toast(poolAlso && poolAlso.checked? "Activity added to the CO and the pool" : "Activity added to this CO");
+}
+function deliveryList(co){
+  return (co.delivery||"").split(",").map(s=>s.trim()).filter(Boolean);
+}
+function removeDelivery(coId, idx){
+  const c = activeCourse(); if(!c) return;
+  const co = c.cos.find(x=>x.id===coId); if(!co) return;
+  const list = deliveryList(co);
+  if(idx<0 || idx>=list.length) return;
+  const removed = list.splice(idx,1)[0];
+  co.delivery = list.join(", ");
+  save(); renderTLA();
+  toast("Removed “"+removed+"” — it can be re-adopted any time");
 }
 function adoptTLA(coId, name){
   const c = activeCourse(); if(!c) return;

@@ -6,6 +6,14 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.17 — July 14, 2026 (minor)
+  - T&L Activities: adopted activities can now be deselected. Each CO
+    card shows its delivery methods as removable chips (click × to
+    remove); the recommendation list's "adopted" badge reverts to
+    "+ Adopt" immediately, so choices are fully reversible. Removal does
+    not touch the effectiveness history (Course Report 3.2) or CQI
+    records.
+
 v1.16 — July 14, 2026 (minor)
   - Ctrl+S / Cmd+S now saves the current session at any moment: commits
     the field being edited, flushes the pending file write immediately

@@ -1,4 +1,4 @@
-# OBE Course Manager — v1.16 (First release: July 13, 2026)
+# OBE Course Manager — v1.17 (First release: July 13, 2026)
 
 > **Deployment note:** upload `aust_logo.svg` alongside `index.html` — the official AUST logo shown on the Accreditation Documents. If the file is absent, the documents simply render without the logo.
 
