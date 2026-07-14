@@ -1,4 +1,4 @@
-# OBE Course Manager — v1.4 (First release: July 13, 2026)
+# OBE Course Manager — v1.6 (First release: July 13, 2026)
 
 See `change_log.txt` for the version history.
 

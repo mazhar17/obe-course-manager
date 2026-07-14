@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OBE Course Manager</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230F6B5C'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23E6F2F0' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='11' fill='%23C98A1B'/%3E%3Cpath d='M26 32l4.5 4.5L38.5 27.5' stroke='%23FFFFFF' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
@@ -114,9 +115,29 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
 <body>
 
 <header class="app-header">
-  <div>
-    <h1>OBE Course Manager</h1>
-    <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.4</span></span>
+  <div style="display:flex;align-items:center;gap:14px">
+    <svg width="46" height="46" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.35)" aria-hidden="true">
+      <defs>
+        <linearGradient id="icBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15806E"/><stop offset="1" stop-color="#083A32"/></linearGradient>
+        <linearGradient id="icAm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3A72F"/><stop offset="1" stop-color="#B2761A"/></linearGradient>
+        <clipPath id="icSq"><rect width="256" height="256" rx="58"/></clipPath>
+      </defs>
+      <rect width="256" height="256" rx="58" fill="url(#icBg)"/>
+      <ellipse cx="128" cy="34" rx="160" ry="78" fill="#FFFFFF" opacity="0.07" clip-path="url(#icSq)"/>
+      <path d="M44.9,80 A96,96 0 1 1 176,44.9" fill="none" stroke="#C98A1B" stroke-width="10" stroke-linecap="round"/>
+      <polygon points="188,52 172.5,51 179.5,38.8" fill="#C98A1B"/>
+      <circle cx="128" cy="128" r="70" fill="none" stroke="#0A4A40" stroke-width="18" opacity="0.35"/>
+      <circle cx="128" cy="128" r="70" fill="none" stroke="#E6F2F0" stroke-width="14"/>
+      <circle cx="128" cy="128" r="46" fill="none" stroke="#E6F2F0" stroke-width="5" opacity="0.35"/>
+      <circle cx="128" cy="133" r="31" fill="#052A24" opacity="0.35"/>
+      <circle cx="128" cy="128" r="31" fill="url(#icAm)"/>
+      <circle cx="128" cy="128" r="31" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.25"/>
+      <path d="M111,128 l12,12 l22,-26" stroke="#FFFFFF" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <h1>OBE Course Manager</h1>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.6</span></span>
+    </div>
   </div>
   <div class="header-right">
     <span id="fileChip"></span>
@@ -151,14 +172,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.4</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.6</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.4";
+const APP_VERSION = "v1.6";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",

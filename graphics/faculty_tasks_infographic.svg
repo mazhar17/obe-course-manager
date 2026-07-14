@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" font-family="Segoe UI, Calibri, Arial, sans-serif">
+  <rect width="1600" height="900" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="800" y="54" text-anchor="middle" font-size="36" font-weight="700" fill="#0A4A40">10 OBE-Related Tasks for the Faculty Members at AUST</text>
+  <text x="800" y="90" text-anchor="middle" font-size="18" font-style="italic" fill="#1F2D3D">The framework behind the Accreditation Documents · BAETE / Washington Accord</text>
+
+  <!-- ===== PHASE HEADERS (4 columns: x = 40, 426, 812, 1198; w = 360) ===== -->
+  <g>
+    <rect x="40" y="118" width="360" height="92" rx="14" fill="#0F6B5C"/>
+    <rect x="56" y="132" width="92" height="26" rx="13" fill="#C98A1B"/>
+    <text x="102" y="150" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">PHASE 1</text>
+    <text x="220" y="182" text-anchor="middle" font-size="21" font-weight="700" fill="#FFFFFF">Before the Class Sessions</text>
+  </g>
+  <g>
+    <rect x="426" y="118" width="360" height="92" rx="14" fill="#0F6B5C"/>
+    <rect x="442" y="132" width="92" height="26" rx="13" fill="#C98A1B"/>
+    <text x="488" y="150" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">PHASE 2</text>
+    <text x="606" y="176" text-anchor="middle" font-size="21" font-weight="700" fill="#FFFFFF">During the Class Sessions</text>
+    <text x="606" y="198" text-anchor="middle" font-size="16" fill="#CFE3DF">(14 Weeks)</text>
+  </g>
+  <g>
+    <rect x="812" y="118" width="360" height="92" rx="14" fill="#0F6B5C"/>
+    <rect x="828" y="132" width="92" height="26" rx="13" fill="#C98A1B"/>
+    <text x="874" y="150" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">PHASE 3</text>
+    <text x="992" y="182" text-anchor="middle" font-size="21" font-weight="700" fill="#FFFFFF">After the Class Sessions</text>
+  </g>
+  <g>
+    <rect x="1198" y="118" width="360" height="92" rx="14" fill="#0F6B5C"/>
+    <rect x="1214" y="132" width="92" height="26" rx="13" fill="#C98A1B"/>
+    <text x="1260" y="150" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">PHASE 4</text>
+    <text x="1378" y="176" text-anchor="middle" font-size="21" font-weight="700" fill="#FFFFFF">After Submission of</text>
+    <text x="1378" y="198" text-anchor="middle" font-size="21" font-weight="700" fill="#FFFFFF">the Final Results</text>
+  </g>
+
+  <!-- Phase connectors -->
+  <g stroke="#C98A1B" stroke-width="6" stroke-linecap="round">
+    <line x1="402" y1="164" x2="412" y2="164"/>
+    <line x1="788" y1="164" x2="798" y2="164"/>
+    <line x1="1174" y1="164" x2="1184" y2="164"/>
+  </g>
+  <g fill="#C98A1B">
+    <polygon points="412,154 412,174 425,164"/>
+    <polygon points="798,154 798,174 811,164"/>
+    <polygon points="1184,154 1184,174 1197,164"/>
+  </g>
+
+  <!-- ===== TASK CARDS ===== -->
+  <!-- helper visual: white card, mint side bar, teal number circle, optional amber check seal -->
+
+  <!-- Phase 1: tasks 1,2,3 at y = 236, 416, 596 ; h=160, gap 20 -->
+  <g>
+    <rect x="40" y="236" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="40" y="236" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="82" cy="278" r="18" fill="#0A4A40"/><text x="82" y="285" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">1</text>
+    <circle cx="372" cy="262" r="14" fill="#C98A1B"/><path d="M365,262 l5,5 l9,-10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="114" y="284" font-size="17" fill="#1F2D3D">Submit the</text>
+    <text x="114" y="312" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Course Outline”</text>
+    <text x="114" y="372" font-size="13" fill="#6B7A8D">to the OBE Course Coordinator</text>
+  </g>
+  <g>
+    <rect x="40" y="416" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="40" y="416" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="82" cy="458" r="18" fill="#0A4A40"/><text x="82" y="465" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">2</text>
+    <circle cx="372" cy="442" r="14" fill="#C98A1B"/><path d="M365,442 l5,5 l9,-10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="114" y="464" font-size="17" fill="#1F2D3D">Submit the</text>
+    <text x="114" y="492" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Course Specifications”</text>
+    <text x="114" y="552" font-size="13" fill="#6B7A8D">before the semester begins</text>
+  </g>
+  <g>
+    <rect x="40" y="596" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="40" y="596" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="82" cy="638" r="18" fill="#0A4A40"/><text x="82" y="645" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">3</text>
+    <text x="114" y="644" font-size="17" fill="#1F2D3D">Prepare the</text>
+    <text x="114" y="672" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Routine”</text>
+    <text x="114" y="700" font-size="17" fill="#1F2D3D">with Consultation Hours</text>
+    <text x="114" y="726" font-size="17" fill="#1F2D3D">and post it on the door</text>
+  </g>
+
+  <!-- Phase 2: tasks 4,5,6 -->
+  <g>
+    <rect x="426" y="236" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="426" y="236" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="468" cy="278" r="18" fill="#0A4A40"/><text x="468" y="285" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">4</text>
+    <text x="500" y="284" font-size="17" fill="#1F2D3D">Implement the</text>
+    <text x="500" y="312" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Course Specifications”</text>
+    <text x="500" y="372" font-size="13" fill="#6B7A8D">constructive alignment in action</text>
+  </g>
+  <g>
+    <rect x="426" y="416" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="426" y="416" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="468" cy="458" r="18" fill="#0A4A40"/><text x="468" y="465" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">5</text>
+    <circle cx="758" cy="442" r="14" fill="#C98A1B"/><path d="M751,442 l5,5 l9,-10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="500" y="464" font-size="17" fill="#1F2D3D">Record the</text>
+    <text x="500" y="492" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Actual Contact Hours”</text>
+    <text x="500" y="520" font-size="17" fill="#1F2D3D">in the Course Report</text>
+  </g>
+  <g>
+    <rect x="426" y="596" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="426" y="596" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="468" cy="638" r="18" fill="#0A4A40"/><text x="468" y="645" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">6</text>
+    <text x="500" y="644" font-size="17" fill="#1F2D3D">Maintain a</text>
+    <text x="500" y="672" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Course File”</text>
+    <text x="500" y="700" font-size="17" fill="#1F2D3D">containing the items listed</text>
+    <text x="500" y="726" font-size="17" fill="#1F2D3D">in the prescribed Checklist</text>
+  </g>
+
+  <!-- Phase 3: task 7 (centred) -->
+  <g>
+    <rect x="812" y="416" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="812" y="416" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="854" cy="458" r="18" fill="#0A4A40"/><text x="854" y="465" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">7</text>
+    <circle cx="1144" cy="442" r="14" fill="#C98A1B"/><path d="M1137,442 l5,5 l9,-10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="886" y="464" font-size="17" fill="#1F2D3D">Submit the</text>
+    <text x="886" y="492" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Final Exam</text>
+    <text x="886" y="518" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">Vetting Form”</text>
+    <text x="886" y="552" font-size="13" fill="#6B7A8D">moderation by two vetters</text>
+  </g>
+
+  <!-- Phase 4: tasks 8,9,10 -->
+  <g>
+    <rect x="1198" y="236" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="1198" y="236" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="1240" cy="278" r="18" fill="#0A4A40"/><text x="1240" y="285" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">8</text>
+    <circle cx="1530" cy="262" r="14" fill="#C98A1B"/><path d="M1523,262 l5,5 l9,-10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="1272" y="284" font-size="17" fill="#1F2D3D">Submit the</text>
+    <text x="1272" y="312" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Direct Measurements</text>
+    <text x="1272" y="338" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">of CO-PO”</text>
+  </g>
+  <g>
+    <rect x="1198" y="416" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="1198" y="416" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="1240" cy="458" r="18" fill="#0A4A40"/><text x="1240" y="465" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">9</text>
+    <circle cx="1530" cy="442" r="14" fill="#C98A1B"/><path d="M1523,442 l5,5 l9,-10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="1272" y="464" font-size="17" fill="#1F2D3D">Submit the</text>
+    <text x="1272" y="492" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Course Report”</text>
+    <text x="1272" y="552" font-size="13" fill="#6B7A8D">with CQI action plans</text>
+  </g>
+  <g>
+    <rect x="1198" y="596" width="360" height="160" rx="12" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2"/>
+    <rect x="1198" y="596" width="10" height="160" rx="5" fill="#E6F2F0"/>
+    <circle cx="1240" cy="638" r="18" fill="#0A4A40"/><text x="1240" y="645" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">10</text>
+    <text x="1272" y="644" font-size="17" fill="#1F2D3D">Submit the</text>
+    <text x="1272" y="672" font-size="18" font-weight="700" font-style="italic" fill="#0F6B5C">“Course File”</text>
+  </g>
+
+  <!-- ===== LEGEND + FOOTER ===== -->
+  <g>
+    <rect x="40" y="786" width="1518" height="52" rx="14" fill="#E6F2F0"/>
+    <circle cx="80" cy="812" r="14" fill="#C98A1B"/><path d="M73,812 l5,5 l9,-10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="104" y="818" font-size="16" fill="#0A4A40">= this document/record is produced automatically by the OBE Course Manager  ·  mazhar17.github.io/obe-course-manager</text>
+  </g>
+  <text x="800" y="872" text-anchor="middle" font-size="14" fill="#6B7A8D">Framework: Prof. Mazharul Islam, AUST (2018) · Infographic © 2026 Prof. Mazharul Islam · CC BY 4.0</text>
+</svg>

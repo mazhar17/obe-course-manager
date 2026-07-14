@@ -6,6 +6,19 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.6 — July 14, 2026 (minor)
+  - Faculty User Manual: app icon added to the cover page above the title.
+  - Added the app icon (target + checkmark + CQI orbit arrow) inline
+    beside the "OBE Course Manager" title in the header — a brand
+    lockup embedded as inline SVG, keeping the app a single file.
+  - Standalone icon assets added to the repository: app_icon.svg,
+    app_icon_1024.png, app_icon_512.png, favicon PNGs.
+
+v1.5 — July 13, 2026 (minor)
+  - Added a favicon (inline SVG data URI, keeping the app a single file):
+    a target symbol with a checkmark at its centre — outcomes attained —
+    in the tool's teal/amber palette. Static (non-animated) by design.
+
 v1.4 — July 13, 2026 (minor)
   - Course Info: changed the Cohort field's example text from
     "e.g., Intake Spring 2023 / 39th batch" to "e.g., ME17".
