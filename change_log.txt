@@ -7,6 +7,9 @@
 ==========================================================================
 
 v1.21 — July 14, 2026 (minor)
+  - Attainment Calculation Methodology guide: applicability line updated
+    to v1.21, noting that calculations are unchanged since v1.20 and
+    that Group/scheme settings now live under the Advanced panel.
   - Assessments tab simplified by progressive disclosure: item rows show
     only Label, Max marks, CO and Mandatory. Question Groups and the
     choice scheme moved into a per-assessment "⚙ Advanced (question
