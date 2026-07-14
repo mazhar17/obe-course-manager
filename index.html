@@ -70,7 +70,7 @@ table.tbl tr:nth-child(even) td{background:#fafcfd}
 .chart-box{max-width:900px;margin:10px auto}
 .empty{padding:26px;text-align:center;color:var(--muted);font-size:14px}
 .pill-note{font-size:12.5px;color:var(--muted);background:var(--primary-light);border-radius:8px;padding:8px 12px;margin:10px 0;display:inline-block}
-.item-row{display:grid;grid-template-columns:2fr 100px 1fr 36px;gap:8px;margin-bottom:6px;align-items:center}
+.item-row{display:grid;grid-template-columns:2fr 80px 1fr 92px 84px 36px;gap:8px;margin-bottom:6px;align-items:center}
 .item-row input,.item-row select{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13.5px;font-family:inherit;width:100%}
 .icon-btn{background:none;border:none;color:var(--danger);font-size:17px;cursor:pointer;padding:2px}
 .report-sheet{background:#fff;padding:34px 40px;border-radius:var(--radius);box-shadow:var(--shadow);font-size:13.5px}
@@ -146,7 +146,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.17</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.20</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -182,14 +182,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.17</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.20</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.17";
+const APP_VERSION = "v1.20";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -216,7 +216,7 @@ function ensureAust(c){
   if(!c.marks) c.marks = {};
   ["cos","assessments","students"].forEach(k=>{ if(!Array.isArray(c[k])) c[k]=[]; });
   c.cos.forEach(co=>{ ["bloomA","bloomP","kp","cep","cea","delivery","assess","modStatement","modPO","modBloom"].forEach(f=>{ if(co[f]===undefined) co[f]=""; }); if(!co.btDomain) co.btDomain="Cognitive"; if(!co.po) co.po={}; });
-  c.assessments.forEach(a=>{ if(a.weightPct===undefined) a.weightPct=""; });
+  c.assessments.forEach(a=>{ if(a.weightPct===undefined) a.weightPct=""; if(a.chooseK===undefined) a.chooseK=""; a.items.forEach(it=>{ if(it.mandatory===undefined) it.mandatory=true; if(it.group===undefined) it.group=""; }); });
   c.aust = c.aust || {};
   const a = c.aust;
   a.outline = Object.assign({level:"",faculty:"Engineering",dept:"",programme:"",synopsis:"",type:"Core",prereq:"",room:"",phone:"",email:"",consult:"",refsReq:"",refsRec:"",prepared:"",checked:"",approved:""}, a.outline||{});
@@ -973,6 +973,8 @@ function renderAssess(){
         <select onchange="updateItem('${a.id}','${it.id}','coId',this.value)">
           <option value="">— CO —</option>${coOptions(it.coId)}
         </select>
+        <label style="font-size:12px;white-space:nowrap;color:var(--muted)" title="Mandatory: a blank mark counts as 0. Optional (unticked): a blank mark means the student legitimately skipped it and is not penalized."><input type="checkbox" ${it.mandatory!==false?"checked":""} onchange="updateItem('${a.id}','${it.id}','mandatory',this.checked)"> Mandatory</label>
+        <input value="${esc(it.group||"")}" placeholder="Group" title="Optional question group (e.g., Q3 for sub-parts Q3a, Q3b). If a student attempts ANY item of the group, ALL items of the group count for that student (blanks = 0) — partial answers to a chosen question are penalized. If none are attempted, the whole group is excluded." onchange="updateItem('${a.id}','${it.id}','group',this.value)">
         <button class="icon-btn" title="Delete item" onclick="deleteItem('${a.id}','${it.id}')">✕</button>
       </div>`).join("");
     const total = a.items.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
@@ -986,8 +988,20 @@ function renderAssess(){
         <span class="badge blue">Total: ${total} marks</span>
         <button class="btn danger small" onclick="deleteAssessment('${a.id}')">Delete</button>
       </div>
+      ${(()=>{
+        const unitKeys = new Set();
+        a.items.forEach(it=>{ if(it.mandatory===false) unitKeys.add(it.group? "g::"+it.group : "i::"+it.id); });
+        const nOpt = unitKeys.size;
+        if(!nOpt) return "";
+        const k = parseInt(a.chooseK);
+        return `<div style="margin-top:10px;font-size:13px;color:var(--muted)">
+          Choice scheme: students must answer
+          <input type="number" min="0" max="${nOpt}" value="${esc(a.chooseK)}" style="width:56px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:inherit" onchange="updateAssessment('${a.id}','chooseK',this.value)">
+          of the <b>${nOpt}</b> optional question(s)${k>nOpt? ' <span class="badge red">cannot exceed '+nOpt+'</span>':''}${k>0? ' <span class="badge blue">R5 active: shortfalls count as zeros</span>':' <span class="badge grey">blank = no requirement</span>'}
+        </div>`;
+      })()}
       <h3>Items / Questions (each mapped to a CO)</h3>
-      <div class="item-row" style="color:var(--muted);font-size:12px;font-weight:600"><span>Label</span><span>Max marks</span><span>CO</span><span></span></div>
+      <div class="item-row" style="color:var(--muted);font-size:12px;font-weight:600"><span>Label</span><span>Max marks</span><span>CO</span><span>Mandatory?</span><span>Group</span><span></span></div>
       ${rows || '<p class="hint">No items yet.</p>'}
       <div class="btn-row"><button class="btn secondary small" onclick="addItem('${a.id}')">+ Add Item</button></div>
     </div>`;
@@ -1050,7 +1064,7 @@ function renderMarks(){
   const items = allItems(c);
   const groups = c.assessments.filter(a=>a.items.length);
   const head1 = groups.map(a=>`<th colspan="${a.items.length}" style="text-align:center">${esc(a.name||a.type)}</th>`).join("");
-  const head2 = items.map(it=>`<th style="text-align:center" title="Max ${it.max} · ${coLabel(c,it.coId)}">${esc(it.label)}<br><span style="font-weight:400;color:var(--muted)">${coLabel(c,it.coId)} /${it.max}</span></th>`).join("");
+  const head2 = items.map(it=>`<th style="text-align:center" title="Max ${it.max} · ${coLabel(c,it.coId)}${it.mandatory===false?" · optional — leave blank if not attempted":""}">${esc(it.label)}${it.mandatory===false?"†":""}<br><span style="font-weight:400;color:var(--muted)">${coLabel(c,it.coId)} /${it.max}</span></th>`).join("");
   const rows = c.students.map((s,si)=>{
     const cells = items.map(it=>{
       const v = c.marks[s.id]?.[it.id];
@@ -1074,7 +1088,7 @@ function renderMarks(){
   </div>
   <div class="card">
     <h2>Marks Entry</h2>
-    <p class="hint">${items.length? "Enter marks per item. Cells save automatically. Leave blank if absent/not assessed (blank cells are excluded from that CO's calculation for that student only if the student has no marks at all in the CO)." : "Define assessment items first (Assessments tab)."}</p>
+    <p class="hint">${items.length? "Enter marks per item. Cells save automatically. Leave a cell blank when the student did not attempt the item: on a mandatory item a blank counts as 0, while on an optional item (marked †) the student is not penalized — the item is simply excluded from that student's CO calculation." : "Define assessment items first (Assessments tab)."}</p>
     ${items.length && c.students.length ? `
     <div class="tbl-wrap"><table class="tbl">
       <thead>
@@ -1224,29 +1238,88 @@ function downloadFile(name, content, mime){
    - CO: % of students scoring > Target Pass Marks; also % above KPI marks
    - Student PO score (%) = Σ(CO score × CO max marks × mapped) / Σ(CO max marks × mapped)  [mapped = CO-PO cell ticked]
    - Attained when % of students above pass marks ≥ Target KPI */
+/* ---- Choice-scheme engine ----
+   Question-unit = an optional group (Q3a+Q3b = one unit) or an ungrouped optional item.
+   R3: attempting ANY item of a unit engages the whole unit (blanks in it = 0).
+   R5: if the assessment declares "answer k of the optional questions" and the student
+       attempted only u < k units, the (k−u) unattempted units with the HIGHEST maximum
+       marks are added as zeros (phantom units) — the student is penalized for required
+       answers not produced.
+   Absent rule: with a declared scheme, a student with no marks anywhere in that
+   assessment is treated as absent from it — all of its items are excluded for them. */
+function unitKeyOf(it){ return it.aId + (it.group? "::g::"+it.group : "::i::"+it.id); }
+function schemeContexts(c, items){
+  // units per assessment: key -> {items:[], maxSum, aId}
+  const unitsByA = {};
+  items.forEach(it=>{
+    if(it.mandatory===false){
+      const key = unitKeyOf(it);
+      if(!unitsByA[it.aId]) unitsByA[it.aId] = {};
+      if(!unitsByA[it.aId][key]) unitsByA[it.aId][key] = { key, items:[], maxSum:0 };
+      unitsByA[it.aId][key].items.push(it);
+      unitsByA[it.aId][key].maxSum += parseFloat(it.max)||0;
+    }
+  });
+  return c.students.map(s=>{
+    const m = c.marks[s.id]||{};
+    const counted = new Set();      // unit keys that count for this student (attempted or phantom)
+    const absent = new Set();       // assessment ids the student is absent from
+    c.assessments.forEach(a=>{
+      const aItems = items.filter(it=>it.aId===a.id);
+      const anyMark = aItems.some(it=>m[it.id]!==undefined);
+      const k = parseInt(a.chooseK);
+      const units = Object.values(unitsByA[a.id]||{});
+      if(k>0 && !anyMark){ absent.add(a.id); return; }
+      const attempted = units.filter(u=>u.items.some(it=>m[it.id]!==undefined));
+      attempted.forEach(u=>counted.add(u.key));
+      if(k>0 && attempted.length<k){
+        const shortfall = k - attempted.length;
+        const candidates = units.filter(u=>!counted.has(u.key))
+          .sort((x,y)=> y.maxSum - x.maxSum || (x.key<y.key?-1:1));
+        candidates.slice(0, shortfall).forEach(u=>counted.add(u.key));
+      }
+    });
+    return { counted, absent };
+  });
+}
+function countsForStudent(it, m, ctx){
+  if(ctx.absent.has(it.aId)) return false;                 // absent from this assessment
+  if(m[it.id]!==undefined) return true;                    // attempted
+  if(it.mandatory!==false) return true;                    // mandatory blank = 0
+  return ctx.counted.has(unitKeyOf(it));                   // engaged or phantom unit = 0; else skipped
+}
 function computeAttainment(c){
   const items = allItems(c);
   const nStu = c.students.length;
+  const ctxs = schemeContexts(c, items);
   const coData = c.cos.map((co,i)=>{
     const coItems = items.filter(it=>it.coId===co.id);
     const totalMax = coItems.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
-    const scores = c.students.map(s=>{
-      if(!totalMax) return null;
+    /* Per-student CO score. Blank mandatory = 0; blank optional = excluded, unless the
+       item's question-unit was engaged (R3) or drafted as a phantom under the choice
+       scheme (R5). Absent-from-assessment items are excluded. A student with no assessed
+       marks under a CO (den = 0) is excluded from that CO's cohort entirely. */
+    const scores = c.students.map((s,si)=>{
       const m = c.marks[s.id]||{};
-      const got = coItems.reduce((sm,it)=>sm+(m[it.id]||0),0);
-      return got/totalMax*100;
+      let num = 0, den = 0;
+      coItems.forEach(it=>{
+        const max = parseFloat(it.max)||0;
+        if(countsForStudent(it, m, ctxs[si])){ num += (m[it.id]||0); den += max; }
+      });
+      return den>0? num/den*100 : null;
     });
     return { co, i, coItems, totalMax, scores };
   });
   const cos = coData.map(d=>{
-    const valid = d.totalMax>0 && nStu>0;
-    const above = th => valid? d.scores.filter(x=>x>th).length/nStu*100 : null;
+    const assessed = d.scores.filter(x=>x!==null);
+    const valid = d.totalMax>0 && assessed.length>0;
+    const above = th => valid? assessed.filter(x=>x>th).length/assessed.length*100 : null;
     const pctPass = above(c.cfg.passMarks);
     const pctKPI = above(c.cfg.kpiMarks);
-    const avg = valid? d.scores.reduce((a,b)=>a+b,0)/nStu : null;
+    const avg = valid? assessed.reduce((a,b)=>a+b,0)/assessed.length : null;
     return { id:d.co.id, label:"CO"+(d.i+1), statement:d.co.statement, bloom:d.co.bloom, po:d.co.po||{},
-             nItems:d.coItems.length, totalMax:d.totalMax, considered:valid?nStu:0,
-             attainedCount: valid? d.scores.filter(x=>x>c.cfg.passMarks).length : 0,
+             nItems:d.coItems.length, totalMax:d.totalMax, considered:valid?assessed.length:0,
+             attainedCount: valid? assessed.filter(x=>x>c.cfg.passMarks).length : 0,
              avgScorePct:avg, pct:pctPass, pctKPI, attained: pctPass!==null && pctPass>=c.cfg.kpiTarget };
   });
   const pos = [];
@@ -1257,12 +1330,21 @@ function computeAttainment(c){
     const contrib = mapped.map(d=>"CO"+(d.i+1)+(d.totalMax>0?"":" (no marks)"));
     let pctPass=null, pctKPI=null, avg=null;
     if(usable.length && nStu>0){
-      const wTot = usable.reduce((s,d)=>s+d.totalMax,0);
-      const poScores = c.students.map((s,si)=>
-        usable.reduce((sm,d)=>sm+(d.scores[si]||0)*d.totalMax,0)/wTot );
-      pctPass = poScores.filter(x=>x>c.cfg.passMarks).length/nStu*100;
-      pctKPI = poScores.filter(x=>x>c.cfg.kpiMarks).length/nStu*100;
-      avg = poScores.reduce((a,b)=>a+b,0)/nStu;
+      /* Per-student PO score over the COs the student was actually assessed on. */
+      const poScores = c.students.map((s,si)=>{
+        let wSum = 0, wTot = 0;
+        usable.forEach(d=>{
+          const sc = d.scores[si];
+          if(sc!==null){ wSum += sc*d.totalMax; wTot += d.totalMax; }
+        });
+        return wTot>0? wSum/wTot : null;
+      });
+      const assessed = poScores.filter(x=>x!==null);
+      if(assessed.length){
+        pctPass = assessed.filter(x=>x>c.cfg.passMarks).length/assessed.length*100;
+        pctKPI = assessed.filter(x=>x>c.cfg.kpiMarks).length/assessed.length*100;
+        avg = assessed.reduce((a,b)=>a+b,0)/assessed.length;
+      }
     }
     pos.push({ po:p, name:PO_INFO[p], contrib, pct:pctPass, pctKPI, avgScorePct:avg,
                attained: pctPass!==null && pctPass>=c.cfg.kpiTarget });
@@ -1394,6 +1476,7 @@ function renderAttain(){
       <td>${esc(co.statement)||"<i>—</i>"}</td>
       <td style="text-align:center">${co.nItems}</td>
       <td style="text-align:center">${co.totalMax}</td>
+      <td style="text-align:center">${co.considered}</td>
       <td style="text-align:center">${co.avgScorePct===null?"—":co.avgScorePct.toFixed(1)+"%"}</td>
       <td style="text-align:center">${co.pct===null?"—":co.pct.toFixed(1)+"%"}</td>
       <td style="text-align:center">${co.pctKPI===null?"—":co.pctKPI.toFixed(1)+"%"}</td>
@@ -1411,10 +1494,10 @@ function renderAttain(){
   el.innerHTML = `
   <div class="card">
     <h2>CO Attainment — Direct Measurement (AUST method)</h2>
-    <p class="hint">Student CO score = % obtained of the marks allocated to that CO (blank = 0). Columns show the % of students scoring above the Target Pass Marks (${c.cfg.passMarks}) and above the KPI marks (${c.cfg.kpiMarks}). A CO is attained when the % above pass marks reaches the Target KPI (${c.cfg.kpiTarget}%). Thresholds are editable in Course Info.</p>
+    <p class="hint">Student CO score = % obtained of the marks assessed under that CO. A blank mark on a <b>mandatory</b> item counts as 0; a blank on an <b>optional</b> item (unticked in the Assessment Plan) means the student legitimately skipped it and is excluded from that student's calculation — no penalty. Sub-parts of one optional question can share a <b>Group</b> in the Assessment Plan: attempting any part engages the whole question for that student, so unanswered parts count as 0 (partial answers to a chosen question are penalized). If an assessment declares a <b>choice scheme</b> ("answer k of the optional questions") and a student attempts fewer than k, the unattempted questions with the highest marks are counted as zeros for the shortfall; a student with no marks in that assessment is treated as absent from it and excluded. Students with no assessed marks under a CO are excluded from its cohort (n). A CO is attained when the % of assessed students above the Target Pass Marks (${c.cfg.passMarks}) reaches the Target KPI (${c.cfg.kpiTarget}%). Thresholds are editable in Course Info.</p>
     <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th>CO</th><th>Statement</th><th>Items</th><th>Marks</th><th>Avg Score</th><th>% &gt; Pass Marks ${c.cfg.passMarks}</th><th>% &gt; KPI ${c.cfg.kpiMarks}</th><th>Status</th></tr></thead>
-      <tbody>${coRows || '<tr><td colspan="8" class="empty">No COs defined.</td></tr>'}</tbody>
+      <thead><tr><th>CO</th><th>Statement</th><th>Items</th><th>Marks</th><th>n</th><th>Avg Score</th><th>% &gt; Pass Marks ${c.cfg.passMarks}</th><th>% &gt; KPI ${c.cfg.kpiMarks}</th><th>Status</th></tr></thead>
+      <tbody>${coRows || '<tr><td colspan="9" class="empty">No COs defined.</td></tr>'}</tbody>
     </table></div>
     <div class="chart-box"><canvas id="coChart" height="110"></canvas></div>
     <div class="btn-row no-print"><button class="btn secondary small" onclick="showTab('cqi')">🔍 Filter low-attaining students &amp; analyze causes (CQI tab)</button></div>
@@ -1634,20 +1717,29 @@ function renderCQI(){
 /* Per-student CO scores + per-item averages — the analytical bridge between Attainment and CQI */
 function studentCOData(c){
   const items = allItems(c);
+  const ctxs = schemeContexts(c, items);
   return c.cos.map((co,i)=>{
     const coItems = items.filter(it=>it.coId===co.id);
     const totalMax = coItems.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
-    const scores = totalMax>0 ? c.students.map(s=>{
+    /* Same convention as computeAttainment (incl. question groups and choice scheme). */
+    const scores = totalMax>0 ? c.students.map((s,si)=>{
       const m = c.marks[s.id]||{};
-      const got = coItems.reduce((sm,it)=>sm+(m[it.id]||0),0);
-      return { sid:s.sid, name:s.name, pct: got/totalMax*100 };
-    }) : [];
+      let num = 0, den = 0;
+      coItems.forEach(it=>{
+        const max = parseFloat(it.max)||0;
+        if(countsForStudent(it, m, ctxs[si])){ num += (m[it.id]||0); den += max; }
+      });
+      return den>0? { sid:s.sid, name:s.name, pct: num/den*100 } : null;
+    }).filter(Boolean) : [];
     const itemAvgs = coItems.map(it=>{
       const max = parseFloat(it.max)||0;
-      const avg = (c.students.length && max>0)
-        ? c.students.reduce((sm,s)=>sm+((c.marks[s.id]||{})[it.id]||0),0)/c.students.length/max*100
-        : null;
-      return { label: it.label, aName: it.aName, avg };
+      let sum = 0, n = 0;
+      if(max>0) c.students.forEach((s,si)=>{
+        const m = c.marks[s.id]||{};
+        if(countsForStudent(it, m, ctxs[si])){ sum += (m[it.id]||0); n++; }
+      });
+      return { label: it.label, aName: it.aName, optional: it.mandatory===false,
+               avg: n>0? sum/n/max*100 : null };
     });
     return { co, i, label:"CO"+(i+1), totalMax, scores, itemAvgs };
   });
@@ -1666,7 +1758,7 @@ function lowAttainmentCard(c){
     const low = d.scores.filter(s=>s.pct < th).sort((x,y)=>x.pct-y.pct);
     const an = c.aust.cqi.lowAnalysis[d.co.id] || {};
     const lowRows = low.map((s,k)=>`<tr><td>${k+1}</td><td style="white-space:nowrap">${esc(s.sid)}</td><td>${esc(s.name)}</td><td style="text-align:center"><span class="badge ${s.pct<th/2?"red":"amber"}">${s.pct.toFixed(1)}%</span></td></tr>`).join("");
-    const itemRows = d.itemAvgs.map(it=>`<tr><td>${esc(it.aName)}</td><td>${esc(it.label)}</td>
+    const itemRows = d.itemAvgs.map(it=>`<tr><td>${esc(it.aName)}</td><td>${esc(it.label)}${it.optional?' <span class="badge grey">optional</span>':""}</td>
       <td style="text-align:center">${it.avg===null?"—":`<span class="badge ${it.avg<th?"red":"green"}">${it.avg.toFixed(1)}%</span>`}</td></tr>`).join("");
     return `
     <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
@@ -1860,7 +1952,7 @@ function docSpec(c){
     const its = allItems(c).filter(it=>it.coId===co.id);
     return its.map(it=>`
       <tr><td style="text-align:center"><b>CO${i+1}</b></td>
-        <td>${esc(it.aName)} — ${esc(it.label)}</td>
+        <td>${esc(it.aName)} — ${esc(it.label)}${it.mandatory===false? " <i>(optional"+(it.group? ", group "+esc(it.group):"")+")</i>":""}</td>
         <td style="text-align:center">${totalMax? ((parseFloat(it.max)||0)/totalMax*100).toFixed(1):"—"}%</td>
         <td style="text-align:center">${cLevel(co)}</td>
         <td style="text-align:center">${lvlTag(co.bloomA)}</td>
@@ -1927,7 +2019,7 @@ function docVet(c){
   const vetSub = finals.map(()=>`<th style="width:70px;text-align:center">Question</th><th style="width:45px;text-align:center">Level</th>`).join("");
   const vetRows = c.cos.map((co,i)=>{
     const cells = finals.map(a=>{
-      const qs = a.items.filter(it=>it.coId===co.id).map(it=>esc(it.label)).join(", ");
+      const qs = a.items.filter(it=>it.coId===co.id).map(it=>esc(it.label)+(it.mandatory===false?"†":"")).join(", ");
       return `<td style="text-align:center">${qs||""}</td><td style="text-align:center">${qs? primeTag(co):""}</td>`;
     }).join("");
     return `<tr><td style="text-align:center"><b>CO${i+1}</b></td><td style="text-align:center" class="cbx">□</td>${cells}<td></td><td></td></tr>`;
@@ -1950,7 +2042,7 @@ function docVet(c){
     <tr><th rowspan="2" style="width:45px">CO</th><th rowspan="2" style="width:40px">CP*</th>${vetCols}<th rowspan="2">Remarks by the Vetter 1</th><th rowspan="2">Remarks by the Vetter 2</th></tr>
     <tr>${vetSub}</tr></thead>
     <tbody>${vetRows || '<tr><td colspan="4" style="text-align:center">Define COs and assessments first</td></tr>'}</tbody></table></div>
-  <p style="font-size:11.5px;color:var(--muted)">* CP indicates the class performance. Check with tick marks if the CP was assessed for the respective COs. Question/Level cells are auto-filled from the assessment plan (Level = Bloom's cognitive level of the CO).</p>
+  <p style="font-size:11.5px;color:var(--muted)">* CP indicates the class performance. Check with tick marks if the CP was assessed for the respective COs. Question/Level cells are auto-filled from the assessment plan (Level = level of the CO's primary BT domain). † = optional question (student's choice).</p>
   <h2>7. Checklist (To Be Completed by the Instructor and one of the Vetters)</h2>
   <table class="tbl"><thead><tr><th>Item</th><th style="width:150px;text-align:center">Instructor / Course Coordinator</th><th style="width:110px;text-align:center">Vetter ___</th></tr></thead>
     <tbody>${checklist.map((x,i)=>`<tr><td>${i+1}. ${x}</td><td style="text-align:center" class="cbx">□</td><td style="text-align:center" class="cbx">□</td></tr>`).join("")}</tbody></table>
@@ -2010,7 +2102,7 @@ function docCalc(c){
     ${row("Average PO Score (%)", att.pos, "avgScorePct")}
     <tr><th>Status (vs Target KPI ${c.cfg.kpiTarget}%)</th>${att.pos.map(x=>`<td style="text-align:center">${x.pct===null?"—":(x.attained?"✓ Attained":"✗ Not attained")}</td>`).join("")}</tr>
   </tbody></table></div>
-  <p style="font-size:11.5px;color:var(--muted)">Method: student CO score = % of marks obtained out of the marks allocated to the CO; student PO score = CO scores weighted by CO allocated marks over the mapped COs; thresholds are set in Course Info → Attainment Settings.</p>
+  <p style="font-size:11.5px;color:var(--muted)">Method: student CO score = % of marks obtained out of the marks assessed under the CO (blank mandatory items count as 0; blank optional items are excluded — the student is not penalized for legitimately skipping them); student PO score = CO scores weighted by CO allocated marks over the COs the student was assessed on; thresholds are set in Course Info → Attainment Settings.</p>
   <table class="sig-table"><tr>${sigCell("(Signature)<br>Name of the Instructor: "+esc(c.instructor)+"<br>Date: __________")}<td></td><td></td></tr></table>`;
 }
 
@@ -2332,6 +2424,7 @@ function loadSample(){
   const q1={id:uid(),name:"Quiz 1",type:"Quiz",items:items(co1,"Q",2,5)};
   const mid={id:uid(),name:"Mid Term",type:"Mid Term",items:[...items(co1,"Q",1,10),...items(co2,"P",2,10)]};
   const fin={id:uid(),name:"Final Exam",type:"Final Exam",items:[...items(co2,"Q",2,15),...items(co3,"D",2,20)]};
+  fin.items[1].mandatory=false; fin.items[3].mandatory=false;  // demo: students choose which optional questions to answer
   const students=["20250108001 Ayesha Rahman","20250108002 Tanvir Hasan","20250108003 Nusrat Jahan","20250108004 Sabbir Ahmed","20250108005 Farhana Akter","20250108006 Mehedi Hasan","20250108007 Sadia Islam","20250108008 Rakib Hossain"].map(s=>{const [sid,...n]=s.split(" ");return {id:uid(),sid,name:n.join(" ")};});
   const c={id:uid(),code:"ME 4011",title:"Renewable Energy (Sample)",credit:"3.0",semester:"Spring 2026",program:"B.Sc. in Mechanical Engineering",section:"A",instructor:"Prof. Dr. Mazharul Islam",cos:[co1,co2,co3],assessments:[q1,mid,fin],students,marks:{},cfg:defaultCfg(),remarks:""};
   const rnd=(max)=>Math.round(Math.max(0,Math.min(max,(0.45+Math.random()*0.6)*max))*2)/2;

@@ -6,6 +6,45 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.20 — July 14, 2026 (minor)
+  - Choice scheme per assessment: declare "students must answer k of the
+    optional questions" in the Assessment Plan (question-unit = a group
+    or an ungrouped optional item). Rule R5: a student attempting fewer
+    than k units has the shortfall counted as zeros, drawn from the
+    unattempted units with the highest maximum marks (deterministic,
+    conservative). Attempting more than k counts all attempted units.
+  - Absent rule: with a declared scheme, a student with no marks
+    anywhere in that assessment is treated as absent from it and
+    excluded from its calculations (instead of receiving phantom zeros).
+  - Full methodology with worked examples published in
+    Attainment_Calculation_Methodology.docx (Annex A now implemented).
+
+v1.19 — July 14, 2026 (minor)
+  - Assessment Plan: optional items can share a question Group (e.g.,
+    sub-parts Q3a/Q3b grouped as "Q3"). If a student attempts any item
+    of the group, the whole group counts for that student (unanswered
+    sub-parts = 0) — partial answers to a deliberately chosen question
+    are penalized. If no item of the group is attempted, the whole group
+    is excluded (no penalty). Groups are scoped per assessment; an
+    entered 0 counts as an attempt and engages the group.
+  - Group shown in the assessment blueprint; low-attainment item
+    averages are group-aware.
+
+v1.18 — July 14, 2026 (minor)
+  - Assessment Plan: every item now has a "Mandatory" checkbox (default:
+    ticked). Fair handling of choice-based exams (e.g., "Q1 mandatory,
+    answer any four of Q2-Q7"): a blank mark on a mandatory item counts
+    as 0, while a blank on an optional item is excluded from that
+    student's CO calculation — no penalty for legitimately skipped
+    questions. Students with no assessed marks under a CO are excluded
+    from that CO's cohort (per-CO n shown in the Attainment tab), and
+    per-student PO scores use only the COs the student was assessed on.
+  - Optional items are marked with † in the marks grid and the vetting
+    form, "(optional)" in the assessment blueprint, and an "optional"
+    badge in the low-attainment diagnostics.
+  - Convention: blank = not attempted; an entered 0 = attempted and
+    scored zero.
+
 v1.17 — July 14, 2026 (minor)
   - T&L Activities: adopted activities can now be deselected. Each CO
     card shows its delivery methods as removable chips (click × to

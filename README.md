@@ -1,4 +1,4 @@
-# OBE Course Manager — v1.17 (First release: July 13, 2026)
+# OBE Course Manager — v1.20 (First release: July 13, 2026)
 
 > **Deployment note:** upload `aust_logo.svg` alongside `index.html` — the official AUST logo shown on the Accreditation Documents. If the file is absent, the documents simply render without the logo.
 
@@ -62,7 +62,7 @@ Just double-click `index.html` — it opens and works in any modern browser (Chr
 
 Identical to the AUST "Direct CO-PO Calculations" workbook:
 
-- A student's **CO score** = percentage obtained of the marks allocated to that CO (blank marks count as 0).
+- Assessment items are **mandatory** (default) or **optional** (unticked in the Assessment Plan — e.g., "answer any four of Q2–Q7"). A student's **CO score** = percentage obtained of the marks *assessed* under that CO: a blank mark on a mandatory item counts as 0, while a blank on an optional item is excluded from that student's calculation — students are never penalized for legitimately skipping optional questions. Sub-parts of one optional question can share a **Group** (e.g., Q3a/Q3b → "Q3"): attempting any part engages the whole question, so unanswered parts count as 0 — partial answers to a chosen question *are* penalized. Each assessment can declare a **choice scheme** ("students must answer *k* of the optional questions"): a student attempting fewer than *k* has the shortfall counted as zeros (drawn from the unattempted questions with the highest marks), while a student with no marks in that assessment is treated as absent and excluded. Students with no assessed marks under a CO are excluded from that CO's cohort. The full methodology with worked examples is in `Attainment_Calculation_Methodology.docx`.
 - **CO measurement** = % of students scoring **above the Target Pass Marks** (default 40); also reported: % of students above the KPI marks (default 50).
 - A student's **PO score** = the student's CO scores mapped to that PO, weighted by each CO's allocated marks (a ✓ in the CO–PO matrix counts as mapped).
 - A CO/PO is **attained** when the % of students above the pass marks reaches the **Target KPI** (default 50%).
