@@ -6,6 +6,18 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.10 — July 14, 2026 (minor)
+  - COs & CO-PO Mapping: added a "BT Domain" drop-down per CO (Cognitive /
+    Affective / Psychomotor); the "Level" column (renamed from "Bloom's
+    Level") now offers the levels of the selected domain (C1-C6, A1-A5,
+    P1-P7).
+  - Propagated throughout the app: the T&L Activities recommender now
+    matches Affective/Psychomotor COs to activities covering those
+    domains; the Final Exam Vetting Form's Level column, the CQI tab and
+    the CQI Report show the level of the CO's primary domain.
+  - Course Outline / Specifications keep their three-column C/A/P
+    Bloom's display as per the AUST templates.
+
 v1.9 — July 14, 2026 (minor)
   - Header icon: restored the v1.6 dark-gradient tile (preferred color
     scheme) and solved its contrast problem with a mint hairline outline

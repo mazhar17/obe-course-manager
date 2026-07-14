@@ -137,7 +137,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.9</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.10</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -173,14 +173,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.9</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.10</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.9";
+const APP_VERSION = "v1.10";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -206,7 +206,7 @@ function ensureAust(c){
   if(c.cohort===undefined) c.cohort = "";
   if(!c.marks) c.marks = {};
   ["cos","assessments","students"].forEach(k=>{ if(!Array.isArray(c[k])) c[k]=[]; });
-  c.cos.forEach(co=>{ ["bloomA","bloomP","kp","cep","cea","delivery","assess","modStatement","modPO","modBloom"].forEach(f=>{ if(co[f]===undefined) co[f]=""; }); if(!co.po) co.po={}; });
+  c.cos.forEach(co=>{ ["bloomA","bloomP","kp","cep","cea","delivery","assess","modStatement","modPO","modBloom"].forEach(f=>{ if(co[f]===undefined) co[f]=""; }); if(!co.btDomain) co.btDomain="Cognitive"; if(!co.po) co.po={}; });
   c.assessments.forEach(a=>{ if(a.weightPct===undefined) a.weightPct=""; });
   c.aust = c.aust || {};
   const a = c.aust;
@@ -566,20 +566,52 @@ function saveCourseCfg(){
 }
 
 /* ============ COs & CO-PO Mapping ============ */
+const BT_DOMAINS = ["Cognitive","Affective","Psychomotor"];
+function levelOptions(co){
+  const d = co.btDomain || "Cognitive";
+  if(d==="Affective")   return { list: BLOOM_A, field: "bloomA", val: co.bloomA };
+  if(d==="Psychomotor") return { list: BLOOM_P, field: "bloomP", val: co.bloomP };
+  return { list: BLOOMS, field: "bloom", val: co.bloom };
+}
+/* Level tag of the CO's primary BT domain: C1..C6, A1..A5 or P1..P7 */
+function primeTag(co){
+  const d = co.btDomain || "Cognitive";
+  if(d==="Affective")   return lvlTag(co.bloomA);
+  if(d==="Psychomotor") return lvlTag(co.bloomP);
+  return cLevel(co);
+}
+function primeLevelName(co){
+  const d = co.btDomain || "Cognitive";
+  if(d==="Affective")   return co.bloomA || "";
+  if(d==="Psychomotor") return co.bloomP || "";
+  return co.bloom || "";
+}
+function updateCODomain(id, val){
+  const c = activeCourse(); if(!c) return;
+  const co = c.cos.find(x=>x.id===id); if(!co) return;
+  co.btDomain = val;
+  save(); renderCOs(); toast("Saved");
+}
 function renderCOs(){
   const el = document.getElementById("tab-cos");
   const c = activeCourse();
   if(!c){ el.innerHTML = `<div class="empty">No course selected.</div>`; return; }
-  const coRows = c.cos.map((co,i)=>`
+  const coRows = c.cos.map((co,i)=>{
+    const o = levelOptions(co);
+    return `
     <tr>
       <td style="white-space:nowrap"><b>CO${i+1}</b></td>
       <td><textarea onchange="updateCO('${co.id}','statement',this.value)" rows="2" style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px;font-family:inherit;font-size:13.5px">${esc(co.statement)}</textarea></td>
-      <td><select onchange="updateCO('${co.id}','bloom',this.value)" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-family:inherit">
-        ${BLOOMS.map(b=>`<option ${co.bloom===b?"selected":""}>${b}</option>`).join("")}
+      <td><select onchange="updateCODomain('${co.id}',this.value)" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-family:inherit">
+        ${BT_DOMAINS.map(d=>`<option ${(co.btDomain||"Cognitive")===d?"selected":""}>${d}</option>`).join("")}
+      </select></td>
+      <td><select onchange="updateCO('${co.id}','${o.field}',this.value)" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-family:inherit">
+        ${o.field==="bloom"? "" : `<option value="">—</option>`}
+        ${o.list.map(b=>`<option ${o.val===b?"selected":""}>${b}</option>`).join("")}
       </select></td>
       <td style="white-space:nowrap">${Object.entries(co.po||{}).filter(([,v])=>v>0).map(([p,v])=>`<span class="badge blue">PO${p}:${v}</span>`).join(" ")||'<span class="badge grey">unmapped</span>'}</td>
       <td><button class="icon-btn" title="Delete CO" onclick="deleteCO('${co.id}')">✕</button></td>
-    </tr>`).join("");
+    </tr>`;}).join("");
   const mapHeader = Array.from({length:N_PO},(_,i)=>`<th class="map-cell" title="${esc(PO_INFO[i+1])}">PO${i+1}</th>`).join("");
   const mapRows = c.cos.map((co,i)=>{
     const cells = Array.from({length:N_PO},(_,p)=>{
@@ -591,10 +623,10 @@ function renderCOs(){
   el.innerHTML = `
   <div class="card">
     <h2>Course Outcomes (COs)</h2>
-    <p class="hint">Write measurable CO statements using action verbs and set the Bloom's taxonomy level. Edits save automatically.</p>
+    <p class="hint">Write measurable CO statements using action verbs, choose the Bloom's Taxonomy (BT) Domain, and set the matching Level. Edits save automatically.</p>
     <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th>#</th><th style="min-width:320px">CO Statement</th><th>Bloom's Level</th><th>Mapped POs</th><th></th></tr></thead>
-      <tbody>${coRows || `<tr><td colspan="5" class="empty">No COs yet — add your first CO below.</td></tr>`}</tbody>
+      <thead><tr><th>#</th><th style="min-width:300px">CO Statement</th><th>BT Domain</th><th>Level</th><th>Mapped POs</th><th></th></tr></thead>
+      <tbody>${coRows || `<tr><td colspan="6" class="empty">No COs yet — add your first CO below.</td></tr>`}</tbody>
     </table></div>
     <div class="btn-row"><button class="btn" onclick="addCO()">+ Add CO</button></div>
   </div>
@@ -610,7 +642,7 @@ function renderCOs(){
 }
 function addCO(){
   const c = activeCourse(); if(!c) return;
-  c.cos.push({ id: uid(), statement:"", bloom:"Apply", po:{} });
+  c.cos.push({ id: uid(), statement:"", btDomain:"Cognitive", bloom:"Apply", bloomA:"", bloomP:"", po:{} });
   save(); renderCOs();
 }
 function updateCO(id, field, val){
@@ -682,9 +714,16 @@ function cqiTexts(c){
 function ineffectiveTLA(c){
   return (c.aust.report.tla||[]).filter(t=>t.eff==="No" && t.act).map(t=>t.act);
 }
-function tlaScore(c, act, coLvl, cqi, bad){
+function tlaScore(c, act, co, cqi, bad){
   let s = 0;
-  if(act.b.includes(coLvl)) s += 3; else return -99;             // must suit the CO's Bloom level
+  const dom = co.btDomain || "Cognitive";
+  if(dom==="Cognitive"){
+    const coLvl = BLOOMS.indexOf(co.bloom)+1;
+    if(act.b.includes(coLvl)) s += 3; else return -99;           // must suit the CO's cognitive level
+  } else {
+    const letter = dom==="Affective"? "A" : "P";
+    if((act.dom||"").includes(letter)) s += 3; else return -99;  // must cover the CO's domain
+  }
   const mode = window._tlaMode||"Any", size = window._tlaSize||"Any";
   if(mode!=="Any" && act.mode!=="Any" && act.mode!==mode) return -99;
   if(size!=="Any" && act.size!=="Any" && act.size!==size) return -99;
@@ -715,14 +754,14 @@ function renderTLA(){
     </div>
   </div>`;
   const coCards = c.cos.map((co,i)=>{
-    const lvl = BLOOMS.indexOf(co.bloom)+1;
     const ranked = tlaPool()
-      .map(a=>({a, s: tlaScore(c, a, lvl, cqi, bad)}))
+      .map(a=>({a, s: tlaScore(c, a, co, cqi, bad)}))
       .filter(x=>x.s>-50).sort((x,y)=>y.s-x.s).slice(0,6);
     const adopted = (co.delivery||"").toLowerCase();
+    const lvlName = primeLevelName(co), tag = primeTag(co);
     return `
     <div class="card">
-      <h2>CO${i+1} <span class="badge blue">${esc(co.bloom)} (C${lvl})</span></h2>
+      <h2>CO${i+1} <span class="badge blue">${esc(co.btDomain||"Cognitive")}${lvlName? " · "+esc(lvlName):""}${tag && (co.btDomain||"Cognitive")==="Cognitive"? " ("+tag+")":""}</span></h2>
       <p class="hint">${esc(co.statement)||"<i>(no statement)</i>"}</p>
       <p style="font-size:13px"><b>Current delivery methods:</b> ${esc(co.delivery)||'<span class="badge grey">none adopted yet</span>'}</p>
       <h3>Recommended activities</h3>
@@ -1405,7 +1444,7 @@ function renderCQI(){
     const tools = [...new Set(c.assessments.filter(a=>a.items.some(it=>it.coId===co.id)).map(a=>a.name||a.type))].join(", ");
     return `<tr>
       <td><b>CO${i+1}</b></td>
-      <td style="text-align:center">${esc(co.bloom)} (${cLevel(co)})</td>
+      <td style="text-align:center">${esc(co.btDomain||"Cognitive")}${primeTag(co)? " ("+primeTag(co)+")":""}</td>
       <td style="text-align:center">${esc(co.cep)||"—"}</td>
       <td style="text-align:center">${esc(co.cea)||"—"}</td>
       <td>${esc(co.delivery)||'<span class="badge grey">none adopted</span>'}</td>
@@ -1441,7 +1480,7 @@ function renderCQI(){
     <h2>BAETE 3.8 — Teaching-Learning Methods &amp; Assessment Tools</h2>
     <p class="hint">The table is compiled automatically from your COs, adopted T&amp;L activities, and assessment plan. CP/CEA come from the Knowledge-Profile mapping in the Course Outline (item 14).</p>
     <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th>CO</th><th>Bloom's</th><th>Complex Problem (P1–P7)</th><th>Complex Activities (A1–A5)</th><th>T&amp;L Methods (adopted)</th><th>Assessment Tools</th></tr></thead>
+      <thead><tr><th>CO</th><th>BT Domain (Level)</th><th>Complex Problem (P1–P7)</th><th>Complex Activities (A1–A5)</th><th>T&amp;L Methods (adopted)</th><th>Assessment Tools</th></tr></thead>
       <tbody>${coRows || '<tr><td colspan="6" class="empty">Define COs first.</td></tr>'}</tbody>
     </table></div>
     <h3>Narratives (used verbatim in the printable CQI Report)</h3>
@@ -1785,7 +1824,7 @@ function docVet(c){
   const vetRows = c.cos.map((co,i)=>{
     const cells = finals.map(a=>{
       const qs = a.items.filter(it=>it.coId===co.id).map(it=>esc(it.label)).join(", ");
-      return `<td style="text-align:center">${qs||""}</td><td style="text-align:center">${qs? cLevel(co):""}</td>`;
+      return `<td style="text-align:center">${qs||""}</td><td style="text-align:center">${qs? primeTag(co):""}</td>`;
     }).join("");
     return `<tr><td style="text-align:center"><b>CO${i+1}</b></td><td style="text-align:center" class="cbx">□</td>${cells}<td></td><td></td></tr>`;
   }).join("");
@@ -1904,7 +1943,7 @@ function docCQI(c){
     const tools = [...new Set(c.assessments.filter(a=>a.items.some(it=>it.coId===co.id)).map(a=>a.name||a.type))].join(", ");
     return `<tr><td style="text-align:center"><b>CO${i+1}</b></td>
       <td style="font-size:12px">${esc(co.statement)}</td>
-      <td style="text-align:center">${cLevel(co)}</td>
+      <td style="text-align:center">${esc((co.btDomain||"Cognitive").slice(0,3))}. ${primeTag(co)}</td>
       <td style="text-align:center">${esc(co.cep)||"—"}</td>
       <td style="text-align:center">${esc(co.cea)||"—"}</td>
       <td style="font-size:12px">${esc(co.delivery)||"—"}</td>
@@ -1931,7 +1970,7 @@ function docCQI(c){
   </tbody></table>
   <h2>1. Teaching-Learning Methods and Assessment Tools per CO (Criterion 3.8)</h2>
   <div class="tbl-wrap"><table class="tbl">
-    <thead><tr><th>CO</th><th>Statement</th><th>Bloom's</th><th>CP</th><th>CEA</th><th>T&amp;L Methods</th><th>Assessment Tools</th></tr></thead>
+    <thead><tr><th>CO</th><th>Statement</th><th>BT Domain (Level)</th><th>CP</th><th>CEA</th><th>T&amp;L Methods</th><th>Assessment Tools</th></tr></thead>
     <tbody>${coRows || '<tr><td colspan="7">—</td></tr>'}</tbody></table></div>
   <h2>2. Narratives (Criterion 3.8)</h2>
   ${narr("2.1 How the teaching-learning methods and assessment tools address complex engineering problems and the POs", q.complex)}

@@ -1,4 +1,4 @@
-# OBE Course Manager — v1.9 (First release: July 13, 2026)
+# OBE Course Manager — v1.10 (First release: July 13, 2026)
 
 See `change_log.txt` for the version history.
 
@@ -9,7 +9,7 @@ Everything runs in the browser. No server, no database, no login. All data stays
 ## Features
 
 - **Course Info** — course code, title, credits, semester, program, teacher; editable attainment thresholds.
-- **COs & CO–PO Mapping** — write CO statements with Bloom's taxonomy levels; click-to-set CO–PO mapping matrix (correlation strengths 1/2/3) against the 12 Washington Accord Program Outcomes.
+- **COs & CO–PO Mapping** — write CO statements, choose the Bloom's Taxonomy (BT) Domain (Cognitive, Affective, or Psychomotor) with the matching Level (C1–C6, A1–A5, P1–P7); click-to-set CO–PO mapping matrix (correlation strengths 1/2/3) against the 12 Washington Accord Program Outcomes.
 - **T&L Activities (CQI recommender)** — a built-in pool of 31 teaching & learning activities tagged by Bloom's level, mode (in-person/online), and class size. For each CO the app recommends the best-fitting activities, **boosting** ones suggested in the previous semester's CQI recommendations (Course Specifications 6.1 / Course Report 6.1) and **ranking down** ones marked ineffective in the previous Course Report (3.2). One click adopts an activity into the CO's delivery methods, which then flow automatically into the Course Specifications constructive-alignment table — closing the CQI loop. Faculty/departments can extend the pool with custom activities (kept in backups for sharing).
 - **Assessments** — plan quizzes, class tests, mid/final exams, labs, projects; every item/question is tagged with a CO and maximum marks.
 - **Students & Marks** — add students individually or bulk-paste from Excel; spreadsheet-style marks grid; CSV export/import of the full marks sheet.
