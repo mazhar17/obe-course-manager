@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.23</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.24</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -186,14 +186,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.23</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.24</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.23";
+const APP_VERSION = "v1.24";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -1640,6 +1640,127 @@ function cqiStatus(c){
     stakeholders: (c.aust.cqi.stakeholders||[]).length>0
   };
 }
+/* ---- AI prompt generator: assembles a complete, curated CQI prompt from the course
+   data (aggregates only — never student names or IDs) for pasting into any AI tool. ---- */
+function buildAIPrompt(c){
+  const att = computeAttainment(c);
+  const ind = computeIndirect(c);
+  const d = studentCOData(c);
+  const L = [];
+  L.push("You are an expert in Outcome-Based Education and engineering accreditation");
+  L.push("(Washington Accord / BAETE, Bangladesh). Help me, the course teacher, draft");
+  L.push("CQI analysis and improvement actions for the course below. Ground every");
+  L.push("statement in the evidence provided; do not invent data.");
+  L.push("");
+  L.push("== METHODOLOGY (how to read the numbers) ==");
+  L.push("A student's CO score = % of marks obtained out of the marks assessed under");
+  L.push("that CO (blank mandatory items = 0; legitimately skipped optional questions");
+  L.push("are excluded; partial answers to a chosen question are penalized). CO/PO");
+  L.push(`attainment = % of assessed students scoring STRICTLY ABOVE ${c.cfg.passMarks}% (Target Pass`);
+  L.push(`Marks); attained if this reaches the Target KPI of ${c.cfg.kpiTarget}%. Indirect attainment`);
+  L.push(`= % of exit-survey responses rated >= ${c.cfg.likertPass} of 5. Combined = ${c.cfg.wDirect}% direct + ${c.cfg.wIndirect}% indirect.`);
+  L.push("");
+  L.push("== COURSE CONTEXT ==");
+  L.push(`Course: ${c.code} — ${c.title} | Program: ${c.program||"—"}`);
+  L.push(`Semester: ${c.semester||"—"} | Section: ${c.section||"—"} | Cohort: ${c.cohort||"—"} | Students enrolled: ${c.students.length}`);
+  L.push("");
+  L.push("== COURSE OUTCOMES ==");
+  c.cos.forEach((co,i)=>{
+    const dom = co.btDomain||"Cognitive";
+    const tag = primeTag(co), lvl = primeLevelName(co);
+    L.push(`CO${i+1} [${dom}${tag? " "+tag:""}${lvl && dom==="Cognitive"? " "+lvl:""} -> ${posOf(co)||"unmapped"}]: ${co.statement||"(no statement)"}`);
+  });
+  const mappedPOs = [...new Set(c.cos.flatMap(co=>Object.entries(co.po||{}).filter(([,v])=>v>0).map(([p])=>+p)))].sort((a,b)=>a-b);
+  if(mappedPOs.length){
+    L.push("");
+    L.push("== MAPPED PROGRAM OUTCOMES (Washington Accord) ==");
+    L.push(mappedPOs.map(p=>`PO${p} ${PO_INFO[p]}`).join(" · "));
+  }
+  if(c.assessments.length){
+    L.push("");
+    L.push("== ASSESSMENT PLAN ==");
+    c.assessments.forEach(a=>{
+      const k = parseInt(a.chooseK);
+      const units = new Set(a.items.filter(it=>it.mandatory===false).map(it=>it.group? "g"+it.group : "i"+it.id));
+      const scheme = k>0? ` (choice scheme: answer ${k} of ${units.size} optional questions)` : "";
+      const items = a.items.map(it=>{
+        const co = c.cos.findIndex(x=>x.id===it.coId);
+        const bits = [it.max, co>=0? "CO"+(co+1) : "no CO"];
+        if(it.mandatory===false) bits.push("optional");
+        if(it.group) bits.push("group "+it.group);
+        return `${it.label} [${bits.join(", ")}]`;
+      }).join(", ");
+      L.push(`${a.name||a.type} (${a.type})${scheme}: ${items}`);
+    });
+  }
+  const hasMarks = att.cos.some(x=>x.pct!==null);
+  if(hasMarks){
+    L.push("");
+    L.push("== DIRECT MEASUREMENT RESULTS ==");
+    att.cos.forEach(x=>{
+      if(x.pct===null){ L.push(`${x.label}: no marks data`); return; }
+      L.push(`${x.label}: n=${x.considered}, avg ${x.avgScorePct.toFixed(1)}%, ${x.pct.toFixed(1)}% above pass marks -> ${x.attained? "ATTAINED":"NOT ATTAINED"} (KPI ${c.cfg.kpiTarget}%)`);
+    });
+    const weak = d.flatMap(dc=>dc.itemAvgs.filter(it=>it.avg!==null && it.avg<c.cfg.passMarks).map(it=>`${it.aName} ${it.label} (${it.avg.toFixed(0)}%)`));
+    if(weak.length) L.push(`Weakest items (class average below pass marks): ${weak.join(", ")}`);
+    att.cos.forEach((x,i)=>{
+      if(x.pct!==null && !x.attained){
+        const low = d[i].scores.filter(s=>s.pct<=c.cfg.passMarks).length;
+        L.push(`Students at/below pass marks on ${x.label}: ${low} of ${d[i].scores.length}`);
+      }
+    });
+  }
+  if(ind.n>0){
+    L.push("");
+    L.push(`== INDIRECT MEASUREMENT (CO Exit Survey, n = ${ind.n}) ==`);
+    L.push(ind.cos.filter(x=>x.pct!==null).map(x=>`${x.label}: ${x.pct.toFixed(0)}% rated >=${c.cfg.likertPass} (avg ${x.avgRating.toFixed(1)})`).join(" | "));
+  }
+  const tlaBits = [];
+  c.cos.forEach((co,i)=>{ if(co.delivery) tlaBits.push(`CO${i+1}: ${co.delivery}`); });
+  const effBits = (c.aust.report.tla||[]).filter(t=>t.act && t.eff).map(t=>`${t.act} = ${t.eff==="Yes"?"effective":"not effective"}${t.diff? " (\""+t.diff+"\")":""}`);
+  const prevCqi = (c.aust.spec.cqiPrev||[]).filter(x=>x.rec).map(x=>`"${x.rec}"${x.ref? " — reflected: "+x.ref:""}`);
+  if(tlaBits.length || effBits.length || prevCqi.length){
+    L.push("");
+    L.push("== TEACHING-LEARNING HISTORY ==");
+    if(tlaBits.length) L.push("Adopted activities — " + tlaBits.join("; "));
+    if(effBits.length) L.push("Effectiveness recorded (Course Report 3.2): " + effBits.join("; "));
+    if(prevCqi.length) L.push("Previous offering's CQI actions (Specifications 6.1): " + prevCqi.join("; "));
+  }
+  L.push("");
+  L.push("== YOUR TASK — draft 3-5 sentences for each ==");
+  const failing = att.cos.filter(x=>x.pct!==null && !x.attained).map(x=>x.label);
+  let t = 1;
+  if(failing.length){
+    L.push(`${t++}. Analysis of the low attainment of ${failing.join(", ")} w.r.t. the teaching-learning activities.`);
+    L.push(`${t++}. Analysis of the low attainment of ${failing.join(", ")} w.r.t. the assessment techniques (note the weakest items above).`);
+  } else {
+    L.push(`${t++}. A short evaluation of the teaching-learning activities in light of the results.`);
+  }
+  L.push(`${t++}. Recommended actions for quality improvement (Course Report 6.1 — CO loop and PO loop separately).`);
+  if(ind.n>0 && failing.length) L.push(`${t++}. A brief comment on any direct-vs-indirect gap for ${failing.join(", ")} (self-rating vs measured marks).`);
+  L.push("");
+  L.push("== CONSTRAINTS ==");
+  L.push("Professional accreditation-report tone; every claim traceable to the");
+  L.push("evidence above; actions must be specific and feasible for a class of this");
+  L.push("size at a Bangladeshi university; if the evidence is insufficient for any");
+  L.push("conclusion, say so explicitly rather than speculating.");
+  return L.join("\n");
+}
+function copyAIPrompt(){
+  const c = activeCourse(); if(!c) return;
+  const txt = buildAIPrompt(c);
+  const done = ()=>toast("AI prompt copied — paste it into ChatGPT, Claude, Gemini, etc.");
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>copyAIFallback(txt, done));
+  } else copyAIFallback(txt, done);
+}
+function copyAIFallback(txt, done){
+  const ta = document.createElement("textarea");
+  ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); done(); }catch(e){ alert("Copy failed — please copy manually:\n\n"+txt.slice(0,500)+"…"); }
+  ta.remove();
+}
 function renderCQI(){
   const el = document.getElementById("tab-cqi");
   const c = activeCourse();
@@ -1682,6 +1803,7 @@ function renderCQI(){
     <p class="hint">This tab consolidates the evidence BAETE asks for under <b>Criterion 3.8</b> (teaching-learning &amp; assessment) and <b>Criterion 5.4.3</b> (CQI loop for courses and curriculum). The action tables below are <b>the same data</b> as Course Report 6.1 and Course Specifications 6.1 — editing here updates the documents and vice versa. A printable <b>CQI Report</b> for Annexure H is available under Accreditation Documents.</p>
     <div class="btn-row" style="margin-top:0">
       <button class="btn" onclick="showDoc('cqi');showTab('docs')">🖨 Open Printable CQI Report (Annexure H)</button>
+      <button class="btn secondary" title="Copies a complete, curated prompt (methodology, COs, mapped POs, assessment plan, results, T&L history — aggregates only, no student identities) for pasting into any AI tool to draft CQI narratives." onclick="copyAIPrompt()">📋 Copy AI Prompt</button>
     </div>
   </div>
   <div class="card">

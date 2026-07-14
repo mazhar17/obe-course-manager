@@ -6,6 +6,20 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.24 — July 14, 2026 (minor)
+  - CQI tab: new "📋 Copy AI Prompt" button. Assembles a complete, curated
+    prompt from the course data — methodology note (with the course's
+    actual thresholds), course context, full CO statements with BT
+    domain/level and mapped POs, Washington Accord names of the mapped
+    POs only, assessment plan (marks, CO tags, optional flags, groups,
+    choice scheme), direct results (per-CO n, averages, verdicts, weakest
+    items, below-threshold counts), indirect survey summary, T&L history
+    (adopted activities, recorded effectiveness, previous CQI actions),
+    a task list auto-focused on the not-attained COs, and evidence-bound
+    constraints. Aggregates only — student names/IDs are never included.
+    Empty sections are omitted. Copies to the clipboard for pasting into
+    any AI tool.
+
 v1.23 — July 14, 2026 (minor)
   - CQI tab: all analysis fields now allow at least five lines. The
     narrative and low-attainment textareas gained a five-line minimum
