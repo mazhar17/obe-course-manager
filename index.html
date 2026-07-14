@@ -116,7 +116,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
 
 <header class="app-header">
   <div style="display:flex;align-items:center;gap:14px">
-    <svg width="46" height="46" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.35)" aria-hidden="true">
+    <svg width="46" height="46" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.45)" aria-hidden="true">
       <defs>
         <linearGradient id="icBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15806E"/><stop offset="1" stop-color="#083A32"/></linearGradient>
         <linearGradient id="icAm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3A72F"/><stop offset="1" stop-color="#B2761A"/></linearGradient>
@@ -133,10 +133,11 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
       <circle cx="128" cy="128" r="31" fill="url(#icAm)"/>
       <circle cx="128" cy="128" r="31" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.25"/>
       <path d="M111,128 l12,12 l22,-26" stroke="#FFFFFF" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="4" y="4" width="248" height="248" rx="54" fill="none" stroke="#E6F2F0" stroke-width="8" opacity="0.55"/>
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.6</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.9</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -172,14 +173,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.6</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.9</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.6";
+const APP_VERSION = "v1.9";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",

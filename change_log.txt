@@ -6,6 +6,24 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.9 — July 14, 2026 (minor)
+  - Header icon: restored the v1.6 dark-gradient tile (preferred color
+    scheme) and solved its contrast problem with a mint hairline outline
+    and a stronger drop shadow, so the tile separates cleanly from the
+    teal title bar.
+
+v1.8 — July 14, 2026 (minor)
+  - Header logo redesigned as a tile-less mark: the target rings, CQI
+    orbit arrow and checkmark are now drawn directly on the title bar
+    (white rings with a subtle dark halo, amber accents) instead of
+    sitting on a background tile — better integration and contrast.
+
+v1.7 — July 14, 2026 (minor)
+  - Header icon switched to a light variant (mint-white tile, teal target
+    rings) for sufficient contrast against the teal title bar; the dark
+    variant remains in use for the favicon and standalone icon assets,
+    which sit on light backgrounds.
+
 v1.6 — July 14, 2026 (minor)
   - Faculty User Manual: app icon added to the cover page above the title.
   - Added the app icon (target + checkmark + CQI orbit arrow) inline
