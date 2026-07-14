@@ -6,6 +6,36 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.16 — July 14, 2026 (minor)
+  - Ctrl+S / Cmd+S now saves the current session at any moment: commits
+    the field being edited, flushes the pending file write immediately
+    (file linked), prompts reconnection (file awaiting permission), or
+    confirms browser storage (no file). The browser's own "Save page
+    as…" dialog is suppressed. The File menu item now reads
+    "Save Now (Ctrl+S)".
+
+v1.15 — July 14, 2026 (minor)
+  - Accreditation Documents: the "AUST" placeholder circle in the top-left
+    corner of every document is replaced by the official AUST logo. The
+    logo ships as aust_logo.svg next to index.html (upload both to the
+    repository); if the file is missing, documents render without a logo.
+
+v1.14 — July 14, 2026 (minor)
+  - T&L Activities: the "Add your own activity" input now suggests
+    activities from the Activity Pool as you type (autocomplete via
+    datalist) — pick a pool activity, search it, or enter a new one in
+    the same box. Using canonical pool names keeps the CQI
+    effectiveness tracking (name-matched) reliable.
+
+v1.13 — July 14, 2026 (minor)
+  - T&L Activities: each CO card now has an "Add your own activity"
+    input — typed activities are appended directly to that CO's delivery
+    methods (with duplicate protection). An optional tick also saves the
+    activity to the Activity Pool, auto-tagged with the CO's BT domain
+    and level so it participates in future recommendations and sharing.
+  - Recommendation lists gained a "Show all matching" toggle (previously
+    fixed at the top 6).
+
 v1.12 — July 14, 2026 (minor)
   - CO-PO Mapping Matrix simplified: a click now toggles a check mark (✓)
     instead of cycling correlation strengths 1/2/3. The strengths were

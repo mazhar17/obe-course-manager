@@ -1,4 +1,6 @@
-# OBE Course Manager — v1.12 (First release: July 13, 2026)
+# OBE Course Manager — v1.16 (First release: July 13, 2026)
+
+> **Deployment note:** upload `aust_logo.svg` alongside `index.html` — the official AUST logo shown on the Accreditation Documents. If the file is absent, the documents simply render without the logo.
 
 See `change_log.txt` for the version history.
 
@@ -10,7 +12,7 @@ Everything runs in the browser. No server, no database, no login. All data stays
 
 - **Course Info** — course code, title, credits, semester, program, teacher; editable attainment thresholds.
 - **COs & CO–PO Mapping** — write CO statements, choose the Bloom's Taxonomy (BT) Domain (Cognitive, Affective, or Psychomotor) with the matching Level (C1–C6, A1–A5, P1–P7); click-to-tick CO–PO mapping matrix (✓) against the 12 Washington Accord Program Outcomes.
-- **T&L Activities (CQI recommender)** — a built-in pool of 31 teaching & learning activities tagged by Bloom's level, mode (in-person/online), and class size. For each CO the app recommends the best-fitting activities, **boosting** ones suggested in the previous semester's CQI recommendations (Course Specifications 6.1 / Course Report 6.1) and **ranking down** ones marked ineffective in the previous Course Report (3.2). One click adopts an activity into the CO's delivery methods, which then flow automatically into the Course Specifications constructive-alignment table — closing the CQI loop. Faculty/departments can extend the pool with custom activities (kept in backups for sharing).
+- **T&L Activities (CQI recommender)** — a built-in pool of 31 teaching & learning activities tagged by Bloom's level, mode (in-person/online), and class size. For each CO the app recommends the best-fitting activities, **boosting** ones suggested in the previous semester's CQI recommendations (Course Specifications 6.1 / Course Report 6.1) and **ranking down** ones marked ineffective in the previous Course Report (3.2). One click adopts an activity into the CO's delivery methods, which then flow automatically into the Course Specifications constructive-alignment table — closing the CQI loop. Each CO card also accepts **your own activity** typed directly — with autocomplete suggestions from the Activity Pool as you type (keeping names consistent for CQI tracking), optionally saved to the pool auto-tagged with the CO's domain/level — and a "show all matching" toggle reveals every suitable pool activity. Faculty/departments can extend the pool with custom activities (kept in backups for sharing).
 - **Assessments** — plan quizzes, class tests, mid/final exams, labs, projects; every item/question is tagged with a CO and maximum marks.
 - **Students & Marks** — add students individually or bulk-paste from Excel; spreadsheet-style marks grid; CSV export/import of the full marks sheet.
 - **Attainment (Direct)** — automatic CO attainment (% of students scoring above the threshold per CO) and PO attainment (weighted by mapping strength), with color-coded tables and charts against the target line.
@@ -51,6 +53,7 @@ Just double-click `index.html` — it opens and works in any modern browser (Chr
 ## Important notes on data
 
 - **Recommended: work on a real file.** In Chrome/Edge, use the **📁 File menu in the header** (Open Data File… / Save to New File…) — also available under Data & Backup — to keep all data in a `.json` file on your computer. Every change then auto-saves to the file (header shows "saved"/"saving…"). Keep the file in a OneDrive/Google Drive/Dropbox folder and it is backed up and portable across computers. After reopening the browser, click **Reconnect** once to resume.
+- **Ctrl+S / Cmd+S** saves at any moment: it commits the field being edited, flushes the pending file write immediately (with a linked file), or confirms that everything is stored in the browser. The browser's own "Save page as…" dialog is suppressed.
 - Without a linked file, data is stored per browser, per device (localStorage) — clearing browser data erases it, so export JSON backups regularly from **Data & Backup**.
 - To share with the department, send the `.json` file (or a JSON export) — colleagues open it via **Open Data File…** or Import.
 - Nothing is ever uploaded anywhere; the app has no backend.
