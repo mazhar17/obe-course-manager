@@ -6,6 +6,22 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.23 — July 14, 2026 (minor)
+  - CQI tab: all analysis fields now allow at least five lines. The
+    narrative and low-attainment textareas gained a five-line minimum
+    height (still resizable), and the single-line inputs in the two
+    linked action tables (Course Report 6.1 / Course Specifications 6.1)
+    were converted to multi-line textareas. The printable documents keep
+    their compact print-style fields.
+
+v1.22 — July 14, 2026 (minor)
+  - CQI tab: all editable fields widened to full width (CSS only) — the
+    BAETE 3.8 narratives, the action tables linked to Course Report 6.1
+    and Course Specifications 6.1, the low-attainment analysis boxes,
+    and the stakeholder register. The Date column keeps its compact
+    width; the printable documents' dotted print-style fields are
+    unaffected. No calculation or content changes.
+
 v1.21 — July 14, 2026 (minor)
   - Attainment Calculation Methodology guide: applicability line updated
     to v1.21, noting that calculations are unchanged since v1.20 and

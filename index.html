@@ -81,6 +81,10 @@ table.tbl tr:nth-child(even) td{background:#fafcfd}
 footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;text-align:center;padding:16px}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--primary-dark);color:#fff;padding:10px 22px;border-radius:24px;font-size:14px;box-shadow:var(--shadow);opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
 .toast.show{opacity:1}
+/* CQI tab: full-width editable fields (the di/dta helpers are print-styled only inside .report-sheet) */
+#tab-cqi textarea.di{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;min-height:100px}
+#tab-cqi input.di{width:100%;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit}
+#tab-cqi select.di{border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:13px;font-family:inherit;width:100%}
 .file-wrap{position:relative;display:inline-flex;gap:4px;align-items:center}
 .file-menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);min-width:230px;z-index:60;overflow:hidden;text-align:left}
 .file-menu button{display:block;width:100%;background:none;border:none;padding:10px 14px;font-size:13.5px;text-align:left;cursor:pointer;font-family:inherit;color:var(--text)}
@@ -146,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.21</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.23</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -182,14 +186,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.21</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.23</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.21";
+const APP_VERSION = "v1.23";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -1656,11 +1660,11 @@ function renderCQI(){
   }).join("");
   const repRows = CQI_LABELS.map((L,i)=>`
     <tr><td>${L[0]}</td><td>${L[1]}</td>
-      <td>${di('report.cqi.'+i, c.aust.report.cqi[i]||'', 'Recommended action for quality improvement')}</td></tr>`).join("");
+      <td>${dta('report.cqi.'+i, c.aust.report.cqi[i]||'', 2, 'Recommended action for quality improvement')}</td></tr>`).join("");
   const specRows = CQI_LABELS.map((L,i)=>`
     <tr><td>${L[0]}</td><td>${L[1]}</td>
-      <td>${di('spec.cqiPrev.'+i+'.rec', c.aust.spec.cqiPrev[i].rec)}</td>
-      <td>${di('spec.cqiPrev.'+i+'.ref', c.aust.spec.cqiPrev[i].ref)}</td></tr>`).join("");
+      <td>${dta('spec.cqiPrev.'+i+'.rec', c.aust.spec.cqiPrev[i].rec, 2, 'Recommended action (previous Course Report)')}</td>
+      <td>${dta('spec.cqiPrev.'+i+'.ref', c.aust.spec.cqiPrev[i].ref, 2, 'How it was reflected in this offering')}</td></tr>`).join("");
   const stRows = q.stakeholders.map((s,i)=>`
     <tr>
       <td><select class="di" onchange="austSet('cqi.stakeholders.${i}.src',this.value)">${STAKEHOLDER_SRC.map(x=>`<option ${s.src===x?"selected":""}>${x}</option>`).join("")}</select></td>
