@@ -6,6 +6,14 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.12 — July 14, 2026 (minor)
+  - CO-PO Mapping Matrix simplified: a click now toggles a check mark (✓)
+    instead of cycling correlation strengths 1/2/3. The strengths were
+    display-only (calculations already treated mapping as binary,
+    weighted by CO marks per the AUST workbook method), so results are
+    unchanged. Existing files with 1-3 values remain fully compatible
+    (any non-zero value shows as ✓).
+
 v1.11 — July 14, 2026 (minor)
   - Header file chip is now a File menu: with no file linked it shows
     "File" with Open Data File… / Save to New File…; with a file linked

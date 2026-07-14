@@ -145,7 +145,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.11</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.12</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -181,14 +181,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.11</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.12</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.11";
+const APP_VERSION = "v1.12";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -642,14 +642,14 @@ function renderCOs(){
         ${o.field==="bloom"? "" : `<option value="">—</option>`}
         ${o.list.map(b=>`<option ${o.val===b?"selected":""}>${b}</option>`).join("")}
       </select></td>
-      <td style="white-space:nowrap">${Object.entries(co.po||{}).filter(([,v])=>v>0).map(([p,v])=>`<span class="badge blue">PO${p}:${v}</span>`).join(" ")||'<span class="badge grey">unmapped</span>'}</td>
+      <td style="white-space:nowrap">${Object.entries(co.po||{}).filter(([,v])=>v>0).map(([p])=>`<span class="badge blue">PO${p}</span>`).join(" ")||'<span class="badge grey">unmapped</span>'}</td>
       <td><button class="icon-btn" title="Delete CO" onclick="deleteCO('${co.id}')">✕</button></td>
     </tr>`;}).join("");
   const mapHeader = Array.from({length:N_PO},(_,i)=>`<th class="map-cell" title="${esc(PO_INFO[i+1])}">PO${i+1}</th>`).join("");
   const mapRows = c.cos.map((co,i)=>{
     const cells = Array.from({length:N_PO},(_,p)=>{
       const v = (co.po&&co.po[p+1])||0;
-      return `<td class="map-cell m${v}" title="Click to cycle 0→1→2→3 (${esc(PO_INFO[p+1])})" onclick="cyclePO('${co.id}',${p+1})">${v||"·"}</td>`;
+      return `<td class="map-cell m${v?3:0}" title="Click to toggle (${esc(PO_INFO[p+1])})" onclick="togglePO('${co.id}',${p+1})">${v?"✓":"·"}</td>`;
     }).join("");
     return `<tr><td style="white-space:nowrap"><b>CO${i+1}</b></td>${cells}</tr>`;
   }).join("");
@@ -665,7 +665,7 @@ function renderCOs(){
   </div>
   <div class="card">
     <h2>CO–PO Mapping Matrix</h2>
-    <p class="hint">Click a cell to cycle correlation strength: blank → 1 (weak) → 2 (moderate) → 3 (strong). Hover a PO heading for its Washington Accord graduate attribute name.</p>
+    <p class="hint">Click a cell to tick (✓) the POs addressed by each CO — click again to remove. Hover a PO heading for its Washington Accord graduate attribute name.</p>
     <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th></th>${mapHeader}</tr></thead>
       <tbody>${mapRows || `<tr><td colspan="13" class="empty">Add COs first.</td></tr>`}</tbody>
@@ -691,12 +691,12 @@ function deleteCO(id){
   c.cos = c.cos.filter(x=>x.id!==id);
   save(); renderCOs();
 }
-function cyclePO(coId, po){
+function togglePO(coId, po){
   const c = activeCourse(); if(!c) return;
   const co = c.cos.find(x=>x.id===coId); if(!co) return;
   if(!co.po) co.po = {};
-  co.po[po] = ((co.po[po]||0)+1) % 4;
-  if(co.po[po]===0) delete co.po[po];
+  if(co.po[po]) delete co.po[po];
+  else co.po[po] = 1;
   save(); renderCOs();
 }
 
@@ -1152,7 +1152,7 @@ function downloadFile(name, content, mime){
 /* Mirrors the AUST "Direct CO-PO Calculations" workbook:
    - Student CO score (%) = marks obtained in CO items / max marks of CO items × 100 (blank = 0)
    - CO: % of students scoring > Target Pass Marks; also % above KPI marks
-   - Student PO score (%) = Σ(CO score × CO max marks × mapped) / Σ(CO max marks × mapped)  [mapped = CO-PO strength > 0]
+   - Student PO score (%) = Σ(CO score × CO max marks × mapped) / Σ(CO max marks × mapped)  [mapped = CO-PO cell ticked]
    - Attained when % of students above pass marks ≥ Target KPI */
 function computeAttainment(c){
   const items = allItems(c);
