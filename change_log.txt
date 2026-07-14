@@ -6,6 +6,15 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.21 — July 14, 2026 (minor)
+  - Assessments tab simplified by progressive disclosure: item rows show
+    only Label, Max marks, CO and Mandatory. Question Groups and the
+    choice scheme moved into a per-assessment "⚙ Advanced (question
+    choice)" panel — collapsed by default, shown only when the
+    assessment has optional items, auto-opened when its settings are in
+    use (with a "settings in use" badge when collapsed). No change to
+    any calculation; all v1.18–v1.20 fairness rules remain in force.
+
 v1.20 — July 14, 2026 (minor)
   - Choice scheme per assessment: declare "students must answer k of the
     optional questions" in the Assessment Plan (question-unit = a group

@@ -70,7 +70,7 @@ table.tbl tr:nth-child(even) td{background:#fafcfd}
 .chart-box{max-width:900px;margin:10px auto}
 .empty{padding:26px;text-align:center;color:var(--muted);font-size:14px}
 .pill-note{font-size:12.5px;color:var(--muted);background:var(--primary-light);border-radius:8px;padding:8px 12px;margin:10px 0;display:inline-block}
-.item-row{display:grid;grid-template-columns:2fr 80px 1fr 92px 84px 36px;gap:8px;margin-bottom:6px;align-items:center}
+.item-row{display:grid;grid-template-columns:2fr 90px 1fr 92px 36px;gap:8px;margin-bottom:6px;align-items:center}
 .item-row input,.item-row select{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13.5px;font-family:inherit;width:100%}
 .icon-btn{background:none;border:none;color:var(--danger);font-size:17px;cursor:pointer;padding:2px}
 .report-sheet{background:#fff;padding:34px 40px;border-radius:var(--radius);box-shadow:var(--shadow);font-size:13.5px}
@@ -146,7 +146,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.20</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.21</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -182,14 +182,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.20</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.21</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.20";
+const APP_VERSION = "v1.21";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -974,7 +974,6 @@ function renderAssess(){
           <option value="">— CO —</option>${coOptions(it.coId)}
         </select>
         <label style="font-size:12px;white-space:nowrap;color:var(--muted)" title="Mandatory: a blank mark counts as 0. Optional (unticked): a blank mark means the student legitimately skipped it and is not penalized."><input type="checkbox" ${it.mandatory!==false?"checked":""} onchange="updateItem('${a.id}','${it.id}','mandatory',this.checked)"> Mandatory</label>
-        <input value="${esc(it.group||"")}" placeholder="Group" title="Optional question group (e.g., Q3 for sub-parts Q3a, Q3b). If a student attempts ANY item of the group, ALL items of the group count for that student (blanks = 0) — partial answers to a chosen question are penalized. If none are attempted, the whole group is excluded." onchange="updateItem('${a.id}','${it.id}','group',this.value)">
         <button class="icon-btn" title="Delete item" onclick="deleteItem('${a.id}','${it.id}')">✕</button>
       </div>`).join("");
     const total = a.items.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
@@ -989,19 +988,29 @@ function renderAssess(){
         <button class="btn danger small" onclick="deleteAssessment('${a.id}')">Delete</button>
       </div>
       ${(()=>{
-        const unitKeys = new Set();
-        a.items.forEach(it=>{ if(it.mandatory===false) unitKeys.add(it.group? "g::"+it.group : "i::"+it.id); });
+        const optItems = a.items.filter(it=>it.mandatory===false);
+        if(!optItems.length) return "";
+        const unitKeys = new Set(optItems.map(it=> it.group? "g::"+it.group : "i::"+it.id));
         const nOpt = unitKeys.size;
-        if(!nOpt) return "";
         const k = parseInt(a.chooseK);
-        return `<div style="margin-top:10px;font-size:13px;color:var(--muted)">
-          Choice scheme: students must answer
-          <input type="number" min="0" max="${nOpt}" value="${esc(a.chooseK)}" style="width:56px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:inherit" onchange="updateAssessment('${a.id}','chooseK',this.value)">
-          of the <b>${nOpt}</b> optional question(s)${k>nOpt? ' <span class="badge red">cannot exceed '+nOpt+'</span>':''}${k>0? ' <span class="badge blue">R5 active: shortfalls count as zeros</span>':' <span class="badge grey">blank = no requirement</span>'}
+        const hasAdv = (k>0) || optItems.some(it=>it.group);
+        const open = (window._advA||{})[a.id] !== undefined ? (window._advA||{})[a.id] : hasAdv;
+        const head = `<div class="btn-row" style="margin-top:10px"><button class="btn secondary small" onclick="toggleAdv('${a.id}')">⚙ Advanced (question choice) ${open?"▾":"▸"}</button>${hasAdv && !open? ' <span class="badge blue">settings in use</span>':''}</div>`;
+        if(!open) return head;
+        return head + `
+        <div style="border:1px dashed var(--border);border-radius:10px;padding:12px;margin-top:6px">
+          <p style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Only needed when the exam offers a choice of questions. <b>Group</b>: sub-parts of one question share a name (Q3a, Q3b → “Q3”) — attempting any part makes the whole question count. <b>Scheme</b>: if students must answer a fixed number of optional questions, declare it — shortfalls count as zeros (drawn from the highest-mark unattempted questions), and a student with no marks in this assessment is treated as absent. Details: Attainment Calculation Methodology guide.</p>
+          <div style="font-size:13px;margin-bottom:10px">Students must answer
+            <input type="number" min="0" max="${nOpt}" value="${esc(a.chooseK)}" style="width:56px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:inherit" onchange="updateAssessment('${a.id}','chooseK',this.value)">
+            of the <b>${nOpt}</b> optional question(s)${k>nOpt? ' <span class="badge red">cannot exceed '+nOpt+'</span>':''}${!(k>0)? ' <span class="badge grey">blank = no requirement</span>':''}
+          </div>
+          <table class="tbl" style="max-width:440px"><thead><tr><th>Optional item</th><th style="width:130px">Group</th></tr></thead><tbody>
+            ${optItems.map(it=>`<tr><td>${esc(it.label)}</td><td><input value="${esc(it.group||"")}" placeholder="—" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12.5px" onchange="updateItem('${a.id}','${it.id}','group',this.value)"></td></tr>`).join("")}
+          </tbody></table>
         </div>`;
       })()}
       <h3>Items / Questions (each mapped to a CO)</h3>
-      <div class="item-row" style="color:var(--muted);font-size:12px;font-weight:600"><span>Label</span><span>Max marks</span><span>CO</span><span>Mandatory?</span><span>Group</span><span></span></div>
+      <div class="item-row" style="color:var(--muted);font-size:12px;font-weight:600"><span>Label</span><span>Max marks</span><span>CO</span><span>Mandatory?</span><span></span></div>
       ${rows || '<p class="hint">No items yet.</p>'}
       <div class="btn-row"><button class="btn secondary small" onclick="addItem('${a.id}')">+ Add Item</button></div>
     </div>`;
@@ -1009,10 +1018,19 @@ function renderAssess(){
   el.innerHTML = `
   <div class="card">
     <h2>Assessment Plan</h2>
-    <p class="hint">Create assessments (quizzes, tests, exams, labs...) and break each into items/questions, each tagged with a CO and maximum marks. This drives marks entry and attainment. Edits save automatically.</p>
+    <p class="hint">Create assessments (quizzes, tests, exams, labs...) and break each into items/questions, each tagged with a CO, maximum marks, and a Mandatory tick (untick for questions the students may choose to skip). Exams offering a choice of questions can be configured further under <b>⚙ Advanced (question choice)</b> — most courses never need it. Edits save automatically.</p>
     <div class="btn-row" style="margin-top:0"><button class="btn" onclick="addAssessment()">+ Add Assessment</button></div>
   </div>
   ${blocks || '<div class="empty">No assessments yet.</div>'}`;
+}
+function toggleAdv(aid){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===aid); if(!a) return;
+  const hasAdv = (parseInt(a.chooseK)>0) || a.items.some(it=>it.mandatory===false && it.group);
+  window._advA = window._advA || {};
+  const cur = window._advA[aid] !== undefined ? window._advA[aid] : hasAdv;
+  window._advA[aid] = !cur;
+  renderAssess();
 }
 function addAssessment(){
   const c = activeCourse(); if(!c) return;
