@@ -1,4 +1,4 @@
-# OBE Course Manager — v1.10 (First release: July 13, 2026)
+# OBE Course Manager — v1.11 (First release: July 13, 2026)
 
 See `change_log.txt` for the version history.
 
@@ -50,7 +50,7 @@ Just double-click `index.html` — it opens and works in any modern browser (Chr
 
 ## Important notes on data
 
-- **Recommended: work on a real file.** In Chrome/Edge, use **Data & Backup → Save As New File…** (or the 💾 button in the header) to keep all data in a `.json` file on your computer. Every change then auto-saves to the file (header shows "saved"/"saving…"). Keep the file in a OneDrive/Google Drive/Dropbox folder and it is backed up and portable across computers. After reopening the browser, click **Reconnect** once to resume.
+- **Recommended: work on a real file.** In Chrome/Edge, use the **📁 File menu in the header** (Open Data File… / Save to New File…) — also available under Data & Backup — to keep all data in a `.json` file on your computer. Every change then auto-saves to the file (header shows "saved"/"saving…"). Keep the file in a OneDrive/Google Drive/Dropbox folder and it is backed up and portable across computers. After reopening the browser, click **Reconnect** once to resume.
 - Without a linked file, data is stored per browser, per device (localStorage) — clearing browser data erases it, so export JSON backups regularly from **Data & Backup**.
 - To share with the department, send the `.json` file (or a JSON export) — colleagues open it via **Open Data File…** or Import.
 - Nothing is ever uploaded anywhere; the app has no backend.

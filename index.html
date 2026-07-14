@@ -81,6 +81,14 @@ table.tbl tr:nth-child(even) td{background:#fafcfd}
 footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;text-align:center;padding:16px}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--primary-dark);color:#fff;padding:10px 22px;border-radius:24px;font-size:14px;box-shadow:var(--shadow);opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
 .toast.show{opacity:1}
+.file-wrap{position:relative;display:inline-flex;gap:4px;align-items:center}
+.file-menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);min-width:230px;z-index:60;overflow:hidden;text-align:left}
+.file-menu button{display:block;width:100%;background:none;border:none;padding:10px 14px;font-size:13.5px;text-align:left;cursor:pointer;font-family:inherit;color:var(--text)}
+.file-menu button:hover{background:var(--primary-light)}
+.file-menu button.danger{color:var(--danger)}
+.file-menu button.sep{border-top:1px solid var(--border)}
+.file-chip-btn{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.55);color:#fff;border-radius:8px;padding:6px 11px;font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap}
+.file-chip-btn:hover{background:rgba(255,255,255,.22)}
 .doc-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .doc-nav button{background:#fff;border:1.5px solid var(--primary);color:var(--primary);border-radius:20px;padding:7px 15px;font-size:13.5px;cursor:pointer;font-family:inherit;font-weight:600}
 .doc-nav button.on{background:var(--primary);color:#fff}
@@ -137,7 +145,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.10</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.11</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -173,14 +181,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.10</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.11</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.10";
+const APP_VERSION = "v1.11";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -369,13 +377,38 @@ function updateFileChip(){
   const el = document.getElementById("fileChip");
   if(!el) return;
   if(!FS_OK){ el.innerHTML = ""; return; }
+  const menu = items => window._fileMenuOpen? `<div class="file-menu">${items}</div>` : "";
+  const mi = (label, action, cls) => `<button class="${cls||""}" onclick="window._fileMenuOpen=false;${action}">${label}</button>`;
   if(!fileHandle){
-    el.innerHTML = `<button class="btn secondary small" title="Keep your data in a real file on your computer (recommended)" onclick="saveAsDataFile()">💾 Save to file…</button>`;
+    el.innerHTML = `<span class="file-wrap">
+      <button class="file-chip-btn" title="Open an existing data file or save your data to a new file" onclick="toggleFileMenu(event)">📁 File ▾</button>
+      ${menu(
+        mi("📂 Open Data File…","openDataFile()") +
+        mi("💾 Save to New File…","saveAsDataFile()")
+      )}</span>`;
   } else if(!filePermOk){
-    el.innerHTML = `<button class="btn secondary small" title="Click to reconnect to the file and resume auto-saving" onclick="reconnectFile()">🔗 Reconnect: ${esc(fileHandle.name)}</button>`;
+    el.innerHTML = `<span class="file-wrap">
+      <button class="file-chip-btn" title="Click to reconnect to the file and resume auto-saving" onclick="reconnectFile()">🔗 Reconnect: ${esc(fileHandle.name)}</button>
+      <button class="file-chip-btn" style="padding:6px 8px" title="File options" onclick="toggleFileMenu(event)">▾</button>
+      ${menu(
+        mi("🔗 Reconnect","reconnectFile()") +
+        mi("📂 Open Another File…","openDataFile()") +
+        mi("Stop Using File","unlinkFile()","danger sep")
+      )}</span>`;
   } else {
-    el.innerHTML = `<span class="badge ${fileDirty?"amber":"green"}" title="All changes auto-save to this file">💾 ${esc(fileHandle.name)} · ${fileDirty? "saving…" : "saved"}</span>`;
+    el.innerHTML = `<span class="file-wrap">
+      <button class="file-chip-btn" style="${fileDirty? "border-color:#E3A72F;color:#F6DCAB":""}" title="All changes auto-save to this file — click for file options" onclick="toggleFileMenu(event)">💾 ${esc(fileHandle.name)} · ${fileDirty? "saving…" : "saved"} ▾</button>
+      ${menu(
+        mi("📂 Open Another File…","openDataFile()") +
+        mi("💾 Save Now","writeFileNow().then(()=>toast('Saved'))") +
+        mi("Stop Using File","unlinkFile()","danger sep")
+      )}</span>`;
   }
+}
+function toggleFileMenu(e){
+  if(e && e.stopPropagation) e.stopPropagation();
+  window._fileMenuOpen = !window._fileMenuOpen;
+  updateFileChip();
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function esc(s){ return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -2250,6 +2283,9 @@ if(FS_OK){
     else updateFileChip();
   }).catch(()=>updateFileChip());
 } else updateFileChip();
+document.addEventListener("click", ()=>{
+  if(window._fileMenuOpen){ window._fileMenuOpen = false; updateFileChip(); }
+});
 </script>
 </body>
 </html>

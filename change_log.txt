@@ -6,6 +6,14 @@
  minor changes increment the number after the decimal point (v1.1, v1.2).
 ==========================================================================
 
+v1.11 — July 14, 2026 (minor)
+  - Header file chip is now a File menu: with no file linked it shows
+    "File" with Open Data File… / Save to New File…; with a file linked
+    the status chip opens a menu with Open Another File…, Save Now and
+    Stop Using File; the Reconnect state keeps one-click reconnect plus
+    the menu. Opening an existing file is now available directly from
+    the main interface.
+
 v1.10 — July 14, 2026 (minor)
   - COs & CO-PO Mapping: added a "BT Domain" drop-down per CO (Cognitive /
     Affective / Psychomotor); the "Level" column (renamed from "Bloom's
