@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.44</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.45</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.44</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.45</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.44";
+const APP_VERSION = "v1.45";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -2257,7 +2257,10 @@ function buildAIPrompt(c){
   L.push("");
   L.push("== CONSTRAINTS ==");
   L.push("Professional accreditation-report tone; every claim traceable to the");
-  L.push("evidence above; actions must be specific and feasible for a class of this");
+  L.push("evidence above. For every recommended action, add a one-sentence");
+  L.push("justification tied to the specific evidence (CO/PO figures, weak items,");
+  L.push("survey gaps) that motivates it — no unsupported assertions.");
+  L.push("Actions must be specific and feasible for a class of this");
   L.push("size at a Bangladeshi university; if the evidence is insufficient for any");
   L.push("conclusion, say so explicitly rather than speculating. Note: attendance/");
   L.push("participation data is not tracked by this tool — do not speculate about");
@@ -2322,9 +2325,9 @@ function aiAssessContext(c){
   out.push("Assessment types available: " + ASSESS_TYPES.join(", "));
   return out;
 }
-const AI_TLA_TASK = "T&L: for each CO touched by the recommendations, list the activities to adopt (exact pool names where possible) or drop, each with a one-line classroom tip. If a suggestion maps to no pool activity, propose it as a new custom activity with a short, reusable name.";
-const AI_ASSESS_TASK = "Assessment: for each CO touched by the recommendations, state which assessments/items to add or adjust — type, item Bloom level, mandatory vs optional and question-choice setup, question design; rubric actions (analytic rubrics shared in advance; mandatory for assignments plus a similarity check such as Turnitin); and marks-distribution changes across COs.";
-const AI_COMMON_RULES = ["- Be concise; group the output by CO number.","- Suggestions must be feasible for the stated class size within a regular semester."];
+const AI_TLA_TASK = "T&L: for each CO touched by the recommendations, list the activities to adopt (exact pool names where possible) or drop, each with a one-line classroom tip. If a suggestion maps to no pool activity, propose it as a new custom activity with a short, reusable name. JUSTIFY every suggestion in one sentence: why it fits the CO's Bloom domain/level, which recommendation it addresses, and why it is feasible for the stated class size.";
+const AI_ASSESS_TASK = "Assessment: for each CO touched by the recommendations, state which assessments/items to add or adjust — type, item Bloom level, mandatory vs optional and question-choice setup, question design; rubric actions (analytic rubrics shared in advance; mandatory for assignments plus a similarity check such as Turnitin); and marks-distribution changes across COs. JUSTIFY every suggestion in one sentence: how it improves validity, reliability or authenticity at that CO's level, and which recommendation it addresses.";
+const AI_COMMON_RULES = ["- Be concise; group the output by CO number.","- Suggestions must be feasible for the stated class size within a regular semester.","- Keep each justification to a single sentence — I may reuse them in the CQI narratives."];
 const AI_TLA_IMPL = "- I will adopt T&L suggestions in the app's T&L tab (+ Adopt buttons, or typed with pool-name autocomplete).";
 const AI_ASSESS_IMPL = "- I will implement assessment suggestions in the app's Assessments tab (items with CO/marks/Level, Mandatory ticks, ⚙ question choice, “Rubric prepared”).";
 function buildTlaAIPrompt(c){
@@ -2386,7 +2389,7 @@ function buildSynthPrompt(c){
   if((c.aust.assessSuggest||"").trim()) lines.push("[Suggested Modifications in Assessment Activities]\n" + c.aust.assessSuggest.trim());
   lines.push("");
   lines.push("== TASK ==");
-  lines.push("For each of the five loop rows — (1) CO loop, direct measurement; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect (survey) — draft 2–4 sentences describing how the recommendations were reflected in this offering, synthesized from my notes. If a row has no matching action, output exactly: \"No specific action this offering.\"");
+  lines.push("For each of the five loop rows — (1) CO loop, direct measurement; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect (survey) — draft 2–4 sentences describing how the recommendations were reflected in this offering, synthesized from my notes, explicitly naming the recommendation each action closes. If a row has no matching action, output exactly: \"No specific action this offering.\"");
   lines.push("");
   lines.push("== CONSTRAINTS ==");
   lines.push("- Formal, accreditation-ready wording (e.g., \"Think-pair-share was adopted for CO1; an analytic rubric was introduced for the design assignment\").");
@@ -2516,7 +2519,7 @@ function renderCQI(){
     <p class="hint">This tab consolidates the evidence BAETE asks for under <b>Criterion 3.8</b> (teaching-learning &amp; assessment) and <b>Criterion 5.4.3</b> (CQI loop for courses and curriculum). The action tables below are <b>the same data</b> as Course Report 6.1 and Course Specifications 6.1 — editing here updates the documents and vice versa. A printable <b>CQI Report</b> for Annexure H is available under Accreditation Documents.</p>
     <div class="btn-row" style="margin-top:0">
       <button class="btn" onclick="showDoc('cqi');showTab('docs')">🖨 Open Printable CQI Report (Annexure H)</button>
-      <button class="btn secondary" title="Copies a complete, curated prompt (methodology, COs, mapped POs, assessment plan, results, T&L history — aggregates only, no student identities) for pasting into any AI tool to draft CQI narratives." onclick="copyAIPrompt()">📋 Copy AI Prompt</button>
+      <button class="btn secondary" title="Copies a complete, curated prompt (methodology, COs, mapped POs, assessment plan, results, T&L history — aggregates only, no student identities) for pasting into any AI tool to draft CQI narratives." onclick="copyAIPrompt()">📋 Copy AI Prompt (CQI narratives &amp; action plans)</button>
     </div>
   </div>
   <div class="card">
