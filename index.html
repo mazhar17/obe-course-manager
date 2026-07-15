@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.32</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.33</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.32</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.33</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.32";
+const APP_VERSION = "v1.33";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -537,15 +537,15 @@ function renderDashboard(){
     <p class="hint">${esc(c.program||"")} ${c.semester? "· "+esc(c.semester):""} ${c.instructor? "· "+esc(c.instructor):""}</p>
     <h3>Suggested workflow</h3>
     <table class="tbl"><tbody>
-      <tr><td>1</td><td><b>Course Info</b> — course details, credit hours, instructor</td><td>${c.code? '<span class="badge green">done</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>2</td><td><b>COs &amp; CO–PO Mapping</b> — write COs with Bloom's level, map to POs</td><td>${c.cos.length? '<span class="badge green">'+c.cos.length+' COs</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>3</td><td><b>T&amp;L</b> — adopt recommended teaching &amp; learning activities per CO, informed by previous-semester CQI</td><td>${c.cos.some(co=>co.delivery)? '<span class="badge green">adopted</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>4</td><td><b>Assessments</b> — plan quizzes/exams; tag every question/item with a CO and Bloom level</td><td>${nItems? '<span class="badge green">'+nItems+' items</span>':'<span class="badge grey">pending</span>'}${unmapped? ' <span class="badge red">'+unmapped+' item(s) without valid CO</span>':''}</td></tr>
-      <tr><td>5</td><td><b>CA</b> — check the constructive alignment of COs, T&amp;L activities and assessments (Biggs triangle) and close any gaps</td><td><span class="badge blue">any time</span></td></tr>
-      <tr><td>6</td><td><b>Students &amp; Marks</b> — add students (or paste from Excel), enter marks</td><td>${nStu? '<span class="badge green">'+nStu+' students</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>7</td><td><b>Attainment</b> — CO/PO attainment computed automatically (AUST Direct Measurement method)</td><td>${marksEntered? '<span class="badge green">available</span>':'<span class="badge grey">needs marks</span>'}</td></tr>
-      <tr><td>8</td><td><b>CQI</b> — BAETE 3.8 &amp; 5.4.3 evidence: narratives, loop status, stakeholder feedback register, Annexure H checklist</td><td>${(c.aust&&c.aust.cqi&&(c.aust.cqi.complex||c.aust.cqi.effective))? '<span class="badge green">in progress</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>9</td><td><b>Accreditation Documents</b> — Course Outline, Course Specifications, Final Exam Vetting Form, Direct CO-PO Calculations, CO Exit Survey, Course Report &amp; CQI Report — auto-filled and printable</td><td><span class="badge blue">any time</span></td></tr>
+      <tr><td>1</td><td><b>Course Info</b> — course details, cohort, credits, instructor; set the attainment thresholds (Target Pass Marks, KPI, Direct/Indirect weights)</td><td>${c.code? '<span class="badge green">done</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>2</td><td><b>COs &amp; CO–PO Mapping</b> — write COs, choose the BT Domain (Cognitive / Affective / Psychomotor) and Level, tick the CO–PO matrix</td><td>${c.cos.length? '<span class="badge green">'+c.cos.length+' COs</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>3</td><td><b>T&amp;L</b> — first fill out <b>Course Specifications Table 6.1</b> (CQI recommendations from the previous offering) so the recommender can use them; then adopt activities per CO — they auto-fill <b>Course Specifications Table 3.1 (Constructive Alignment)</b>; review the T&amp;L Activities Summary Table (descriptions, practical tips, related COs)</td><td>${c.cos.some(co=>co.delivery)? '<span class="badge green">adopted</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>4</td><td><b>Assessments</b> — plan quizzes/exams/labs/projects; tag every item with a CO, marks and Level (warning if set above the CO's level); untick Mandatory for optional questions (⚙ Advanced for question choice); tick “Rubric prepared” where required; review the Assessment Summary Table (marks-distribution chart + practical tips)</td><td>${nItems? '<span class="badge green">'+nItems+' items</span>':'<span class="badge grey">pending</span>'}${unmapped? ' <span class="badge red">'+unmapped+' item(s) without valid CO</span>':''}</td></tr>
+      <tr><td>5</td><td><b>CA</b> — check the Biggs triangle and per-CO alignment cards; close gaps using the suggestions (one-click Adopt)</td><td><span class="badge blue">any time</span></td></tr>
+      <tr><td>6</td><td><b>Students &amp; Marks</b> — add students or paste from Excel; enter marks in the grid or via CSV (Empty Template / Import / Export)</td><td>${nStu? '<span class="badge green">'+nStu+' students</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>7</td><td><b>Attainment</b> — Direct CO/PO attainment computed automatically (AUST method); add the CO Exit Survey for Indirect and the 80/20 (editable) Combined attainment</td><td>${marksEntered? '<span class="badge green">available</span>':'<span class="badge grey">needs marks</span>'}</td></tr>
+      <tr><td>8</td><td><b>CQI</b> — BAETE 3.8 &amp; 5.4.3 evidence: narratives, loop status, low-attainment analysis, stakeholder feedback register, Annexure H checklist (incl. rubrics); 📋 Copy AI Prompt to draft narratives</td><td>${(c.aust&&c.aust.cqi&&(c.aust.cqi.complex||c.aust.cqi.effective))? '<span class="badge green">in progress</span>':'<span class="badge grey">pending</span>'}</td></tr>
+      <tr><td>9</td><td><b>Accreditation Documents</b> — Course Outline, Course Specifications, Final Exam Vetting Form, Direct CO-PO Calculations, CO Exit Survey, Course Report &amp; CQI Report — several key information are auto-filled and printable</td><td><span class="badge blue">any time</span></td></tr>
     </tbody></table>
     <div class="btn-row">
       <button class="btn secondary" onclick="duplicateForNewSemester()">⟳ Duplicate for New Semester (CQI)</button>

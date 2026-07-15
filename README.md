@@ -1,8 +1,8 @@
-# OBE Course Manager — v1.32 (First release: July 13, 2026)
+# OBE Course Manager — v1.33 (First release: July 13, 2026)
 
 > **Deployment note:** upload `aust_logo.svg` alongside `index.html` — the official AUST logo shown on the Accreditation Documents. If the file is absent, the documents simply render without the logo.
 
-See `change_log_v1.32.txt` for the version history (the log file is renamed with each release).
+See `change_log_v1.33.txt` for the version history (the log file is renamed with each release).
 
 A free, single-file web app for managing **teaching, learning & assessment from the OBE (Outcome-Based Education) perspective** — built for engineering faculty working under the Washington Accord / BAETE framework.
 
