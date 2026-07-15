@@ -1,0 +1,233 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1180" font-family="Segoe UI, Calibri, Arial, sans-serif">
+  <rect width="1600" height="1180" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="800" y="58" text-anchor="middle" font-size="38" font-weight="700" fill="#0A4A40">OBE Course Manager — One Semester Workflow</text>
+  <text x="800" y="92" text-anchor="middle" font-size="19" font-style="italic" fill="#1F2D3D">Outcome-Based Education per the BAETE / Washington Accord framework · a PDCA-based CQI cycle</text>
+
+  <!-- ======== CARDS: 3 x 3 grid. w=330 h=250. Cols x: 120, 635, 1150. Rows y: 130, 415, 700 ======== -->
+
+  <!-- 1 Course Info (PLAN) -->
+  <g>
+    <rect x="120" y="130" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="3"/>
+    <circle cx="156" cy="166" r="18" fill="#0A4A40"/><text x="156" y="173" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">1</text>
+    <rect x="352" y="146" width="76" height="26" rx="13" fill="#3E6FB0"/><text x="390" y="164" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">PLAN</text>
+    <circle cx="285" cy="212" r="42" fill="#E6F2F0"/>
+    <g stroke="#0F6B5C" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <rect x="265" y="190" width="40" height="46" rx="4"/>
+      <rect x="276" y="184" width="18" height="10" rx="3" fill="#E6F2F0"/>
+      <path d="M273,203 l5,5 l8,-9"/><line x1="273" y1="219" x2="297" y2="219"/><line x1="273" y1="228" x2="292" y2="228"/>
+    </g>
+    <text x="285" y="285" text-anchor="middle" font-size="21" font-weight="700" fill="#0A4A40">Course Info</text>
+    <line x1="165" y1="298" x2="405" y2="298" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="285" y="322" text-anchor="middle" font-size="15" fill="#1F2D3D">Course details, cohort,</text>
+    <text x="285" y="342" text-anchor="middle" font-size="15" fill="#1F2D3D">teacher(s) &amp; attainment</text>
+    <text x="285" y="362" text-anchor="middle" font-size="15" fill="#1F2D3D">thresholds</text>
+  </g>
+
+  <!-- 2 Course Outcomes (PLAN) -->
+  <g>
+    <rect x="635" y="130" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="3"/>
+    <circle cx="671" cy="166" r="18" fill="#0A4A40"/><text x="671" y="173" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">2</text>
+    <rect x="867" y="146" width="76" height="26" rx="13" fill="#3E6FB0"/><text x="905" y="164" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">PLAN</text>
+    <circle cx="800" cy="212" r="42" fill="#E6F2F0"/>
+    <g stroke="#0F6B5C" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <circle cx="800" cy="212" r="25"/><circle cx="800" cy="212" r="14"/><circle cx="800" cy="212" r="4" fill="#0F6B5C"/>
+      <line x1="800" y1="212" x2="824" y2="188"/><path d="M824,188 l8,-2 l-2,8 z" fill="#0F6B5C"/>
+    </g>
+    <text x="800" y="285" text-anchor="middle" font-size="21" font-weight="700" fill="#0A4A40">Course Outcomes</text>
+    <line x1="680" y1="298" x2="920" y2="298" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="800" y="322" text-anchor="middle" font-size="15" fill="#1F2D3D">Write COs with BT domain</text>
+    <text x="800" y="342" text-anchor="middle" font-size="15" fill="#1F2D3D">&amp; Level; tick-map to</text>
+    <text x="800" y="362" text-anchor="middle" font-size="15" fill="#1F2D3D">the 12 POs</text>
+  </g>
+
+  <!-- 3 T&L (PLAN) -->
+  <g>
+    <rect x="1150" y="130" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="3"/>
+    <circle cx="1186" cy="166" r="18" fill="#0A4A40"/><text x="1186" y="173" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">3</text>
+    <rect x="1382" y="146" width="76" height="26" rx="13" fill="#3E6FB0"/><text x="1420" y="164" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">PLAN</text>
+    <circle cx="1315" cy="212" r="42" fill="#E6F2F0"/>
+    <g stroke="#0F6B5C" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <path d="M1315,190 a16,16 0 0 1 8,29 c-3,2 -4,6 -4,8 h-8 c0,-2 -1,-6 -4,-8 a16,16 0 0 1 8,-29 z"/>
+      <line x1="1309" y1="234" x2="1321" y2="234"/><line x1="1311" y1="240" x2="1319" y2="240"/>
+      <line x1="1315" y1="179" x2="1315" y2="184"/><line x1="1292" y1="212" x2="1287" y2="212"/><line x1="1343" y1="212" x2="1338" y2="212"/>
+    </g>
+    <text x="1315" y="285" text-anchor="middle" font-size="21" font-weight="700" fill="#0A4A40">T&amp;L</text>
+    <line x1="1195" y1="298" x2="1435" y2="298" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="1315" y="322" text-anchor="middle" font-size="15" fill="#1F2D3D">CQI-aware recommendations;</text>
+    <text x="1315" y="342" text-anchor="middle" font-size="15" fill="#1F2D3D">AI prompt; summary table</text>
+    <text x="1315" y="362" text-anchor="middle" font-size="15" fill="#1F2D3D">with practical tips</text>
+  </g>
+
+  <!-- 4 Assessments (PLAN) -->
+  <g>
+    <rect x="120" y="415" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="3"/>
+    <circle cx="156" cy="451" r="18" fill="#0A4A40"/><text x="156" y="458" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">4</text>
+    <rect x="352" y="431" width="76" height="26" rx="13" fill="#3E6FB0"/><text x="390" y="449" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">PLAN</text>
+    <circle cx="285" cy="497" r="42" fill="#E6F2F0"/>
+    <g stroke="#0F6B5C" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <path d="M265,474 h28 l10,10 v40 h-38 z"/><path d="M293,474 v10 h10"/>
+      <line x1="273" y1="512" x2="297" y2="512"/><line x1="273" y1="520" x2="291" y2="520"/>
+    </g>
+    <text x="285" y="497" text-anchor="middle" font-size="17" font-weight="700" fill="#0F6B5C">?</text>
+    <text x="285" y="570" text-anchor="middle" font-size="21" font-weight="700" fill="#0A4A40">Assessments</text>
+    <line x1="165" y1="583" x2="405" y2="583" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="285" y="607" text-anchor="middle" font-size="15" fill="#1F2D3D">Items tagged with CO, marks</text>
+    <text x="285" y="627" text-anchor="middle" font-size="15" fill="#1F2D3D">&amp; Level; rubrics; AI prompt;</text>
+    <text x="285" y="647" text-anchor="middle" font-size="15" fill="#1F2D3D">summary table &amp; marks chart</text>
+  </g>
+
+  <!-- 5 CA (DO) -->
+  <g>
+    <rect x="635" y="415" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="3"/>
+    <circle cx="671" cy="451" r="18" fill="#0A4A40"/><text x="671" y="458" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">5</text>
+    <rect x="867" y="431" width="76" height="26" rx="13" fill="#6B7B8A"/><text x="905" y="449" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">DO</text>
+    <circle cx="800" cy="497" r="42" fill="#E6F2F0"/>
+    <g stroke="#0F6B5C" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M800,473 L776,519 L824,519 Z"/>
+    </g>
+    <circle cx="800" cy="473" r="4.5" fill="#0F6B5C"/><circle cx="776" cy="519" r="4.5" fill="#0F6B5C"/><circle cx="824" cy="519" r="4.5" fill="#0F6B5C"/>
+    <text x="800" y="514" text-anchor="middle" font-size="13" font-weight="700" font-style="italic" fill="#B22222">KSA</text>
+    <text x="800" y="570" text-anchor="middle" font-size="20" font-weight="700" fill="#0A4A40">CA (Constructive Alignment)</text>
+    <line x1="680" y1="583" x2="920" y2="583" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="800" y="607" text-anchor="middle" font-size="15" fill="#1F2D3D">Biggs triangle &amp; per-CO</text>
+    <text x="800" y="627" text-anchor="middle" font-size="15" fill="#1F2D3D">alignment suggestions</text>
+    <text x="800" y="647" text-anchor="middle" font-size="15" fill="#1F2D3D">(check any time)</text>
+  </g>
+
+  <!-- 6 Students & Marks (DO) -->
+  <g>
+    <rect x="1150" y="415" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="3"/>
+    <circle cx="1186" cy="451" r="18" fill="#0A4A40"/><text x="1186" y="458" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">6</text>
+    <rect x="1382" y="431" width="76" height="26" rx="13" fill="#6B7B8A"/><text x="1420" y="449" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">DO</text>
+    <circle cx="1315" cy="497" r="42" fill="#E6F2F0"/>
+    <g stroke="#0F6B5C" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <rect x="1291" y="475" width="48" height="44" rx="4"/>
+      <line x1="1291" y1="489" x2="1339" y2="489"/><line x1="1291" y1="504" x2="1339" y2="504"/>
+      <line x1="1307" y1="475" x2="1307" y2="519"/><line x1="1323" y1="475" x2="1323" y2="519"/>
+    </g>
+    <text x="1315" y="570" text-anchor="middle" font-size="21" font-weight="700" fill="#0A4A40">Students &amp; Marks</text>
+    <line x1="1195" y1="583" x2="1435" y2="583" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="1315" y="607" text-anchor="middle" font-size="15" fill="#1F2D3D">Enroll students; enter or</text>
+    <text x="1315" y="627" text-anchor="middle" font-size="15" fill="#1F2D3D">import marks (CSV)</text>
+  </g>
+
+  <!-- 7 Attainment (CHECK) -->
+  <g>
+    <rect x="120" y="700" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="3"/>
+    <circle cx="156" cy="736" r="18" fill="#0A4A40"/><text x="156" y="743" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">7</text>
+    <rect x="352" y="716" width="76" height="26" rx="13" fill="#C98A1B"/><text x="390" y="734" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">CHECK</text>
+    <circle cx="285" cy="782" r="42" fill="#E6F2F0"/>
+    <g fill="#0F6B5C">
+      <rect x="264" y="787" width="9" height="17" rx="1.5"/>
+      <rect x="278" y="777" width="9" height="27" rx="1.5"/>
+      <rect x="292" y="767" width="9" height="37" rx="1.5"/>
+      <rect x="306" y="757" width="9" height="47" rx="1.5"/>
+    </g>
+    <line x1="258" y1="807" x2="320" y2="807" stroke="#0F6B5C" stroke-width="3"/>
+    <text x="285" y="855" text-anchor="middle" font-size="21" font-weight="700" fill="#0A4A40">Attainment</text>
+    <line x1="165" y1="868" x2="405" y2="868" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="285" y="892" text-anchor="middle" font-size="15" fill="#1F2D3D">Direct + indirect (Course</text>
+    <text x="285" y="912" text-anchor="middle" font-size="15" fill="#1F2D3D">Evaluation Survey) + combined</text>
+    <text x="285" y="932" text-anchor="middle" font-size="15" fill="#1F2D3D">CO/PO attainment</text>
+  </g>
+
+  <!-- 8 CQI (ACT) -->
+  <g>
+    <rect x="635" y="700" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="3"/>
+    <circle cx="671" cy="736" r="18" fill="#0A4A40"/><text x="671" y="743" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">8</text>
+    <rect x="867" y="716" width="76" height="26" rx="13" fill="#1E8E3E"/><text x="905" y="734" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">ACT</text>
+    <circle cx="800" cy="782" r="42" fill="#E6F2F0"/>
+    <g stroke="#0F6B5C" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <circle cx="794" cy="776" r="16"/><line x1="805" y1="787" x2="820" y2="802"/>
+    </g>
+    <text x="800" y="855" text-anchor="middle" font-size="21" font-weight="700" fill="#0A4A40">CQI</text>
+    <line x1="680" y1="868" x2="920" y2="868" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="800" y="892" text-anchor="middle" font-size="15" fill="#1F2D3D">Low-attainment analysis; CQI</text>
+    <text x="800" y="912" text-anchor="middle" font-size="15" fill="#1F2D3D">narratives &amp; action plans (AI-</text>
+    <text x="800" y="932" text-anchor="middle" font-size="15" fill="#1F2D3D">assisted); Annexure H evidence</text>
+  </g>
+
+  <!-- 9 Accreditation Documents (ACT) -->
+  <g>
+    <rect x="1150" y="700" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="3"/>
+    <circle cx="1186" cy="736" r="18" fill="#0A4A40"/><text x="1186" y="743" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">9</text>
+    <rect x="1382" y="716" width="76" height="26" rx="13" fill="#1E8E3E"/><text x="1420" y="734" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">ACT</text>
+    <circle cx="1315" cy="775" r="38" fill="#E6F2F0"/>
+    <g stroke="#0F6B5C" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <rect x="1294" y="771" width="42" height="22" rx="3"/>
+      <path d="M1301,771 v-14 h28 v14"/>
+      <path d="M1301,787 h28 v14 h-28 z" fill="#FFFFFF"/>
+      <circle cx="1330" cy="777" r="1.8" fill="#0F6B5C"/>
+    </g>
+    <text x="1315" y="843" text-anchor="middle" font-size="20" font-weight="700" fill="#0A4A40">Accreditation Documents</text>
+    <line x1="1195" y1="856" x2="1435" y2="856" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
+    <text x="1315" y="878" text-anchor="middle" font-size="14" fill="#1F2D3D">Print 7 auto-filled documents:</text>
+    <text x="1315" y="897" text-anchor="middle" font-size="14" fill="#1F2D3D">Outline, Specifications, Vetting Form,</text>
+    <text x="1315" y="916" text-anchor="middle" font-size="14" fill="#1F2D3D">CO-PO Calculations, Course Evaluation</text>
+    <text x="1315" y="935" text-anchor="middle" font-size="14" fill="#1F2D3D">Survey, Course Report, CQI Report</text>
+  </g>
+
+  <!-- ======== FLOW ARROWS (explicit heads) ======== -->
+  <g stroke="#0F6B5C" stroke-width="5" fill="none" stroke-linecap="round">
+    <line x1="455" y1="255" x2="605" y2="255"/>
+    <line x1="970" y1="255" x2="1120" y2="255"/>
+    <line x1="455" y1="540" x2="605" y2="540"/>
+    <line x1="970" y1="540" x2="1120" y2="540"/>
+    <line x1="455" y1="825" x2="605" y2="825"/>
+    <line x1="970" y1="825" x2="1120" y2="825"/>
+  </g>
+  <g fill="#0F6B5C">
+    <polygon points="605,247 605,263 620,255"/>
+    <polygon points="1120,247 1120,263 1135,255"/>
+    <polygon points="605,532 605,548 620,540"/>
+    <polygon points="1120,532 1120,548 1135,540"/>
+    <polygon points="605,817 605,833 620,825"/>
+    <polygon points="1120,817 1120,833 1135,825"/>
+  </g>
+  <!-- Serpentine connector: 3 -> 4 -->
+  <path d="M1315,380 v3 q0,11 -11,11 H296 q-11,0 -11,9" stroke="#0F6B5C" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <polygon points="277,403 293,403 285,415" fill="#0F6B5C"/>
+  <!-- Serpentine connector: 6 -> 7 -->
+  <path d="M1315,665 v3 q0,11 -11,11 H296 q-11,0 -11,9" stroke="#0F6B5C" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <polygon points="277,688 293,688 285,700" fill="#0F6B5C"/>
+
+  <!-- ======== CQI RETURN LOOP: 9 -> 3 (right margin) ======== -->
+  <path d="M1480,825 h40 q12,0 12,-12 V267 q0,-12 -12,-12 h-23" stroke="#C98A1B" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <polygon points="1497,247 1497,263 1483,255" fill="#C98A1B"/>
+  <text x="800" y="990" text-anchor="middle" font-size="20" font-weight="700" fill="#C98A1B">⟳ Duplicate for New Semester — Course Report 6.1 feeds the next Specifications 6.1 (CQI loop closed)</text>
+
+  <!-- ======== BADGES ======== -->
+  <g>
+    <rect x="90" y="1015" width="400" height="60" rx="14" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2.5"/>
+    <g stroke="#0F6B5C" stroke-width="2.8" fill="none">
+      <circle cx="130" cy="1045" r="16"/>
+      <ellipse cx="130" cy="1045" rx="7" ry="16"/>
+      <line x1="114" y1="1045" x2="146" y2="1045"/>
+    </g>
+    <text x="160" y="1039" font-size="17" font-weight="700" fill="#1F2D3D">Single HTML file —</text>
+    <text x="160" y="1061" font-size="17" fill="#1F2D3D">runs in any browser</text>
+
+    <rect x="600" y="1015" width="400" height="60" rx="14" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2.5"/>
+    <g fill="#0F6B5C">
+      <path d="M640,1029 l14,5 v12 c0,9 -6,15 -14,18 c-8,-3 -14,-9 -14,-18 v-12 z"/>
+    </g>
+    <rect x="634" y="1042" width="12" height="10" rx="2" fill="#FFFFFF"/>
+    <path d="M636,1042 v-3 a4,4 0 0 1 8,0 v3" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+    <text x="670" y="1039" font-size="17" font-weight="700" fill="#1F2D3D">Data stays</text>
+    <text x="670" y="1061" font-size="17" fill="#1F2D3D">on your device</text>
+
+    <rect x="1110" y="1015" width="400" height="60" rx="14" fill="#FFFFFF" stroke="#0F6B5C" stroke-width="2.5"/>
+    <circle cx="1150" cy="1045" r="16" stroke="#0F6B5C" stroke-width="2.8" fill="none"/>
+    <text x="1150" y="1052" text-anchor="middle" font-size="20" font-weight="700" fill="#0F6B5C">C</text>
+    <text x="1180" y="1039" font-size="17" font-weight="700" fill="#1F2D3D">© Prof. Mazharul Islam</text>
+    <text x="1180" y="1061" font-size="17" fill="#1F2D3D">CC BY 4.0</text>
+  </g>
+
+  <!-- ======== FOOTER ======== -->
+  <rect x="480" y="1105" width="640" height="40" rx="20" fill="#E6F2F0"/>
+  <rect x="592" y="1113" width="70" height="24" rx="6" fill="#0A4A40"/>
+  <text x="627" y="1130" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">v1.45</text>
+  <text x="676" y="1131" font-size="17" fill="#0A4A40">·  mazhar17.github.io/obe-course-manager</text>
+</svg>

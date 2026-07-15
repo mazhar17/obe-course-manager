@@ -59,8 +59,8 @@ table.tbl tr:nth-child(even) td{background:#fafcfd}
 .badge.blue{background:var(--primary-light);color:var(--primary-dark)}
 .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}
 .stat{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;text-align:center}
-.stat .num{font-size:28px;font-weight:700;color:var(--primary)}
-.stat .lbl{font-size:12.5px;color:var(--muted);margin-top:2px}
+.stat .num{font-size:21px;font-weight:700;color:var(--primary)}
+.stat .lbl{font-size:12px;color:var(--muted);margin-top:2px}
 .map-cell{width:44px;text-align:center !important;cursor:pointer;user-select:none;font-weight:700}
 .map-cell.m3{background:#0f6b5c !important;color:#fff}
 .map-cell.m2{background:#5ba396 !important;color:#fff}
@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.45</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.50</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.45</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.50</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.45";
+const APP_VERSION = "v1.50";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -551,6 +551,54 @@ function renderDashboard(){
   const att = computeAttainment(c);
   const attainedCOs = att.cos.filter(x=>x.attained).length;
   const unmapped = c.assessments.flatMap(a=>a.items).filter(it=>!c.cos.some(co=>co.id===it.coId)).length;
+  /* Suggested workflow — grouped by PDCA phase, with stepper circles (✓ done / outlined next / muted pending)
+     and one-line rows whose full instructions expand on demand. */
+  const stepDetails = {
+    1: `Set the course details, cohort, credits and teacher(s), and the attainment thresholds (Target Pass Marks, KPI, Direct/Indirect weights).`,
+    2: `Write the COs, choose the BT Domain (Cognitive / Affective / Psychomotor) and Level, and tick the CO–PO matrix against the 12 Washington Accord POs.`,
+    3: `First fill out <b>Course Specifications Table 6.1</b> (CQI recommendations from the previous offering) so the recommender and AI prompts can use them, noting distilled actions in <b>Suggested Modifications in T&amp;L Activities</b> (named pool activities get boosted); then adopt activities per CO — they auto-fill <b>Course Specifications Table 3.1 (Constructive Alignment)</b>; review the T&amp;L Activities Summary Table (descriptions, practical tips, related COs).`,
+    4: `Start from the assessment-related CQI recommendations of the previous offering (the tab's CQI Inputs card + scoped AI prompt), noting them in <b>Suggested Modifications in Assessment Activities</b>; then plan quizzes/exams/labs/projects; tag every item with a CO, marks and Level (warning if set above the CO's level); untick Mandatory for optional questions (⚙ Advanced for question choice); tick “Rubric prepared” where required; review the Assessment Summary Table (marks-distribution chart + practical tips).`,
+    5: `Check the Biggs triangle and per-CO alignment cards; close gaps using the suggestions (one-click Adopt).`,
+    6: `Add students or paste from Excel; enter marks in the grid or via CSV (Empty Template / Import / Export).`,
+    7: `Direct CO/PO attainment is computed automatically (AUST method); add the Course Evaluation Survey for Indirect and the 80/20 (editable) Combined attainment.`,
+    8: `BAETE 3.8 &amp; 5.4.3 evidence: narratives, loop status, low-attainment analysis, stakeholder feedback register, Annexure H checklist (incl. rubrics); 📋 Copy AI Prompt (CQI narratives &amp; action plans); record next semester's actions in Course Report 6.1 — the loop then restarts via “⟳ Duplicate for New Semester”. The full loop map is shown atop the CQI tab.`,
+    9: `Course Outline, Course Specifications, Final Exam Vetting Form, Direct CO-PO Calculations, Course Evaluation Survey, Course Report &amp; CQI Report — several key information are auto-filled and printable.`
+  };
+  const cqiStarted = !!(c.aust&&c.aust.cqi&&(c.aust.cqi.complex||c.aust.cqi.effective));
+  const steps = [
+    {n:1, tab:"Course Info", gist:"course details, cohort & attainment thresholds", done: !!c.code, badge: c.code? '<span class="badge green">done</span>':'<span class="badge grey">pending</span>'},
+    {n:2, tab:"COs & CO–PO Mapping", gist:"write COs with BT Level; tick the matrix", done: c.cos.length>0, badge: c.cos.length? `<span class="badge green">${c.cos.length} COs</span>`:'<span class="badge grey">pending</span>'},
+    {n:3, tab:"T&L", gist:"adopt activities from the CQI recommendations", done: c.cos.some(co=>co.delivery), badge: c.cos.some(co=>co.delivery)? '<span class="badge green">adopted</span>':'<span class="badge grey">pending</span>'},
+    {n:4, tab:"Assessments", gist:"plan CO-tagged items, rubrics & summary table", done: nItems>0, badge: (nItems? `<span class="badge green">${nItems} items</span>`:'<span class="badge grey">pending</span>') + (unmapped? ` <span class="badge red">${unmapped} without valid CO</span>`:'')},
+    {n:5, tab:"CA", gist:"Biggs triangle & constructive alignment suggestions", any:true, badge:'<span class="badge blue">any time</span>'},
+    {n:6, tab:"Students & Marks", gist:"enroll students; enter or import marks", done: nStu>0, badge: nStu? `<span class="badge green">${nStu} students</span>`:'<span class="badge grey">pending</span>'},
+    {n:7, tab:"Attainment", gist:"direct + survey + combined CO/PO attainment", done: marksEntered>0, badge: marksEntered? '<span class="badge green">available</span>':'<span class="badge grey">needs marks</span>'},
+    {n:8, tab:"CQI", gist:"analyze results, write narratives & next actions", done: cqiStarted, badge: cqiStarted? '<span class="badge green">in progress</span>':'<span class="badge grey">pending</span>'},
+    {n:9, tab:"Accreditation Documents", gist:"print the 7 documents for reporting", any:true, badge:'<span class="badge blue">any time</span>'}
+  ];
+  const currentStep = (steps.find(s=>!s.any && !s.done)||{}).n;
+  const stepCircle = s => {
+    const base = "display:inline-flex;width:26px;height:26px;border-radius:50%;font-size:13px;font-weight:700;align-items:center;justify-content:center;flex:none";
+    if(s.any) return `<span style="${base};border:2px dashed #9ab8b2;color:#5f7a75" title="A checkpoint — use it whenever you like">${s.n}</span>`;
+    if(s.done) return `<span style="${base};background:#0F6B5C;color:#FFFFFF;font-size:14px" title="Done">✓</span>`;
+    if(s.n===currentStep) return `<span style="${base};border:2px solid #0F6B5C;color:#0F6B5C" title="Your next step">${s.n}</span>`;
+    return `<span style="${base};border:2px solid #c9d6d3;color:#8aa19c" title="Pending">${s.n}</span>`;
+  };
+  const stepRow = s => {
+    const open = (window._dashOpen||{})[s.n];
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 6px;border-top:1px solid var(--border)${s.n===currentStep? ";background:rgba(15,107,92,.05);border-radius:8px":""}">
+      ${stepCircle(s)}
+      <span style="font-weight:700;white-space:nowrap">${s.tab}</span>
+      <span style="color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">— ${s.gist}</span>
+      <span style="white-space:nowrap">${s.badge}</span>
+      <button class="btn secondary small" style="padding:2px 9px" onclick="toggleDashStep(${s.n})" title="${open? "Hide the full instructions":"Show the full instructions"}">${open? "▾":"▸"}</button>
+    </div>
+    ${open? `<div style="font-size:13px;padding:4px 10px 12px 42px;border-top:1px dashed var(--border)">${stepDetails[s.n]}</div>`:""}`;
+  };
+  const phaseGroup = (label, cls, sub, ns) => `
+    <div style="margin-top:14px;margin-bottom:4px"><span class="badge ${cls}">${label}</span> <span style="font-size:12px;color:var(--muted)">${sub}</span></div>
+    ${ns.map(n=>stepRow(steps[n-1])).join("")}`;
   el.innerHTML = `
   <div class="stat-cards">
     <div class="stat"><div class="num">${c.cos.length}</div><div class="lbl">Course Outcomes</div></div>
@@ -560,27 +608,25 @@ function renderDashboard(){
     <div class="stat"><div class="num">${attainedCOs}/${c.cos.length}</div><div class="lbl">COs Attained</div></div>
   </div>
   <div class="card">
-    <h2>${esc(c.code)} — ${esc(c.title)}</h2>
+    <h2 style="font-size:23px">${esc(c.code)} — ${esc(c.title)}</h2>
     <p class="hint">${esc(c.program||"")} ${c.semester? "· "+esc(c.semester):""} ${c.instructor? "· "+esc(c.instructor):""}</p>
-    <h3>The CQI loop at a glance</h3>
-    ${cqiLoopStrip()}
-    <h3>Suggested workflow</h3>
-    <table class="tbl"><tbody>
-      <tr><td>1</td><td><span class="badge blue">PLAN</span> <b>Course Info</b> — course details, cohort, credits, instructor; set the attainment thresholds (Target Pass Marks, KPI, Direct/Indirect weights)</td><td>${c.code? '<span class="badge green">done</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>2</td><td><span class="badge blue">PLAN</span> <b>COs &amp; CO–PO Mapping</b> — write COs, choose the BT Domain (Cognitive / Affective / Psychomotor) and Level, tick the CO–PO matrix</td><td>${c.cos.length? '<span class="badge green">'+c.cos.length+' COs</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>3</td><td><span class="badge blue">PLAN</span> <b>T&amp;L</b> — first fill out <b>Course Specifications Table 6.1</b> (CQI recommendations from the previous offering) so the recommender and AI prompts can use them, noting distilled actions in <b>Suggested Modifications in T&amp;L Activities</b> (named pool activities get boosted); then adopt activities per CO — they auto-fill <b>Course Specifications Table 3.1 (Constructive Alignment)</b>; review the T&amp;L Activities Summary Table (descriptions, practical tips, related COs)</td><td>${c.cos.some(co=>co.delivery)? '<span class="badge green">adopted</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>4</td><td><span class="badge blue">PLAN</span> <b>Assessments</b> — start from the assessment-related CQI recommendations of the previous offering (the tab's CQI Inputs card + scoped AI prompt), noting them in <b>Suggested Modifications in Assessment Activities</b>; then plan quizzes/exams/labs/projects; tag every item with a CO, marks and Level (warning if set above the CO's level); untick Mandatory for optional questions (⚙ Advanced for question choice); tick “Rubric prepared” where required; review the Assessment Summary Table (marks-distribution chart + practical tips)</td><td>${nItems? '<span class="badge green">'+nItems+' items</span>':'<span class="badge grey">pending</span>'}${unmapped? ' <span class="badge red">'+unmapped+' item(s) without valid CO</span>':''}</td></tr>
-      <tr><td>5</td><td><span class="badge grey">DO</span> <b>CA</b> — check the Biggs triangle and per-CO alignment cards; close gaps using the suggestions (one-click Adopt)</td><td><span class="badge blue">any time</span></td></tr>
-      <tr><td>6</td><td><span class="badge grey">DO</span> <b>Students &amp; Marks</b> — add students or paste from Excel; enter marks in the grid or via CSV (Empty Template / Import / Export)</td><td>${nStu? '<span class="badge green">'+nStu+' students</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>7</td><td><span class="badge amber">CHECK</span> <b>Attainment</b> — Direct CO/PO attainment computed automatically (AUST method); add the Course Evaluation Survey for Indirect and the 80/20 (editable) Combined attainment</td><td>${marksEntered? '<span class="badge green">available</span>':'<span class="badge grey">needs marks</span>'}</td></tr>
-      <tr><td>8</td><td><span class="badge green">ACT</span> <b>CQI</b> — BAETE 3.8 &amp; 5.4.3 evidence: narratives, loop status, low-attainment analysis, stakeholder feedback register, Annexure H checklist (incl. rubrics); 📋 Copy AI Prompt to draft narratives; record next semester's actions in Course Report 6.1 — the loop then restarts via “⟳ Duplicate for New Semester”</td><td>${(c.aust&&c.aust.cqi&&(c.aust.cqi.complex||c.aust.cqi.effective))? '<span class="badge green">in progress</span>':'<span class="badge grey">pending</span>'}</td></tr>
-      <tr><td>9</td><td><span class="badge green">ACT</span> <b>Accreditation Documents</b> — Course Outline, Course Specifications, Final Exam Vetting Form, Direct CO-PO Calculations, Course Evaluation Survey, Course Report &amp; CQI Report — several key information are auto-filled and printable</td><td><span class="badge blue">any time</span></td></tr>
-    </tbody></table>
-    <div class="btn-row">
+  </div>
+  <div class="card">
+    <h2 style="font-size:20px">Suggested Workflow</h2>
+    ${phaseGroup("PLAN","blue","before the semester",[1,2,3,4])}
+    ${phaseGroup("DO","grey","during the semester",[5,6])}
+    ${phaseGroup("CHECK","amber","when marks are in",[7])}
+    ${phaseGroup("ACT","green","at the end of the semester",[8,9])}
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:18px">
       <button class="btn secondary" onclick="duplicateForNewSemester()">⟳ Duplicate for New Semester (CQI)</button>
       <button class="btn secondary danger" onclick="deleteCourse()">Delete This Course</button>
     </div>
   </div>`;
+}
+function toggleDashStep(n){
+  window._dashOpen = window._dashOpen || {};
+  window._dashOpen[n] = !window._dashOpen[n];
+  renderDashboard();
 }
 function duplicateForNewSemester(){
   const c = activeCourse(); if(!c) return;
@@ -2389,11 +2435,17 @@ function buildSynthPrompt(c){
   if((c.aust.assessSuggest||"").trim()) lines.push("[Suggested Modifications in Assessment Activities]\n" + c.aust.assessSuggest.trim());
   lines.push("");
   lines.push("== TASK ==");
-  lines.push("For each of the five loop rows — (1) CO loop, direct measurement; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect (survey) — draft 2–4 sentences describing how the recommendations were reflected in this offering, synthesized from my notes, explicitly naming the recommendation each action closes. If a row has no matching action, output exactly: \"No specific action this offering.\"");
+  lines.push("Draft the \"Actions reflected\" text for each of the five loop rows, at the same granularity as my notes:");
+  lines.push("1) CO loop, direct measurement — one short block PER CO (CO1, CO2, …): name the specific actions taken (adopted/modified T&L activities by name, assessment items added or redesigned with their type and Bloom level, rubric and similarity-check actions, marks-weight changes) and explicitly cite the recommendation each action closes.");
+  lines.push("2) CO loop, indirect (survey) — only actions that concern the Course Evaluation Survey or other indirect measures; if none, output exactly: \"No specific action this offering.\"");
+  lines.push("3) PO loop, direct measurement — one short block PER mapped PO: draw the CO-level actions up to the PO they serve (my notes tie actions to POs) and cite the PO recommendation each closes.");
+  lines.push("4) PO loop, indirect (survey) — as row 2: survey-related actions only; if none, output exactly: \"No specific action this offering.\"");
+  lines.push("5) PEO loop, indirect (survey) — as row 2: PEO-survey-related actions only; if none, output exactly: \"No specific action this offering.\"");
   lines.push("");
   lines.push("== CONSTRAINTS ==");
-  lines.push("- Formal, accreditation-ready wording (e.g., \"Think-pair-share was adopted for CO1; an analytic rubric was introduced for the design assignment\").");
-  lines.push("- Label the output plainly by row number/name so each part can be pasted straight into the table.");
+  lines.push("- Comprehensive but non-repetitive: include the concrete specifics from my notes (activity names, item types and Bloom levels, rubric criteria, Turnitin/similarity checks, marks redistribution) — omit nothing that appears in the notes; do not pad rows that have no matching action.");
+  lines.push("- Formal, accreditation-ready wording (e.g., \"Think-pair-share was adopted for CO3; an analytic rubric with an 'Assumption Check' criterion was introduced for the design assignments\").");
+  lines.push("- Label the output plainly by row number/name (and CO/PO number within rows 1 and 3) so each part can be pasted straight into the table.");
   lines.push("- Base the text only on my notes and the recommendations; do not invent actions.");
   return lines.join("\n");
 }
