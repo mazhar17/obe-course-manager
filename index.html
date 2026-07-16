@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.56</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.57</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.56</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.57</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.56";
+const APP_VERSION = "v1.57";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -2658,6 +2658,62 @@ function studentCOData(c){
     return { co, i, label:"CO"+(i+1), totalMax, scores, itemAvgs };
   });
 }
+/* Scoped AI prompt for the Low Attainment Analysis section — covers ONLY the
+   not-attained COs, with tasks matching the section's (a)/(b)/(c) boxes. */
+function buildLowAttPrompt(c){
+  const th = (window._lowTh===undefined || window._lowTh===null)? c.cfg.passMarks : window._lowTh;
+  const att = computeAttainment(c);
+  const data = studentCOData(c).filter(d=>d.totalMax>0 && d.scores.length);
+  const targets = data.filter(d=>{ const a = att.cos.find(x=>x.id===d.co.id); return a && a.pct!==null && !a.attained; });
+  const L = [];
+  L.push("You are an expert in Outcome-Based Education and engineering accreditation (Washington Accord / BAETE, Bangladesh). Help me, the course teacher, analyze the LOW ATTAINMENT of the course outcomes below. Ground every statement in the evidence provided; do not invent data.");
+  L.push("");
+  L.push("== METHODOLOGY (how to read the numbers) ==");
+  L.push(`A student's CO score = % of marks obtained out of the marks assessed under that CO (blank mandatory items = 0; legitimately skipped optional questions are excluded; partial answers to a chosen question are penalized). CO attainment = % of assessed students scoring STRICTLY ABOVE ${c.cfg.passMarks}% (Target Pass Marks); attained if this reaches the Target KPI of ${c.cfg.kpiTarget}%. The low-student filter threshold used below: ${th}%.`);
+  L.push("");
+  L.push(aiCtxHeader(c));
+  const attemptsOf = id => c.students.filter(s=>(c.marks[s.id]||{})[id]!==undefined).length;
+  targets.forEach(d=>{
+    const a = att.cos.find(x=>x.id===d.co.id);
+    const info = coLevelInfo(d.co);
+    const low = d.scores.filter(s=>s.pct<th);
+    const b = [0,0,0,0,0]; d.scores.forEach(s=>{ b[Math.min(4, Math.floor(s.pct/20))]++; });
+    L.push("");
+    L.push(`== ${d.label} — NOT ATTAINED (${a.pct.toFixed(1)}% above pass marks vs KPI ${c.cfg.kpiTarget}%) ==`);
+    L.push(`Statement: ${d.co.statement||"(no statement)"} [${info.domain}${info.idx>=0? " — "+info.list[info.idx]:""}]`);
+    L.push(`Adopted T&L activities: ${deliveryList(d.co).map(n=>{ const v=(c.aust.report.tlaA||{})[n]; return n+(v&&v.eff? " ("+(v.eff==="Yes"?"recorded effective":"recorded NOT effective")+")":""); }).join("; ")||"none"}`);
+    L.push(`Assessment items measuring it (class averages): ${d.itemAvgs.map(it=>`${it.aName} ${it.label} [avg ${it.avg===null?"—":it.avg.toFixed(0)+"%"}${it.optional? ", optional, attempted by "+attemptsOf(it.id)+" of "+c.students.length:""}]`).join("; ")}`);
+    const weak = d.itemAvgs.filter(it=>it.avg!==null && it.avg<th).map(it=>`${it.aName} ${it.label} (${it.avg.toFixed(0)}%)`);
+    if(weak.length) L.push(`Weakest items (class average below ${th}%): ${weak.join("; ")}`);
+    L.push(`Students below ${th}%: ${low.length} of ${d.scores.length}. Score distribution: 0-20%: ${b[0]}, 20-40%: ${b[1]}, 40-60%: ${b[2]}, 60-80%: ${b[3]}, 80-100%: ${b[4]}.`);
+  });
+  L.push("");
+  L.push(`== YOUR TASK — for EACH CO above (${targets.map(d=>d.label).join(", ")}), draft the three fields, labelled exactly ==`);
+  L.push(`(a) "Analysis w.r.t. Teaching-Learning activities" — 3-5 sentences: which adopted activities plausibly under-served this CO and why, tied to the score evidence, each cause with a one-sentence justification.`);
+  L.push(`(b) "Analysis w.r.t. Assessment techniques" — 3-5 sentences explicitly referencing the weakest items (design, level, optional-choice effects), each observation justified by the item figures.`);
+  L.push(`(c) "Comment on the low attainment level" — 2-4 sentences: overall judgement, the affected student group (use the score distribution), and the corrective action to carry into Course Report 6.1.`);
+  L.push("");
+  L.push("== CONSTRAINTS ==");
+  L.push("- Professional accreditation-report tone; every claim traceable to the evidence above; if the evidence is insufficient for a conclusion, say so rather than speculating.");
+  L.push("- Blank marks mean 'not attempted' and entered zeros mean 'attempted and scored zero'; a legitimately skipped optional question is NOT a failure. Attendance/participation is not tracked — do not speculate about engagement.");
+  L.push("- Label the output by CO and (a)/(b)/(c) so each part can be pasted into its box in the Low Attainment Analysis section.");
+  return L.join("\n");
+}
+function copyLowAttPrompt(){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  const att = computeAttainment(c);
+  const data = studentCOData(c).filter(d=>d.totalMax>0 && d.scores.length);
+  if(!data.length){ toast("Enter assessment items and marks first"); return; }
+  if(!data.some(d=>{ const a = att.cos.find(x=>x.id===d.co.id); return a && a.pct!==null && !a.attained; })){
+    toast("All COs are attained at the current data — nothing to analyze"); return;
+  }
+  const txt = buildLowAttPrompt(c);
+  const done = ()=>toast("AI prompt copied — paste it into ChatGPT, Claude, Gemini, etc.");
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>copyAIFallback(txt, done));
+  } else copyAIFallback(txt, done);
+}
 function lowAttainmentCard(c){
   const th = (window._lowTh===undefined || window._lowTh===null)? c.cfg.passMarks : window._lowTh;
   const att = computeAttainment(c);
@@ -2708,9 +2764,10 @@ function lowAttainmentCard(c){
   <div class="card">
     <h2>Low Attainment Analysis <span class="badge blue">linked to Attainment</span></h2>
     <p class="hint">Students are filtered by their per-CO score (same calculation as the Attainment tab). For each CO, analyze the causes with respect to (a) the teaching-learning activities and (b) the assessment techniques, and record your comment — these feed the printable CQI Report and support Course Report 6.1.</p>
-    <label class="fld" style="max-width:340px;margin-bottom:12px">Filter: students scoring below (%)
+    <label class="fld" style="max-width:340px;margin-bottom:8px">Filter: students scoring below (%)
       <input type="number" min="0" max="100" value="${th}" onchange="window._lowTh=Math.max(0,Math.min(100,parseFloat(this.value)||0));renderCQI()">
     </label>
+    <div class="btn-row no-print" style="margin:0 0 12px"><button class="btn secondary small" onclick="copyLowAttPrompt()" title="Builds a prompt covering ONLY the not-attained CO(s) — score bands, weakest items, attempt counts, adopted activities — with tasks matching the (a)/(b)/(c) boxes below. Run it before the narratives prompt: the pasted analyses strengthen that evidence.">📋 Copy AI Prompt (low-attainment analysis)</button></div>
     ${blocks}
   </div>`;
 }
