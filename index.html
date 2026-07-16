@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.52</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.53</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.52</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.53</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.52";
+const APP_VERSION = "v1.53";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -2927,7 +2927,7 @@ function docSpec(c){
       <td>${coIn(co.id,'assess',co.assess,'e.g., Quiz 1, Final Q2')}</td></tr>`).join("");
   const topicRows = sp.topics.map((t,i)=>`
     <tr><td style="text-align:center">${i+1}</td>
-      <td>${di('spec.topics.'+i+'.name', t.name, 'Topic')}</td>
+      <td><textarea class="di" rows="1" style="overflow-y:hidden" placeholder="Topic (line breaks allowed — sub-topics on separate lines)" oninput="autoGrowTA(this)" onchange="austSet('spec.topics.${i}.name',this.value)">${esc(t.name)}</textarea></td>
       <td style="text-align:center">${di('spec.topics.'+i+'.planned', t.planned, 'hrs', 'width:70px;text-align:center')}</td>
       <td class="no-print"><button class="icon-btn" onclick="delTopic(${i})">✕</button></td></tr>`).join("");
   const totalPlanned = sp.topics.reduce((s,t)=>s+(parseFloat(t.planned)||0),0);
@@ -3222,7 +3222,7 @@ function docReport(c){
     const a = parseFloat(t.actual)||0;
     const varPct = (p>0 && hasActual)? ((a-p)/p*100) : null;
     const over = varPct!==null && Math.abs(varPct)>25;
-    return `<tr><td style="text-align:center">${i+1}</td><td>${esc(t.name)}</td>
+    return `<tr><td style="text-align:center">${i+1}</td><td style="white-space:pre-wrap">${esc(t.name)}</td>
       <td style="text-align:center">${esc(t.planned)}</td>
       <td style="text-align:center"><input class="di" style="width:60px;text-align:center" value="${esc(t.actual)}" onchange="austSetR('spec.topics.${i}.actual',this.value)"></td>
       <td style="text-align:center">${varPct===null?"—":varPct.toFixed(1)+"%"}</td>
