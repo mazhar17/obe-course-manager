@@ -1,8 +1,8 @@
-# OBE Course Manager — v1.51 (First release: July 13, 2026)
+# OBE Course Manager — v1.52 (First release: July 13, 2026)
 
 > **Deployment note:** upload `aust_logo.svg` alongside `index.html` — the official AUST logo shown on the Accreditation Documents. If the file is absent, the documents simply render without the logo.
 
-See `change_log_v1.51.txt` for the version history (the log file is renamed with each release). All multi-line entry boxes throughout the app open at five rows and grow automatically with the text.
+See `change_log_v1.52.txt` for the version history (the log file is renamed with each release). All multi-line entry boxes throughout the app open at five rows and grow automatically with the text.
 
 A free, single-file web app for managing **teaching, learning & assessment from the OBE (Outcome-Based Education) perspective** — built for engineering faculty working under the Washington Accord / BAETE framework.
 
@@ -22,10 +22,10 @@ Everything runs in the browser. No server, no database, no login. All data stays
 - **CQI tab (BAETE Criteria 3.8 & 5.4.3)** — an auto-compiled per-CO table of T&L methods, assessment tools and complex-problem (CP/CEA) coverage; narrative fields for how methods address complex engineering problems, their effectiveness, assessment-tool design, and question moderation; a live six-step CQI-loop status board; improvement-action tables two-way linked with Course Report 6.1 and Course Specifications 6.1; a **Low Attainment Analysis** linked to the Attainment tab (filter students below a threshold per CO, see item-wise average scores with weak items highlighted, and record analyses w.r.t. T&L activities and assessment techniques plus comments); a stakeholder feedback register; and an Annexure H evidence checklist. A consolidated printable **CQI Report** is included under Accreditation Documents. A **📋 Copy AI Prompt (CQI narratives & action plans)** button assembles a complete, curated prompt (methodology, COs with mapped Washington Accord POs, assessment plan, attainment results, T&L history — aggregates only, never student identities) for pasting into any AI tool to draft CQI narratives, with the task list auto-focused on the not-attained COs. All AI prompts in the app require the AI to justify every suggestion (one sentence each — pedagogical fit, recommendation addressed, or motivating evidence).
 - **Accreditation Documents** — the standard OBE documents (following the AUST templates), auto-filled from the course data and printable (*Print → Save as PDF*):
   1. **Course Outline** (COs with PO/Bloom C-A-P mapping, Knowledge Profile / Complex Problem / Complex Activities mapping, assessment method percentages, 14-week plan, references, signature blocks)
-  2. **Course Specifications** (SLT, constructive alignment table, planned contact hours, assessment blueprint, CQI recommendations — section 6.1 is ⛓ linked to the CQI tab and feeds the scoped AI-prompt buttons in the T&L and Assessments tabs)
+  2. **Course Specifications** (SLT, constructive alignment table, planned contact hours — with a Topics Template (CSV) download/import that preserves actual hours on re-import — assessment blueprint, CQI recommendations — section 6.1 is ⛓ linked to the CQI tab and feeds the scoped AI-prompt buttons in the T&L and Assessments tabs)
   3. **Final Examination Vetting Form** (CO–question mapping auto-filled per assessment, checklist, vetter verification and signature blocks)
   4. **Direct CO-PO Calculations** (same method and layout as the AUST workbook: % of students above Target Pass Marks and above KPI, per CO and PO)
-  5. **Course Report** (CO analysis with modification columns, contact-hour variation, TLA and resources analysis, IUMS grade distribution, CO/PO KPI attainment, indirect assessment, CQI action plans, HOD approval)
+  5. **Course Report** (CO analysis with modification columns, contact-hour variation, TLA and resources analysis, IUMS grade distribution, CO/PO KPI attainment with embedded attainment charts, indirect assessment summary with attained flags, combined direct+indirect attainment tables, CQI action plans, HOD approval)
 
   Dotted fields in these documents are editable in place and save automatically; everything already entered elsewhere in the app fills in by itself.
 - **Data & Backup** — export/import all courses or a single course as JSON; share a course file with a colleague or the OBE committee.

@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.51</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.52</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.51</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.52</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.51";
+const APP_VERSION = "v1.52";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -2812,6 +2812,30 @@ function renderDocs(){
   </div>
   <div class="report-sheet">${docs[sel][1](c)}</div>`;
   autoGrowAll("tab-docs");
+  if(sel==="report") drawReportCharts(c);
+}
+/* CO / PO attainment charts embedded in Course Report 4.2 / 4.3 — same data and styling as the Attainment tab. */
+function drawReportCharts(c){
+  if(typeof Chart === "undefined") return;
+  const att = computeAttainment(c);
+  const target = c.cfg.kpiTarget;
+  const mk = (id, labels, data, label) => {
+    const ctx = document.getElementById(id); if(!ctx) return;
+    if(charts[id]) charts[id].destroy();
+    charts[id] = new Chart(ctx, {
+      type:"bar",
+      data:{ labels,
+        datasets:[
+          { label, data, backgroundColor: data.map(v=>v===null? "#d5dde3" : v>=target? "rgba(15,107,92,.75)" : "rgba(192,57,43,.65)"), borderRadius:6 },
+          { label:"Target "+target+"%", data: labels.map(()=>target), type:"line", borderColor:"#c98a1b", borderDash:[6,4], pointRadius:0, borderWidth:2 }
+        ]},
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        scales:{ y:{ beginAtZero:true, max:100, title:{display:true,text:"% of students attaining"} } },
+        plugins:{ legend:{ labels:{ boxWidth:14 } } } }
+    });
+  };
+  mk("repCoChart", att.cos.map(x=>x.label), att.cos.map(x=>x.pct===null?null:+x.pct.toFixed(1)), "CO attainment %");
+  mk("repPoChart", att.pos.map(x=>"PO"+x.po), att.pos.map(x=>x.pct===null?null:+x.pct.toFixed(1)), "PO attainment %");
 }
 function showDoc(d){ window._docSel = d; renderDocs(); }
 
@@ -2952,12 +2976,18 @@ function docSpec(c){
     <tr><th style="width:45px">C</th><th style="width:45px">A</th><th style="width:45px">P</th></tr></thead>
     <tbody>${caRows || '<tr><td colspan="8" style="text-align:center">Define COs first</td></tr>'}</tbody></table>
   <p style="font-size:11.5px;color:var(--muted)">* Filled out through constructive alignment (Biggs): outcomes → teaching/learning activities → assessments.</p>
-  <h2>4. Teaching &amp; Learning Activities — 4.1 Planned Contact Hours for Different Topics</h2>
+  <h2>4. Teaching &amp; Learning Activities</h2>
+  <h2>4.1 Planned Contact Hours for Different Topics</h2>
   <table class="tbl"><thead><tr><th style="width:55px">Sl. No.</th><th>Topics</th><th style="width:130px">Planned Contact Hours</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
     <tbody>${topicRows}
     <tr><td></td><th style="text-align:right">Total</th><th style="text-align:center">${totalPlanned}</th><td class="no-print"></td></tr></tbody></table>
-  <div class="no-print btn-row"><button class="btn secondary small" onclick="addTopic()">+ Add Topic</button></div>
-  <h2>5. Assessments — 5.1 Assessment Blueprint</h2>
+  <div class="no-print btn-row">
+    <button class="btn secondary small" onclick="addTopic()">+ Add Topic</button>
+    <button class="btn secondary small" onclick="exportTopicsCSV()" title="Downloads a CSV (Topic, Planned Contact Hours) — includes the current topics, so it doubles as an export for editing in Excel">⬇ Topics Template (CSV)</button>
+    <label class="btn secondary small" style="cursor:pointer" title="The imported file becomes the topic list (after a confirmation) — topics whose name matches keep their Actual Hours and variation reasons">⬆ Import Topics (CSV)<input type="file" accept=".csv" style="display:none" onchange="importTopicsCSV(this)"></label>
+  </div>
+  <h2>5. Assessments</h2>
+  <h2>5.1 Assessment Blueprint</h2>
   <table class="tbl"><thead>
     <tr><th rowspan="2" style="width:55px">CO No.</th><th rowspan="2">Assessment Item</th><th rowspan="2" style="width:95px">% of Total Marks</th><th colspan="3">Bloom's Taxonomy</th></tr>
     <tr><th style="width:70px">Cognitive</th><th style="width:70px">Affective</th><th style="width:85px">Psychomotor</th></tr></thead>
@@ -3264,6 +3294,7 @@ function docReport(c){
     <tr><th>% of Students above the Target Pass Marks ${c.cfg.passMarks}%</th>${att.cos.map(x=>`<td style="text-align:center">${x.pct===null?"—":x.pct.toFixed(1)}</td>`).join("")}</tr>
     <tr><th>Attained?</th>${att.cos.map(x=>`<td style="text-align:center">${x.pct===null?"—":(x.attained?"Yes":"No")}</td>`).join("")}</tr>
   </tbody></table>
+  ${att.cos.some(x=>x.pct!==null)? `<div style="max-width:760px;height:230px;margin:10px auto"><canvas id="repCoChart"></canvas></div>` : `<p style="font-size:12px;color:var(--muted);text-align:center">The CO attainment chart appears here once marks are entered.</p>`}
   <p><b>Comments about the KPI attainments for COs</b> ${dta('report.coComment', r.coComment, 2)}</p>
   <h2>4.3 Analysis of Program Outcomes</h2>
   <p style="font-size:12.5px">Target Key Performance Indicator (KPI): ${c.cfg.kpiTarget}</p>
@@ -3271,6 +3302,7 @@ function docReport(c){
     <tr><th>% of Students above the Pass Marks ${c.cfg.passMarks}%</th>${att.pos.map(x=>`<td style="text-align:center">${x.pct===null?"—":x.pct.toFixed(1)}</td>`).join("")}</tr>
     <tr><th>Attained?</th>${att.pos.map(x=>`<td style="text-align:center">${x.pct===null?"—":(x.attained?"Yes":"No")}</td>`).join("")}</tr>
   </tbody></table>
+  ${att.pos.some(x=>x.pct!==null)? `<div style="max-width:760px;height:230px;margin:10px auto"><canvas id="repPoChart"></canvas></div>` : `<p style="font-size:12px;color:var(--muted);text-align:center">The PO attainment chart appears here once marks are entered.</p>`}
   <p><b>Comments about the KPI attainments for POs</b> ${dta('report.poComment', r.poComment, 2)}</p>
   <h2>5. Indirect Assessments</h2>
   <p><b>5.1 Analysis of Student Feedback — Course Evaluation Survey${(()=>{const ind=computeIndirect(c);return ind.n? " (n = "+ind.n+" respondents)":"";})()}</b></p>
@@ -3281,10 +3313,25 @@ function docReport(c){
       <tr><th>Responses (n)</th>${ind.cos.map(x=>`<td style="text-align:center">${x.n||"—"}</td>`).join("")}</tr>
       <tr><th>Average rating (of 5)</th>${ind.cos.map(x=>`<td style="text-align:center">${x.avgRating===null?"—":x.avgRating.toFixed(2)}</td>`).join("")}</tr>
       <tr><th>% of responses rated ≥ ${c.cfg.likertPass}</th>${ind.cos.map(x=>`<td style="text-align:center">${x.pct===null?"—":x.pct.toFixed(1)}</td>`).join("")}</tr>
+      <tr><th>Attained (vs Target KPI ${c.cfg.kpiTarget}%)?</th>${ind.cos.map(x=>`<td style="text-align:center">${x.pct===null?"—":(x.pct>=c.cfg.kpiTarget?"Yes":"No")}</td>`).join("")}</tr>
     </tbody></table>`;
   })()}
   <p><b>Comments on the student feedback</b> ${dta('report.feedback', r.feedback, 2)}</p>
   <p><b>5.2 Analysis of surveys/meeting minutes/reports related to the course (if any)</b> ${dta('report.surveys', r.surveys, 2)}</p>
+  <p><b>5.3 Combined Attainment (Direct ${c.cfg.wDirect}% + Indirect ${c.cfg.wIndirect}%) vs Target KPI ${c.cfg.kpiTarget}%</b></p>
+  ${(()=>{
+    const ind = computeIndirect(c);
+    const comb = combineAtt(c, att, ind);
+    if(!comb.cos.some(x=>x.pct!==null)) return `<p style="font-size:12.5px;color:var(--muted)">Available once direct marks (and optionally survey responses) are entered.</p>`;
+    return `<table class="tbl"><thead><tr><th></th>${comb.cos.map(x=>`<th style="text-align:center">${x.label}</th>`).join("")}</tr></thead><tbody>
+      <tr><th>Combined attainment (%)</th>${comb.cos.map(x=>`<td style="text-align:center">${x.pct===null?"—":x.pct.toFixed(1)}</td>`).join("")}</tr>
+      <tr><th>Attained?</th>${comb.cos.map(x=>`<td style="text-align:center">${x.pct===null?"—":(x.attained?"Yes":"No")}</td>`).join("")}</tr>
+    </tbody></table>
+    <table class="tbl" style="margin-top:8px"><thead><tr><th></th>${comb.pos.map(x=>`<th style="text-align:center">PO${x.po}</th>`).join("")}</tr></thead><tbody>
+      <tr><th>Combined attainment (%)</th>${comb.pos.map(x=>`<td style="text-align:center">${x.pct===null?"—":x.pct.toFixed(1)}</td>`).join("")}</tr>
+      <tr><th>Attained?</th>${comb.pos.map(x=>`<td style="text-align:center">${x.pct===null?"—":(x.attained?"Yes":"No")}</td>`).join("")}</tr>
+    </tbody></table>`;
+  })()}
   <h2>6. Continuous Quality Improvement (CQI) Loops — 6.1 Suggested Action Plans <span class="badge blue no-print" title="Same data as the CQI tab's linked table — edit in either place">⛓ linked — also editable in the CQI tab</span></h2>
   <table class="tbl"><thead><tr><th style="width:140px">Loop</th><th style="width:190px">Assessment Type</th><th>Recommended Actions for Quality Improvement</th></tr></thead><tbody>
     ${cqiLabels.map((L,i)=>`<tr><td>${L[0]}</td><td>${L[1]}</td><td>${dta('report.cqi.'+i, r.cqi[i], 10)}</td></tr>`).join("")}
@@ -3298,6 +3345,48 @@ function addTopic(){
   const c = activeCourse(); if(!c) return;
   c.aust.spec.topics.push({name:"",planned:"",actual:"",reason:""});
   save(); renderDocs();
+}
+function exportTopicsCSV(){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  const lines = [["Topic","Planned Contact Hours"].map(csvCell).join(",")];
+  c.aust.spec.topics.forEach(t=>lines.push([t.name||"", t.planned||""].map(csvCell).join(",")));
+  if(!c.aust.spec.topics.length) lines.push(["(topic name)",""].map(csvCell).join(","));
+  downloadFile(`${(c.code||"course").replace(/\s+/g,"_")}_topics_template.csv`, lines.join("\n"), "text/csv");
+  toast("Template downloaded — edit in Excel, then Import Topics (CSV)");
+}
+function importTopicsCSV(input){
+  const c = activeCourse(); if(!c) return;
+  const file = input.files && input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    ensureAust(c);
+    let rows = parseCSV(String(e.target.result)).filter(r=>r.some(x=>String(x).trim()));
+    if(rows.length && /topic/i.test(rows[0][0]||"")) rows = rows.slice(1);   // header row
+    let skipped = 0;
+    const parsed = [];
+    rows.forEach(r=>{
+      const name = String(r[0]||"").trim();
+      let planned = String(r[1]||"").trim();
+      if(!name){ skipped++; return; }
+      if(planned && isNaN(parseFloat(planned))){ planned = ""; skipped++; }
+      if(!parsed.some(p=>p.name.toLowerCase()===name.toLowerCase())) parsed.push({ name, planned });
+    });
+    if(!parsed.length){ toast("No valid topic rows found — expected columns: Topic, Planned Contact Hours"); input.value=""; return; }
+    const keep = {};
+    c.aust.spec.topics.forEach(t=>{ if(t.name) keep[t.name.toLowerCase()] = t; });
+    const matched = parsed.filter(p=>keep[p.name.toLowerCase()]).length;
+    const existing = c.aust.spec.topics.filter(t=>t.name||t.planned).length;
+    if(existing && !confirm(`Import ${parsed.length} topic(s) from the file?\n\nThis replaces the current list of ${existing} topic(s). ${matched} matching topic name(s) keep their Actual Hours and variation reasons.`)){ input.value=""; return; }
+    c.aust.spec.topics = parsed.map(p=>{
+      const old = keep[p.name.toLowerCase()];
+      return { name: p.name, planned: p.planned, actual: old? old.actual : "", reason: old? old.reason : "" };
+    });
+    save(); renderDocs();
+    toast(`${parsed.length} topic(s) imported${matched? " — "+matched+" kept their actual hours":""}${skipped? " · "+skipped+" line(s)/value(s) skipped":""}`);
+    input.value = "";
+  };
+  reader.readAsText(file);
 }
 function delTopic(i){
   const c = activeCourse(); if(!c) return;
