@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.50</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.51</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.50</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.51</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.50";
+const APP_VERSION = "v1.51";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -1648,8 +1648,13 @@ function renderMarks(){
       <div><button class="btn" onclick="addStudent()">+ Add Student</button></div>
     </div>
     <h3>Bulk paste</h3>
+    <p class="hint" style="margin-bottom:4px"><b>+ Add to List</b> appends the pasted students (existing IDs keep their marks; names are updated). <b>⟲ Replace List</b> swaps in the pasted list as the new class list — students whose ID matches keep their entered marks; students not in the new list are removed with their marks (a confirmation shows the counts first).</p>
     <textarea id="s_bulk" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px;font-family:inherit;font-size:13.5px" rows="3" placeholder="20250108001, Rahim Uddin&#10;20250108002, Karim Ahmed"></textarea>
-    <div class="btn-row"><button class="btn secondary" onclick="bulkAddStudents()">Import Pasted List</button></div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="bulkAddStudents(false)">+ Add to List</button>
+      <button class="btn secondary" onclick="bulkAddStudents(true)">⟲ Replace List</button>
+      <button class="btn danger small" onclick="removeAllStudents()" title="Removes every student and all entered marks (after confirmation)">🗑 Remove All Students</button>
+    </div>
   </div>
   <div class="card">
     <h2>Marks Entry</h2>
@@ -1678,18 +1683,51 @@ function addStudent(){
   c.students.push({ id: uid(), sid, name });
   save(); renderMarks();
 }
-function bulkAddStudents(){
-  const c = activeCourse(); if(!c) return;
-  const text = document.getElementById("s_bulk").value.trim();
-  if(!text) return;
-  let added = 0;
+function parseStudentLines(text){
+  const out = [];
   text.split(/\r?\n/).forEach(line=>{
     const parts = line.split(/\t|,|;/).map(x=>x.trim()).filter(Boolean);
     if(!parts.length) return;
     const sid = parts[0], name = parts.slice(1).join(" ");
-    if(sid && !c.students.some(s=>s.sid===sid)){ c.students.push({ id: uid(), sid, name }); added++; }
+    if(sid && !out.some(x=>x.sid===sid)) out.push({ sid, name });
   });
-  save(); renderMarks(); toast(added+" student(s) imported");
+  return out;
+}
+function bulkAddStudents(replace){
+  const c = activeCourse(); if(!c) return;
+  const text = document.getElementById("s_bulk").value.trim();
+  if(!text){ toast("Paste the list first"); return; }
+  const list = parseStudentLines(text);
+  if(!list.length){ toast("No valid lines found — expected: ID [tab or comma] Name, one student per line"); return; }
+  if(replace){
+    const matched = list.filter(x=>c.students.some(s=>s.sid===x.sid)).length;
+    const removed = c.students.filter(s=>!list.some(x=>x.sid===s.sid));
+    if(c.students.length && !confirm(`Replace the current list of ${c.students.length} student(s) with the pasted ${list.length}?\n\n• ${matched} matching Student ID(s) keep their entered marks (names updated from the new list).\n• ${removed.length} student(s) not in the new list will be removed WITH their marks.`)) return;
+    removed.forEach(s=>{ delete c.marks[s.id]; });
+    const bySid = {}; c.students.forEach(s=>{ bySid[s.sid] = s; });
+    c.students = list.map(x=>{
+      const old = bySid[x.sid];
+      return old? { id: old.id, sid: x.sid, name: x.name || old.name } : { id: uid(), sid: x.sid, name: x.name };
+    });
+    save(); renderMarks();
+    toast(`List replaced: ${list.length} student(s) — ${matched} kept their marks, ${removed.length} removed`);
+    return;
+  }
+  let added = 0, updated = 0;
+  list.forEach(x=>{
+    const ex = c.students.find(s=>s.sid===x.sid);
+    if(ex){ if(x.name && ex.name!==x.name){ ex.name = x.name; updated++; } }
+    else { c.students.push({ id: uid(), sid: x.sid, name: x.name }); added++; }
+  });
+  save(); renderMarks();
+  toast(added+" student(s) added"+(updated? ", "+updated+" name(s) updated":""));
+}
+function removeAllStudents(){
+  const c = activeCourse(); if(!c) return;
+  if(!c.students.length){ toast("No students to remove"); return; }
+  if(!confirm(`Remove all ${c.students.length} student(s) AND all entered marks?\n\nThis cannot be undone — export a JSON backup first if unsure.`)) return;
+  c.students = []; c.marks = {};
+  save(); renderMarks(); toast("All students removed");
 }
 function deleteStudent(id){
   const c = activeCourse(); if(!c) return;
