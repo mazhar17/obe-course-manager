@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.59</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.61</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.59</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.61</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.59";
+const APP_VERSION = "v1.61";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -294,6 +294,30 @@ function austSet(path, val){
 function austSetR(path, val){
   austSet(path, val);
   if(typeof renderDocs === "function") renderDocs();
+}
+function pasteGrades(){
+  const c = activeCourse(); if(!c) return;
+  const GRADES = ["A+","A","A-","B+","B","B-","C+","C","D","F"];
+  const el = document.getElementById("gradePaste");
+  const text = (el && el.value || "").trim();
+  if(!text){ toast("Paste the grade data into the box first"); return; }
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const pairRe = /^(A\+|A-|B\+|B-|C\+|A|B|C|D|F)\s*[\s,;:\t]\s*(\d+)$/i;
+  const found = {};
+  let pairs = 0;
+  lines.forEach(l=>{ const m = l.match(pairRe); if(m){ found[m[1].toUpperCase()] = m[2]; pairs++; } });
+  let filled = 0;
+  if(pairs && pairs===lines.length){
+    // "grade count" line format
+    GRADES.forEach(g=>{ if(found[g]!==undefined){ c.aust.report.grades[g] = found[g]; filled++; } });
+  } else {
+    // single row of 10 counts in GR order
+    const nums = text.split(/[\s,;\t]+/).filter(x=>/^\d+$/.test(x));
+    if(nums.length!==GRADES.length){ toast(`Could not read the pasted data — use “A+ 5” lines or exactly 10 numbers (found ${nums.length})`); return; }
+    GRADES.forEach((g,i)=>{ c.aust.report.grades[g] = nums[i]; filled++; });
+  }
+  save(); renderDocs();
+  toast(filled + " grade count(s) filled from pasted data");
 }
 
 function load(){
@@ -631,7 +655,7 @@ function toggleDashStep(n){
 }
 function duplicateForNewSemester(){
   const c = activeCourse(); if(!c) return;
-  if(!confirm("Create a copy of this course for a new semester?\n\nKept: COs, CO-PO mapping, T&L activities, assessments, topics, settings — and the Course Report CQI actions are carried into the new Course Specifications (6.1).\nCleared: students, marks, survey tallies, actual hours, grades and report comments.")) return;
+  if(!confirm("Create a copy of this course for a new semester?\n\nKept: COs, CO-PO mapping, T&L activities, assessments, topics, settings — and the Course Report CQI actions are carried into the new Course Specifications (6.1).\nCleared: students, marks, survey tallies, actual hours, grades, report comments, the Suggested Modifications working boxes, and the CQI tab's narratives, low-attainment analyses, stakeholder register and evidence ticks.")) return;
   const n = ensureAust(JSON.parse(JSON.stringify(c)));
   n.id = uid();
   n.semester = "";
@@ -641,6 +665,9 @@ function duplicateForNewSemester(){
   n.aust.spec.submitDate = "";
   n.aust.spec.cqiPrev = n.aust.spec.cqiPrev.map((x,i)=>({ rec: (c.aust.report.cqi && c.aust.report.cqi[i]) || "", ref: "" }));
   n.aust.spec.topics.forEach(t=>{ t.actual=""; t.reason=""; });
+  n.aust.tlaSuggest = ""; n.aust.assessSuggest = "";   // per-offering working notes start empty
+  n.aust.cqi.complex = ""; n.aust.cqi.effective = ""; n.aust.cqi.design = ""; n.aust.cqi.moderation = "";  // CQI narratives are written fresh each offering
+  n.aust.cqi.lowAnalysis = {}; n.aust.cqi.stakeholders = []; n.aust.cqi.evid = {};  // per-offering CQI records (tied to the cleared marks/evidence)
   const r = n.aust.report;
   r.grades = {"A+":"","A":"","A-":"","B+":"","B":"","B-":"","C+":"","C":"","D":"","F":""};
   r.coComment=""; r.poComment=""; r.feedback=""; r.surveys=""; r.hod=""; r.submitDate="";
@@ -678,53 +705,45 @@ function renderCourse(){
   el.innerHTML = `
   <div class="card">
     <h2>Course Information</h2>
-    <p class="hint">These details appear on the printable course report.</p>
+    <p class="hint">These details appear on the printable documents. Edits save automatically.</p>
     <div class="grid c2">
-      <label class="fld">Course Code <input id="f_code" value="${esc(c.code)}" placeholder="e.g., ME 4011"></label>
-      <label class="fld">Course Title <input id="f_title" value="${esc(c.title)}" placeholder="e.g., Renewable Energy"></label>
-      <label class="fld">Credit Hours <input id="f_credit" value="${esc(c.credit)}" placeholder="e.g., 3.0"></label>
-      <label class="fld">Semester / Session <input id="f_semester" value="${esc(c.semester)}" placeholder="e.g., Spring 2026"></label>
-      <label class="fld">Program <input id="f_program" value="${esc(c.program)}" placeholder="e.g., B.Sc. in Mechanical Engineering"></label>
-      <label class="fld">Section <input id="f_section" value="${esc(c.section)}" placeholder="e.g., A"></label>
-      <label class="fld">Cohort <input id="f_cohort" value="${esc(c.cohort)}" placeholder="e.g., ME17"></label>
-      <label class="fld">Course Teacher(s) <input id="f_instructor" value="${esc(c.instructor)}" placeholder="e.g., Prof. Dr. Mazharul Islam"></label>
+      <label class="fld">Course Code <input value="${esc(c.code)}" placeholder="e.g., ME 4011" onchange="setCourseField('code',this.value)"></label>
+      <label class="fld">Course Title <input value="${esc(c.title)}" placeholder="e.g., Renewable Energy" onchange="setCourseField('title',this.value)"></label>
+      <label class="fld">Credit Hours <input value="${esc(c.credit)}" placeholder="e.g., 3.0" onchange="setCourseField('credit',this.value)"></label>
+      <label class="fld">Semester / Session <input value="${esc(c.semester)}" placeholder="e.g., Spring 2026" onchange="setCourseField('semester',this.value)"></label>
+      <label class="fld">Program <input value="${esc(c.program)}" placeholder="e.g., B.Sc. in Mechanical Engineering" onchange="setCourseField('program',this.value)"></label>
+      <label class="fld">Section <input value="${esc(c.section)}" placeholder="e.g., A" onchange="setCourseField('section',this.value)"></label>
+      <label class="fld">Cohort <input value="${esc(c.cohort)}" placeholder="e.g., ME17" onchange="setCourseField('cohort',this.value)"></label>
+      <label class="fld">Course Teacher(s) <input value="${esc(c.instructor)}" placeholder="e.g., Prof. Dr. Mazharul Islam" onchange="setCourseField('instructor',this.value)"></label>
     </div>
-    <div class="btn-row"><button class="btn" onclick="saveCourseInfo()">Save Course Info</button></div>
   </div>
   <div class="card">
     <h2>Attainment Settings (AUST Direct CO-PO Measurement)</h2>
     <p class="hint">Same method as the AUST "Direct CO-PO Calculations" workbook: a student's CO score is the percentage obtained of the marks allocated to that CO. A CO/PO is <b>attained</b> when the percentage of students scoring above the Target Pass Marks reaches the KPI.</p>
     <div class="grid c3">
-      <label class="fld">Target Pass Marks (% per CO) <input id="f_passMarks" type="number" min="0" max="100" value="${c.cfg.passMarks}"></label>
-      <label class="fld">KPI marks threshold (%) <input id="f_kpiMarks" type="number" min="0" max="100" value="${c.cfg.kpiMarks}"></label>
-      <label class="fld">Target KPI (% of students above pass marks) <input id="f_kpiTarget" type="number" min="0" max="100" value="${c.cfg.kpiTarget}"></label>
+      <label class="fld">Target Pass Marks (% per CO) <input type="number" min="0" max="100" value="${c.cfg.passMarks}" onchange="setCfgField('passMarks',this.value)"></label>
+      <label class="fld">KPI marks threshold (%) <input type="number" min="0" max="100" value="${c.cfg.kpiMarks}" onchange="setCfgField('kpiMarks',this.value)"></label>
+      <label class="fld">Target KPI (% of students above pass marks) <input type="number" min="0" max="100" value="${c.cfg.kpiTarget}" onchange="setCfgField('kpiTarget',this.value)"></label>
     </div>
     <h3>Indirect Measurement (Course Evaluation Survey) &amp; Combined Attainment</h3>
     <div class="grid c3">
-      <label class="fld">Minimum Likert rating counted as attained (1–5) <input id="f_likertPass" type="number" min="1" max="5" value="${c.cfg.likertPass}"></label>
-      <label class="fld">Weight of Direct measurement (%) <input id="f_wDirect" type="number" min="0" max="100" value="${c.cfg.wDirect}"></label>
-      <label class="fld">Weight of Indirect measurement (%) <input id="f_wIndirect" type="number" min="0" max="100" value="${c.cfg.wIndirect}"></label>
+      <label class="fld">Minimum Likert rating counted as attained (1–5) <input type="number" min="1" max="5" value="${c.cfg.likertPass}" onchange="setCfgField('likertPass',this.value)"></label>
+      <label class="fld">Weight of Direct measurement (%) <input type="number" min="0" max="100" value="${c.cfg.wDirect}" onchange="setCfgField('wDirect',this.value)"></label>
+      <label class="fld">Weight of Indirect measurement (%) <input type="number" min="0" max="100" value="${c.cfg.wIndirect}" onchange="setCfgField('wIndirect',this.value)"></label>
     </div>
-    <div class="btn-row"><button class="btn" onclick="saveCourseCfg()">Save Settings</button></div>
+    <p class="hint" style="margin-top:8px">Edits save automatically and apply immediately to the Attainment tab and all documents.</p>
   </div>`;
 }
-function saveCourseInfo(){
+function setCourseField(k, v){
   const c = activeCourse(); if(!c) return;
-  ["code","title","credit","semester","program","section","cohort","instructor"].forEach(k=>{
-    c[k] = document.getElementById("f_"+k).value.trim();
-  });
-  save(); renderCourseSelect(); toast("Course info saved");
+  c[k] = String(v).trim();
+  save(); renderCourseSelect(); toast("Saved");
 }
-function saveCourseCfg(){
+function setCfgField(k, v){
   const c = activeCourse(); if(!c) return;
-  const num = id => Math.max(0, Math.min(100, parseFloat(document.getElementById(id).value)||0));
-  c.cfg.passMarks = num("f_passMarks");
-  c.cfg.kpiMarks = num("f_kpiMarks");
-  c.cfg.kpiTarget = num("f_kpiTarget");
-  c.cfg.likertPass = Math.max(1, Math.min(5, parseInt(document.getElementById("f_likertPass").value)||4));
-  c.cfg.wDirect = num("f_wDirect");
-  c.cfg.wIndirect = num("f_wIndirect");
-  save(); toast("Attainment settings saved");
+  if(k==="likertPass") c.cfg[k] = Math.max(1, Math.min(5, parseInt(v)||4));
+  else c.cfg[k] = Math.max(0, Math.min(100, parseFloat(v)||0));
+  save(); toast("Saved");
 }
 
 /* ============ COs & CO-PO Mapping ============ */
@@ -2871,6 +2890,7 @@ function autoGrowAll(rootId){
   root.querySelectorAll("textarea.di").forEach(t=>autoGrowTA(t));
 }
 function coIn(id, field, val, ph){ return `<input class="di" value="${esc(val)}" placeholder="${esc(ph||"")}" onchange="updateCO('${id}','${field}',this.value)">`; }
+function coTa(id, field, val, ph){ return `<textarea class="di" rows="1" style="overflow-y:hidden" placeholder="${esc(ph||"")}" oninput="autoGrowTA(this)" onchange="updateCO('${id}','${field}',this.value)">${esc(val)}</textarea>`; }
 function coSel(id, field, val, list){
   return `<select class="di" onchange="updateCO('${id}','${field}',this.value)"><option value="">—</option>${list.map(b=>`<option ${val===b?"selected":""}>${b}</option>`).join("")}</select>`;
 }
@@ -3016,8 +3036,8 @@ function docSpec(c){
       <td style="text-align:center">${cLevel(co)}</td>
       <td style="text-align:center">${lvlTag(co.bloomA)||coSel(co.id,'bloomA',co.bloomA,BLOOM_A)}</td>
       <td style="text-align:center">${lvlTag(co.bloomP)||coSel(co.id,'bloomP',co.bloomP,BLOOM_P)}</td>
-      <td>${coIn(co.id,'delivery',co.delivery,'e.g., Lecture, demonstration, problem solving')}</td>
-      <td>${coIn(co.id,'assess',co.assess,'e.g., Quiz 1, Final Q2')}</td></tr>`).join("");
+      <td>${coTa(co.id,'delivery',co.delivery,'e.g., Lecture, demonstration, problem solving')}</td>
+      <td>${(tools=> (tools? `<div style="font-size:12px;white-space:pre-wrap;padding:2px 0">${esc(tools)}</div>`:"") + coTa(co.id,'assess',co.assess, tools? 'Additional methods (optional)':'e.g., Quiz 1, Final Q2'))([...new Set(c.assessments.filter(a=>a.items.some(it=>it.coId===co.id)).map(a=>a.name||a.type))].join(", "))}</td></tr>`).join("");
   const topicRows = sp.topics.map((t,i)=>`
     <tr><td style="text-align:center">${i+1}</td>
       <td><textarea class="di" rows="1" style="overflow-y:hidden" placeholder="Topic (line breaks allowed — sub-topics on separate lines)" oninput="autoGrowTA(this)" onchange="austSet('spec.topics.${i}.name',this.value)">${esc(t.name)}</textarea></td>
@@ -3063,12 +3083,13 @@ function docSpec(c){
     <tr><td>Final Examination</td><td>${di('spec.slt.finalExam', slt.finalExam,'', 'width:80px;text-align:center')} hrs</td></tr>
     <tr><th>Total SLT</th><th>${di('spec.slt.total', slt.total,'', 'width:80px;text-align:center')} hrs</th></tr>
   </tbody></table>
-  <h2>3. Constructive Alignment — 3.1 Statement of COs</h2>
+  <h2>3. Constructive Alignment</h2>
+  <h2>3.1 Statement of COs</h2>
   <table class="tbl"><thead>
     <tr><th rowspan="2" style="width:50px">CO No.</th><th rowspan="2">CO statement</th><th rowspan="2" style="width:75px">Corresponding PO No.</th><th colspan="3">Bloom's Taxonomy</th><th rowspan="2">Delivery Methods and Activities</th><th rowspan="2">Assessment Method</th></tr>
     <tr><th style="width:45px">C</th><th style="width:45px">A</th><th style="width:45px">P</th></tr></thead>
     <tbody>${caRows || '<tr><td colspan="8" style="text-align:center">Define COs first</td></tr>'}</tbody></table>
-  <p style="font-size:11.5px;color:var(--muted)">* Filled out through constructive alignment (Biggs): outcomes → teaching/learning activities → assessments.</p>
+  <p style="font-size:11.5px;color:var(--muted)">* Filled out through constructive alignment (Biggs): outcomes → teaching/learning activities → assessments. Delivery Methods carry the activities adopted in the T&amp;L tab; Assessment Method is auto-filled from the assessments measuring each CO (⛓ Assessments tab) — the dotted box below it accepts additional methods.</p>
   <h2>4. Teaching &amp; Learning Activities</h2>
   <h2>4.1 Planned Contact Hours for Different Topics</h2>
   <table class="tbl"><thead><tr><th style="width:55px">Sl. No.</th><th>Topics</th><th style="width:130px">Planned Contact Hours</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
@@ -3237,8 +3258,8 @@ function docCQI(c){
       <td style="text-align:center">${x.pct===null?"—":(x.attained?"Attained":"Not attained")}</td></tr>`).join("");
   const narr = (title, val) => `<p style="font-size:12.5px"><b>${title}</b></p>
     <p style="font-size:12.5px;border:1px solid var(--border);border-radius:6px;padding:8px;min-height:40px;white-space:pre-wrap">${esc(val)||"<i>(auto-filled from the CQI tab — currently empty there)</i>"}</p>`;
-  const repRows = CQI_LABELS.map((L,i)=>`<tr><td>${L[0]}</td><td>${L[1]}</td><td>${esc(c.aust.report.cqi[i]||"")||"—"}</td></tr>`).join("");
-  const specRows = CQI_LABELS.map((L,i)=>`<tr><td>${L[0]}</td><td>${L[1]}</td><td>${esc(c.aust.spec.cqiPrev[i].rec)||"—"}</td><td>${esc(c.aust.spec.cqiPrev[i].ref)||"—"}</td></tr>`).join("");
+  const repRows = CQI_LABELS.map((L,i)=>`<tr><td>${L[0]}</td><td>${L[1]}</td><td style="white-space:pre-wrap">${esc(c.aust.report.cqi[i]||"")||"—"}</td></tr>`).join("");
+  const specRows = CQI_LABELS.map((L,i)=>`<tr><td>${L[0]}</td><td>${L[1]}</td><td style="white-space:pre-wrap">${esc(c.aust.spec.cqiPrev[i].rec)||"—"}</td><td style="white-space:pre-wrap">${esc(c.aust.spec.cqiPrev[i].ref)||"—"}</td></tr>`).join("");
   const stRows = q.stakeholders.map(s=>`<tr><td>${esc(s.src)}</td><td>${esc(s.date)}</td><td>${esc(s.summary)}</td><td>${esc(s.action)}</td></tr>`).join("");
   const evRows = EVIDENCE_ITEMS.map(([k,label])=>`<tr><td style="width:44px;text-align:center;font-size:15px">${q.evid[k]?"☑":"☐"}</td><td>${label}</td></tr>`).join("");
   return `${docHead("Course CQI Report","Evidence for BAETE Criterion 3.8 (Teaching-Learning and Assessment) and Criterion 5.4.3 (CQI Loop for Courses and Curriculum) — Annexure H")}
@@ -3355,7 +3376,8 @@ function docReport(c){
     <tr><th>1.4 Semester Offered</th><td>${esc(c.semester)}</td></tr>
     <tr><th>1.5 Date of Submission</th><td>${di('report.submitDate', r.submitDate, 'DD/MM/YYYY')}</td></tr>
   </tbody></table>
-  <h2>2. Learning Outcomes — 2.1 Analysis of existing COs, POs, and Bloom's Taxonomy levels</h2>
+  <h2>2. Learning Outcomes</h2>
+  <h2>2.1 Analysis of existing COs, POs, and Bloom's Taxonomy levels</h2>
   <table class="tbl"><thead>
     <tr><th rowspan="2" style="width:50px">CO No.</th><th colspan="3">Existing</th><th colspan="3">Modification (if needed for constructive alignment)</th></tr>
     <tr><th>CO statement</th><th style="width:70px">PO</th><th style="width:90px">Bloom's</th><th>CO statement</th><th>PO</th><th>Bloom's</th></tr></thead>
@@ -3382,6 +3404,10 @@ function docReport(c){
     <tr><th>No. of Students</th>${GR.map(g=>`<td style="text-align:center"><input class="di" style="width:44px;text-align:center" value="${esc(r.grades[g])}" onchange="austSetR('report.grades.${g}',this.value)"></td>`).join("")}</tr>
     <tr><th>% of Students based on Grade</th>${GR.map(g=>`<td style="text-align:center">${gTotal? (((parseFloat(r.grades[g])||0)/gTotal*100).toFixed(1)) : "—"}</td>`).join("")}</tr>
   </tbody></table>
+  <div class="no-print" style="margin:6px 0 10px">
+    <textarea id="gradePaste" rows="2" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-family:inherit;font-size:12.5px" placeholder="Paste grade counts from IUMS — either one line per grade like “A+  5” (grade then count), or a single row of 10 counts in the order A+ A A- B+ B B- C+ C D F"></textarea>
+    <div class="btn-row" style="margin-top:4px"><button class="btn secondary small" onclick="pasteGrades()">⬆ Fill Grades from Pasted Data</button></div>
+  </div>
   <h2>4.2 Analysis of Course Outcomes</h2>
   <p style="font-size:12.5px">Target Key Performance Indicator (KPI): ${c.cfg.kpiTarget}</p>
   <table class="tbl"><thead><tr><th></th>${att.cos.map(x=>`<th style="text-align:center">${x.label}</th>`).join("")}</tr></thead><tbody>
@@ -3526,7 +3552,10 @@ function renderData(){
   </div>
   <div class="card">
     <h2>About</h2>
-    <p class="hint">OBE Course Manager <b>${APP_VERSION}</b> (Release date: ${APP_RELEASE}) — a free, single-file web app for outcome-based teaching, learning &amp; assessment management. Works offline after first load. No data ever leaves your device.</p>
+    <p class="hint">OBE Course Manager <b>${APP_VERSION}</b> — a free, single-file web app for outcome-based teaching, learning &amp; assessment management. Works offline after first load. No data ever leaves your device.</p>
+    <p class="hint">© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons Attribution (CC BY) 4.0 International License</a>.</p>
+    <p class="hint">GitHub Repository: <a href="https://github.com/mazhar17/obe-course-manager" target="_blank" rel="noopener">github.com/mazhar17/obe-course-manager</a></p>
+    <p class="hint">Feel free to send your comments/suggestions/feedback to <a href="mailto:mazharul.islam.mpe@aust.edu">mazharul.islam.mpe@aust.edu</a>.</p>
   </div>`;
 }
 function exportAll(){
