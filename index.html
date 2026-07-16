@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.54</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.55</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.54</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.55</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.54";
+const APP_VERSION = "v1.55";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -973,7 +973,7 @@ function suggestBox(c, tab){
   return `
   <div class="card">
     <h2>Suggested Modifications in ${isTla? "T&amp;L" : "Assessment"} Activities</h2>
-    <p class="hint">Working notes for this offering — copy the AI prompt below, paste the AI's distilled suggestions here, and act on them further down.${isTla? " Pool activities named here are <b>boosted</b> in the recommendations (green “CQI match” badge)." : ""} Once implemented, record the closure in Course Specifications 6.1 (“Actions reflected” — an AI prompt there synthesizes these notes). Not printed in any document; kept in backups.</p>
+    <p class="hint">Working notes for this offering — copy the AI prompt below, paste the AI's distilled suggestions here, and act on them further down.${isTla? " Pool activities named here are <b>boosted</b> in the recommendations (green “CQI match” badge)." : ""} Once implemented, record the closure in Course Specifications 6.1 (“Actions reflected” — the CQI tab's AI prompt drafts it from these notes as task item 6). Not printed in any document; kept in backups.</p>
     <div class="btn-row" style="margin:0 0 8px">${aiBtn}</div>
     <textarea class="di" id="sug_${field}" rows="5" style="width:100%;overflow-y:hidden;resize:vertical" placeholder="${isTla? "e.g., Adopt Think-pair-share for CO1; drop the ineffective seminar for CO3; add simulation-based activities for CO4…" : "e.g., Add a rubric-graded design item for CO5; make Q2–Q7 parallel in difficulty; return quiz feedback within one week…"}" oninput="autoGrowTA(this)" onchange="austSet('${field}',this.value)${isTla? ";renderTLA()":""}">${esc(val)}</textarea>
   </div>`;
@@ -1113,7 +1113,7 @@ function renderTLA(){
     <div class="btn-row"><button class="btn" onclick="addCustomTLA()">+ Add to Pool</button></div>
   </div>
   ${tlaSummaryCard}`;
-  autoGrowTA(document.getElementById("sug_tlaSuggest"));
+  autoGrowAll("tab-tla");
 }
 function toggleTlaAll(coId){
   window._tlaAll = window._tlaAll || {};
@@ -1507,7 +1507,7 @@ function renderAssess(){
   ${blocks || '<div class="empty">No assessments yet.</div>'}
   ${assessSummaryCard(c)}`;
   drawMarksShareChart(c);
-  autoGrowTA(document.getElementById("sug_assessSuggest"));
+  autoGrowAll("tab-assess");
 }
 const CO_COLORS = ["#0F6B5C","#C98A1B","#3E6FB0","#8E4FA8","#C0392B","#2E8B57","#B25B1A","#5B5EA6","#7A8B24","#9F3B60","#2B7A9E","#6B4F2A"];
 function assessSummaryCard(c){
@@ -2319,13 +2319,23 @@ function buildAIPrompt(c){
   const tlaBits = [];
   c.cos.forEach((co,i)=>{ if(co.delivery) tlaBits.push(`CO${i+1}: ${co.delivery}`); });
   const effBits = Object.entries(c.aust.report.tlaA||{}).filter(([n,v])=>v.eff).map(([n,v])=>`${n} = ${v.eff==="Yes"?"effective":"not effective"}${v.diff? " (\""+v.diff+"\")":""}`);
-  const prevCqi = (c.aust.spec.cqiPrev||[]).filter(x=>x.rec).map(x=>`"${x.rec}"${x.ref? " — reflected: "+x.ref:""}`);
-  if(tlaBits.length || effBits.length || prevCqi.length){
+  if(tlaBits.length || effBits.length){
     L.push("");
     L.push("== TEACHING-LEARNING HISTORY ==");
     if(tlaBits.length) L.push("Adopted activities — " + tlaBits.join("; "));
     if(effBits.length) L.push("Effectiveness recorded (Course Report 3.2): " + effBits.join("; "));
-    if(prevCqi.length) L.push("Previous offering's CQI actions (Specifications 6.1): " + prevCqi.join("; "));
+  }
+  const prevRows = (c.aust.spec.cqiPrev||[]).map((x,i)=>({label:CQI_SRC_LABELS[i], rec:(x.rec||"").trim()}));
+  if(prevRows.some(r=>r.rec)){
+    L.push("");
+    L.push("== PREVIOUS OFFERING'S RECOMMENDATIONS (Specifications 6.1, first column — read-only) ==");
+    prevRows.forEach((r,i)=>L.push(`${i+1}. [${r.label}] ${r.rec || "(empty)"}`));
+  }
+  if((c.aust.tlaSuggest||"").trim() || (c.aust.assessSuggest||"").trim()){
+    L.push("");
+    L.push("== WORKING NOTES (what was decided/implemented this offering) ==");
+    if((c.aust.tlaSuggest||"").trim()) L.push("[Suggested Modifications in T&L Activities]\n" + c.aust.tlaSuggest.trim());
+    if((c.aust.assessSuggest||"").trim()) L.push("[Suggested Modifications in Assessment Activities]\n" + c.aust.assessSuggest.trim());
   }
   const vet = c.aust.vet||{};
   if(vet.vetter1 || vet.vetter2){
@@ -2341,7 +2351,8 @@ function buildAIPrompt(c){
   L.push(`3. "Process of designing and selecting assessment tools" — 3-5 sentences describing the CO-mapped, Bloom-levelled item design, the rubric practice (see the assessment plan) and the question-choice structure where applicable.`);
   L.push(`4. "Question moderation / vetting process" — 2-4 sentences based on the vetting information provided; if none is recorded above, describe the intended process cautiously and note that the signed Vetting Form is the evidence.`);
   L.push(`5. "Improvement actions from this offering (Course Report 6.1)" — one short block per loop row: (1) CO loop, direct; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect — focused on the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""} and their POs; if a row has no evidence-based action, output exactly: "No specific action this offering."`);
-  L.push(`Items 1-4 will be pasted verbatim into the CQI tab's narrative boxes; item 5 into the linked Course Report 6.1 table.`);
+  if(prevRows.some(r=>r.rec)) L.push(`6. "Actions from the previous offering & how they were reflected (Course Specifications 6.1, second column)" — for each numbered previous recommendation above, draft 2-4 sentences describing how it was reflected in this offering (synthesize from the working notes, the adopted activities and the assessment plan, naming the recommendation each action closes); if a recommendation had no matching action, output exactly: "No specific action this offering." Never alter the first column — it is the previous Course Report's text.`);
+  L.push(`Items 1-4 will be pasted verbatim into the CQI tab's narrative boxes; item 5 into the linked Course Report 6.1 table${prevRows.some(r=>r.rec)? "; item 6 into the second column of the linked Specifications 6.1 table":""}.`);
   L.push("");
   L.push("== CONSTRAINTS ==");
   L.push("Professional accreditation-report tone; every claim traceable to the");
@@ -2458,55 +2469,11 @@ function copyScopedPrompt(builder){
 }
 function copyTlaAIPrompt(){ copyScopedPrompt(buildTlaAIPrompt); }
 function copyAssessSuggestPrompt(){ copyScopedPrompt(buildAssessSuggestPrompt); }
-/* Synthesis prompt (Specifications 6.1): turns the two "Suggested Modifications" working
-   boxes into accreditation-ready text for the "Actions reflected" column. */
-function buildSynthPrompt(c){
-  const lines = [];
-  lines.push("You are an experienced engineering-education (OBE) consultant. Synthesize my working notes into concise closure statements for the \"Actions reflected in the Current Course Specification\" column of table 6.1 of my Course Specifications.");
-  lines.push("");
-  lines.push(aiCtxHeader(c));
-  lines.push("");
-  const recs = specRecList(c);
-  if(recs.length){
-    lines.push("== RECOMMENDATIONS BEING CLOSED (6.1 \"Recommended Actions\" — context) ==");
-    recs.forEach((r,i)=>lines.push(`${i+1}. [${r.label}] ${r.rec}`));
-    lines.push("");
-  }
-  lines.push("== MY WORKING NOTES (what was actually decided/implemented this offering) ==");
-  if((c.aust.tlaSuggest||"").trim()) lines.push("[Suggested Modifications in T&L Activities]\n" + c.aust.tlaSuggest.trim());
-  if((c.aust.assessSuggest||"").trim()) lines.push("[Suggested Modifications in Assessment Activities]\n" + c.aust.assessSuggest.trim());
-  lines.push("");
-  lines.push("== TASK ==");
-  lines.push("Draft the \"Actions reflected\" text for each of the five loop rows, at the same granularity as my notes:");
-  lines.push("1) CO loop, direct measurement — one short block PER CO (CO1, CO2, …): name the specific actions taken (adopted/modified T&L activities by name, assessment items added or redesigned with their type and Bloom level, rubric and similarity-check actions, marks-weight changes) and explicitly cite the recommendation each action closes.");
-  lines.push("2) CO loop, indirect (survey) — only actions that concern the Course Evaluation Survey or other indirect measures; if none, output exactly: \"No specific action this offering.\"");
-  lines.push("3) PO loop, direct measurement — one short block PER mapped PO: draw the CO-level actions up to the PO they serve (my notes tie actions to POs) and cite the PO recommendation each closes.");
-  lines.push("4) PO loop, indirect (survey) — as row 2: survey-related actions only; if none, output exactly: \"No specific action this offering.\"");
-  lines.push("5) PEO loop, indirect (survey) — as row 2: PEO-survey-related actions only; if none, output exactly: \"No specific action this offering.\"");
-  lines.push("");
-  lines.push("== CONSTRAINTS ==");
-  lines.push("- Comprehensive but non-repetitive: include the concrete specifics from my notes (activity names, item types and Bloom levels, rubric criteria, Turnitin/similarity checks, marks redistribution) — omit nothing that appears in the notes; do not pad rows that have no matching action.");
-  lines.push("- Formal, accreditation-ready wording (e.g., \"Think-pair-share was adopted for CO3; an analytic rubric with an 'Assumption Check' criterion was introduced for the design assignments\").");
-  lines.push("- Label the output plainly by row number/name (and CO/PO number within rows 1 and 3) so each part can be pasted straight into the table.");
-  lines.push("- Base the text only on my notes and the recommendations; do not invent actions.");
-  return lines.join("\n");
-}
-function copySynthPrompt(){
-  const c = activeCourse(); if(!c) return;
-  ensureAust(c);
-  if(!(c.aust.tlaSuggest||"").trim() && !(c.aust.assessSuggest||"").trim()){
-    toast("Fill the “Suggested Modifications” boxes first (T&L and/or Assessments tab)"); return;
-  }
-  const txt = buildSynthPrompt(c);
-  const done = ()=>toast("AI prompt copied — paste it into ChatGPT, Claude, Gemini, etc.");
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(done).catch(()=>copyAIFallback(txt, done));
-  } else copyAIFallback(txt, done);
-}
-/* Pretty-print a 6.1 recommendation: dash-runs split blocks, "COn:" prefixes become
-   bold sub-headings, " - " / line-starting dashes become bullets; plain prose stays prose. */
+/* (The Specifications 6.1 synthesis prompt was retired — the CQI tab's
+   narratives prompt now covers the "Actions reflected" column as its task item 6.) */
 /* Shared "CQI Inputs from the Previous Offering" card — used by the T&L and Assessments tabs.
-   Collapsed by default (one summary line + the tab's AI button); expand for the panels. */
+   Collapsed by default (one summary line); expanded, the five loop rows are EDITABLE here,
+   writing straight into the shared Specifications 6.1 / Course Report 6.1 storage. */
 function toggleCqiCard(tab){
   window._cqiOpen = window._cqiOpen || {};
   window._cqiOpen[tab] = !window._cqiOpen[tab];
@@ -2514,25 +2481,28 @@ function toggleCqiCard(tab){
 }
 function cqiInputsCard(c, tab){
   const isTla = tab==="tla";
-  const ent = [];
-  (c.aust.spec.cqiPrev||[]).forEach((x,i)=>{ if((x.rec||"").trim()) ent.push({h:CQI_SRC_LABELS[i], s:"Specifications 6.1", t:x.rec}); });
-  (c.aust.report.cqi||[]).forEach((t,i)=>{ if((t||"").trim()) ent.push({h:CQI_SRC_LABELS[i], s:"Course Report 6.1", t}); });
   const bad = isTla? ineffectiveTLA(c) : [];
   const open = (window._cqiOpen||{})[tab];
-  const srcs = [...new Set(ent.map(e=>e.s))].join(", ");
-  const summary = ent.length
-    ? `${ent.length} recommendation entr${ent.length>1?"ies":"y"} recorded · ${srcs}${bad.length? ` · ${bad.length} activit${bad.length>1?"ies":"y"} marked ineffective`:""}`
-    : (isTla? "None recorded yet — activities are recommended from CO Bloom's levels only." : "None recorded yet — fill Course Specifications 6.1 first.");
+  const nSpec = (c.aust.spec.cqiPrev||[]).filter(x=>(x.rec||"").trim()).length;
+  const nRep = (c.aust.report.cqi||[]).filter(t=>(t||"").trim()).length;
+  const srcs = [nSpec? "Specifications 6.1":"", nRep? "Course Report 6.1":""].filter(Boolean).join(", ");
+  const summary = (nSpec+nRep)
+    ? `${nSpec+nRep} recommendation entr${(nSpec+nRep)>1?"ies":"y"} recorded · ${srcs}${bad.length? ` · ${bad.length} activit${bad.length>1?"ies":"y"} marked ineffective`:""}`
+    : (isTla? "None recorded yet — expand to enter them; activities are recommended from CO Bloom's levels only until then." : "None recorded yet — expand to enter them.");
+  const rerender = tab==="tla"? "renderTLA()" : "renderAssess()";
+  const rows = CQI_SRC_LABELS.map((lab,i)=>`
+    <p style="font-size:12px;font-weight:700;color:var(--primary-dark);margin:12px 0 2px">${lab}</p>
+    <div style="font-size:11.5px;color:var(--muted);margin:0 0 2px"><span class="badge blue" title="Same data as Course Specifications 6.1 and the CQI tab — edit in any of them">⛓ Specifications 6.1</span> recommended actions from the previous offering</div>
+    <textarea class="di" rows="2" style="width:100%;overflow-y:hidden" placeholder="Recommended action (previous Course Report)" oninput="autoGrowTA(this)" onchange="austSet('spec.cqiPrev.${i}.rec',this.value);${rerender}">${esc(c.aust.spec.cqiPrev[i].rec||"")}</textarea>
+    <div style="font-size:11.5px;color:var(--muted);margin:6px 0 2px"><span class="badge blue" title="Same data as Course Report 6.1 and the CQI tab — edit in any of them">⛓ Course Report 6.1</span> this offering's suggested actions (for the next offering)</div>
+    <textarea class="di" rows="2" style="width:100%;overflow-y:hidden" placeholder="Recommended action for quality improvement" oninput="autoGrowTA(this)" onchange="austSet('report.cqi.${i}',this.value);${rerender}">${esc(c.aust.report.cqi[i]||"")}</textarea>`).join("");
   return `
   <div class="card">
-    <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">CQI Inputs from the Previous Offering <button class="btn secondary small" onclick="toggleCqiCard('${tab}')">${open? "▾ Hide details":"▸ Show details"}</button></h2>
+    <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">CQI Inputs from the Previous Offering <button class="btn secondary small" onclick="toggleCqiCard('${tab}')">${open? "▾ Hide details":"▸ Show / edit details"}</button></h2>
     ${open? `
-    <p class="hint">Recommendations recorded in <b>Course Specifications → 6.1</b> and <b>Course Report → 6.1 / 3.2</b> ${isTla? "feed the recommendations below" : "inform the assessment plan below"}. Keep them updated for a closed CQI loop — see the loop map on the <b>Dashboard</b>.</p>
-    ${ent.length? ent.map(e=>`
-      <p style="font-size:12px;font-weight:700;color:var(--primary-dark);margin:8px 0 2px">${e.h} <span class="badge blue" title="Same data as the documents — edit in the CQI tab or the document itself">⛓ ${e.s}</span></p>
-      <div style="border:1px solid var(--border);border-radius:8px;padding:8px 12px;max-height:240px;overflow-y:auto;font-size:13px">${fmtCQI(e.t)}</div>`).join("")
-      : `<p class="hint">No CQI recommendations recorded yet — ${isTla? "activities are recommended from CO Bloom's levels only" : "fill Course Specifications 6.1 first"}.</p>`}
-    ${bad.length? `<p style="margin-top:8px"><b>Marked ineffective last time</b> (ranked down): ${bad.map(b=>`<span class="badge red">${esc(b)}</span>`).join(" ")}</p>` : ""}`
+    <p class="hint">Editable here — every change updates <b>Course Specifications 6.1</b>, <b>Course Report 6.1</b> and the <b>CQI tab</b> automatically (⛓ one shared dataset). The Specifications 6.1 entries ${isTla? "feed the recommendations below" : "inform the assessment plan below"}.</p>
+    ${rows}
+    ${bad.length? `<p style="margin-top:10px"><b>Marked ineffective last time</b> (ranked down): ${bad.map(b=>`<span class="badge red">${esc(b)}</span>`).join(" ")}</p>` : ""}`
     : `<p class="hint" style="margin:0 0 4px">${summary}</p>`}
     ${open? `<div class="btn-row">
       <button class="btn secondary small" onclick="showDoc('spec');showTab('docs')">Open Course Specifications</button>
@@ -2554,18 +2524,6 @@ function cqiLoopStrip(){
     ${step("⟳ REPEAT","grey","New Semester","“Duplicate for New Semester” carries Report 6.1 → next Specifications 6.1 — Dashboard")}
   </div>
   <p class="hint" style="margin-top:4px">One dataset drives the loop: the 6.1 tables are shared (⛓ linked) between the documents and the CQI tab — edit in either place.</p>`;
-}
-function fmtCQI(raw){
-  const blocks = String(raw).split(/\s*-{6,}\s*/).filter(s=>s.trim());
-  return blocks.map(b=>{
-    let rest = b.trim(), html = "";
-    const m = rest.match(/^(CO\s*\d+\s*:.*?)(?=\s+-\s|\n|$)/);
-    if(m){ html += `<p style="font-weight:700;margin:6px 0 2px">${esc(m[1].trim())}</p>`; rest = rest.slice(m[0].length); }
-    const items = rest.split(/\n+|\s+-\s+/).map(s=>s.replace(/^-\s*/,"").trim()).filter(Boolean);
-    if(items.length>1 || m) html += items.length? `<ul style="margin:2px 0 6px 18px">${items.map(it=>`<li style="margin:2px 0">${esc(it)}</li>`).join("")}</ul>` : "";
-    else html += `<p style="margin:4px 0;white-space:pre-wrap">${esc(rest)}</p>`;
-    return html;
-  }).join('<hr style="border:none;border-top:1px dashed var(--border);margin:6px 0">');
 }
 function renderCQI(){
   const el = document.getElementById("tab-cqi");
@@ -2997,10 +2955,10 @@ function docSpec(c){
     <tr><th style="width:70px">Cognitive</th><th style="width:70px">Affective</th><th style="width:85px">Psychomotor</th></tr></thead>
     <tbody>${bpRows || '<tr><td colspan="6" style="text-align:center">Define assessment items first</td></tr>'}</tbody></table>
   <h2>6. Continuous Quality Improvement (CQI) Measures</h2>
-  <p><b>6.1 Recommendations from the Previous Course Report (if any)</b> <span class="badge blue no-print" title="Same data as the CQI tab's linked table — edit in either place" style="margin-left:8px">⛓ linked — also editable in the CQI tab</span> <button class="btn secondary small no-print" onclick="copySynthPrompt()" style="margin-left:8px" title="Synthesizes the “Suggested Modifications in T&amp;L Activities” (T&amp;L tab) and “Suggested Modifications in Assessment Activities” (Assessments tab) working notes into accreditation-ready text for the “Actions reflected” column below">📋 Copy AI Prompt (synthesize “Actions reflected”)</button></p>
+  <p><b>6.1 Recommendations from the Previous Course Report (if any)</b> <span class="badge blue no-print" title="Same data as the CQI tab's linked table — edit in either place" style="margin-left:8px">⛓ linked — also editable in the CQI tab</span></p>
   <table class="tbl"><thead><tr><th style="width:130px">Loop</th><th style="width:170px">Assessment Type</th><th>Recommended Actions for Quality Improvement</th><th>Actions reflected in the Current Course Specification</th></tr></thead>
     <tbody>${cqiRows}</tbody></table>
-  <p class="no-print" style="font-size:11.5px;color:var(--muted)">The recommendations above feed the AI-prompt buttons in the <b>T&amp;L</b> tab (T&amp;L suggestions only) and the <b>Assessments</b> tab (assessment suggestions only), plus the activity recommender. The synthesis button above turns the two “Suggested Modifications” working boxes into draft text for the <b>Actions reflected</b> column.</p>
+  <p class="no-print" style="font-size:11.5px;color:var(--muted)">The recommendations above feed the AI-prompt buttons in the <b>T&amp;L</b> tab (T&amp;L suggestions only) and the <b>Assessments</b> tab (assessment suggestions only), plus the activity recommender. Draft text for the <b>Actions reflected</b> column comes from the CQI tab's AI prompt (task item 6).</p>
   <p><b>6.2 Any Other Modification (if any)</b> ${dta('spec.other', sp.other, 3)}</p>
   <table class="sig-table"><tr>${sigCell("Signature of the Instructor<br>Name: "+esc(c.instructor))}<td></td><td></td></tr></table>`;
 }
