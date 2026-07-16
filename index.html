@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.61</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.62</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.61</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.62</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.61";
+const APP_VERSION = "v1.62";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -228,6 +228,13 @@ function ensureAust(c){
   a.outline = Object.assign({level:"",faculty:"Engineering",dept:"",programme:"",synopsis:"",type:"Core",prereq:"",room:"",phone:"",email:"",consult:"",refsReq:"",refsRec:"",prepared:"",checked:"",approved:""}, a.outline||{});
   if(!Array.isArray(a.outline.weeks) || a.outline.weeks.length!==14)
     a.outline.weeks = Array.from({length:14},(_,i)=>(a.outline.weeks&&a.outline.weeks[i])||{t:"",m:""});
+  if(!Array.isArray(a.outline.methods)){   // Outline §15 is a standalone user-managed table — seeded once from the assessments-derived shares (the previous display)
+    const totM = c.assessments.reduce((s,y)=>s+y.items.reduce((t,it)=>t+(parseFloat(it.max)||0),0),0);
+    a.outline.methods = c.assessments.map(x=>{
+      const aMax = x.items.reduce((t,it)=>t+(parseFloat(it.max)||0),0);
+      return { name: x.name||x.type, pct: (x.weightPct!==undefined && x.weightPct!=="")? String(x.weightPct) : (totM? (aMax/totM*100).toFixed(1) : "") };
+    });
+  }
   a.spec = Object.assign({submitDate:"", other:""}, a.spec||{});
   a.spec.slt = Object.assign({lecture:"42", active:"", reading:"", quiz:"", assign:"", finalPrep:"", finalExam:"3", total:"120"}, a.spec.slt||{});
   if(!Array.isArray(a.spec.topics)) a.spec.topics = [];
@@ -1432,13 +1439,6 @@ function assessTips(c, d){
   const pending = [...new Set(acts.filter(a=>rubricTypes().includes(a.type) && !a.rubric).map(nm))];
   return { pending, tips: tips.slice(0,3) };
 }
-function caDbl(color){
-  return `<svg width="54" height="20" viewBox="0 0 54 20" style="flex-shrink:0">
-    <line x1="10" y1="10" x2="44" y2="10" stroke="${color}" stroke-width="4"/>
-    <polygon points="10,4 10,16 1,10" fill="${color}"/>
-    <polygon points="44,4 44,16 53,10" fill="${color}"/>
-  </svg>`;
-}
 function caTriangle(leftSt, rightSt, baseSt){
   const lc = caColor(leftSt), rc = caColor(rightSt), bc = caColor(baseSt);
   return `<svg viewBox="0 0 560 330" style="max-width:560px;width:100%;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
@@ -1459,6 +1459,29 @@ function caTriangle(leftSt, rightSt, baseSt){
     <polygon points="171,285 190,276 190,294" fill="${bc}"/>
     <polygon points="389,285 370,276 370,294" fill="${bc}"/>
     <text x="280" y="315" text-anchor="middle" font-size="13" font-weight="700" fill="${bc}">${caWord(baseSt)}</text>
+  </svg>`;
+}
+/* Compact per-CO Biggs triangle — edges colored by that CO's own alignment state. */
+function caMiniTriangle(d){
+  const lc = caColor(d.tlaStatus), rc = caColor(d.assessStatus), bc = caColor(d.base);
+  return `<svg viewBox="0 0 300 214" style="max-width:300px;width:100%;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${d.label} alignment triangle">
+    <polygon points="150,58 80,158 220,158" fill="#FFE94D" stroke="#E3C900" stroke-width="1"/>
+    <text x="150" y="126" text-anchor="middle" font-size="22" font-style="italic" font-weight="700" fill="#B22222"><title>KSA = Knowledge, Skills, Attitudes</title>KSA</text>
+    <text x="150" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="#0A4A40">${d.label}</text>
+    <text x="50" y="182" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0A4A40">T&amp;L</text>
+    <text x="250" y="182" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0A4A40">Assessment</text>
+    <line x1="66" y1="152" x2="123" y2="64" stroke="${lc}" stroke-width="6"><title>${caWord(d.tlaStatus)}</title></line>
+    <polygon points="128,55 113,60 124,71 128,55" fill="${lc}"/>
+    <polygon points="61,161 76,156 65,145 61,161" fill="${lc}"/>
+    <text x="74" y="102" text-anchor="middle" font-size="9.5" font-weight="700" fill="${lc}" transform="rotate(-57 74 102)">${caWord(d.tlaStatus)}</text>
+    <line x1="234" y1="152" x2="177" y2="64" stroke="${rc}" stroke-width="6"><title>${caWord(d.assessStatus)}</title></line>
+    <polygon points="172,55 187,60 176,71 172,55" fill="${rc}"/>
+    <polygon points="239,161 224,156 235,145 239,161" fill="${rc}"/>
+    <text x="226" y="102" text-anchor="middle" font-size="9.5" font-weight="700" fill="${rc}" transform="rotate(57 226 102)">${caWord(d.assessStatus)}</text>
+    <line x1="105" y1="194" x2="195" y2="194" stroke="${bc}" stroke-width="6"><title>${caWord(d.base)}</title></line>
+    <polygon points="93,194 109,187 109,201 93,194" fill="${bc}"/>
+    <polygon points="207,194 191,187 191,201 207,194" fill="${bc}"/>
+    <text x="150" y="211" text-anchor="middle" font-size="9.5" font-weight="700" fill="${bc}">${caWord(d.base)}</text>
   </svg>`;
 }
 function renderCA(){
@@ -1489,15 +1512,16 @@ function renderCA(){
       : '<span class="badge red">no items</span>';
     return `
     <div class="card">
-      <div style="display:grid;grid-template-columns:1fr 60px 1.3fr 60px 1fr;gap:10px;align-items:center">
-        <div><p style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px">T&amp;L ACTIVITIES</p>${tlaChips}</div>
-        <div style="text-align:center">${caDbl(caColor(d.tlaStatus))}</div>
-        <div style="border:2px solid ${caColor(caWorst([d.tlaStatus,d.assessStatus]))};border-radius:10px;padding:10px;text-align:center">
-          <b>${d.label}</b> <span class="badge blue">${esc(d.info.domain)}${primeTag(d.co)? " · "+primeTag(d.co):""}</span>
-          <p style="font-size:12.5px;margin-top:4px">${esc(d.co.statement)||"<i>(no statement)</i>"}</p>
-        </div>
-        <div style="text-align:center">${caDbl(caColor(d.assessStatus))}</div>
-        <div><p style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px">ASSESSMENT ITEMS</p>${itemChips}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <b style="font-size:15.5px">${d.label}</b>
+        <span class="badge blue" title="Bloom's Taxonomy domain and level of this CO">${esc(d.info.domain)}${primeTag(d.co)? " · "+primeTag(d.co):""}${primeLevelName(d.co)? " "+esc(primeLevelName(d.co)):""}</span>
+        <span class="badge ${d.base}">${caWord(d.base)}</span>
+      </div>
+      <p style="font-size:13px;margin:6px 0 12px">${esc(d.co.statement)||"<i>(no statement)</i>"}</p>
+      <div style="display:grid;grid-template-columns:1fr minmax(230px,300px) 1fr;gap:14px;align-items:center">
+        <div><p style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px">T&amp;L ACTIVITIES <span style="font-weight:400">(⛓ T&amp;L tab)</span></p>${tlaChips}</div>
+        <div>${caMiniTriangle(d)}</div>
+        <div><p style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px">ASSESSMENT ITEMS <span style="font-weight:400">(⛓ Assessments tab)</span></p>${itemChips}</div>
       </div>
       ${sugg.length? `<div style="border-top:1px dashed var(--border);margin-top:12px;padding-top:10px">
         <p style="font-size:12.5px;font-weight:700;color:var(--primary-dark);margin-bottom:6px">Suggestions for proper CA</p>
@@ -1508,7 +1532,7 @@ function renderCA(){
   el.innerHTML = `
   <div class="card">
     <h2>Constructive Alignment (CA)</h2>
-    <p class="hint">"In constructive alignment, we start with the outcomes we intend students to learn, and align teaching and assessment to those outcomes" (Biggs). The triangle below is live: each edge is colored by the actual state of this course — green when every CO is aligned on that edge, amber when partially, red when gaps exist. Details and suggestions per CO follow.</p>
+    <p class="hint">"In constructive alignment, we start with the outcomes we intend students to learn, and align teaching and assessment to those outcomes" (Biggs). The triangle below summarises the whole course: each edge is colored by the actual state — green when every CO is aligned on that edge, amber when partially, red when gaps exist. Below it, <b>each CO card repeats the triangle for that CO alone</b> — live from its own adopted activities (⛓ T&amp;L tab) and assessment items (⛓ Assessments tab) — with the CO statement, Bloom's domain &amp; level, and suggestions.</p>
     ${caTriangle(leftAll, rightAll, baseAll)}
     <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px">
       KSA = Knowledge, Skills, Attitudes · <span class="badge green">Aligned</span> <span class="badge amber">Partially aligned</span> <span class="badge red">Not aligned</span> · Activity chips: <span class="badge green">verified fit</span> <span class="badge amber">level mismatch</span> <span class="badge grey">unverified free-text</span> · Items: † optional, ↑ exceeds CO level
@@ -2955,7 +2979,6 @@ function showDoc(d){ window._docSel = d; renderDocs(); }
 /* ---- Document 1: Course Outline ---- */
 function docOutline(c){
   const o = c.aust.outline;
-  const totalMax = allItems(c).reduce((s,it)=>s+(parseFloat(it.max)||0),0);
   const coRows = c.cos.map((co,i)=>`
     <tr><td style="text-align:center"><b>${i+1}</b></td>
       <td>${esc(co.statement)}</td>
@@ -2968,12 +2991,11 @@ function docOutline(c){
       <td>${coIn(co.id,'kp',co.kp,'e.g., K3, K4')}</td>
       <td>${coIn(co.id,'cep',co.cep,'e.g., P1, P3')}</td>
       <td>${coIn(co.id,'cea',co.cea,'e.g., A1, A2')}</td></tr>`).join("");
-  const methodRows = c.assessments.map(a=>{
-    const aMax = a.items.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
-    const derived = totalMax? (aMax/totalMax*100) : 0;
-    return `<tr><td>${esc(a.name||a.type)}</td>
-      <td style="text-align:center"><input class="di" style="width:80px;text-align:center" value="${esc(a.weightPct!==""? a.weightPct : derived.toFixed(1))}" onchange="updateAssessment('${a.id}','weightPct',this.value)"> %</td></tr>`;
-  }).join("");
+  const methodRows = o.methods.map((m,i)=>`<tr>
+      <td>${di('outline.methods.'+i+'.name', m.name, 'e.g., Attendance')}</td>
+      <td style="text-align:center"><input class="di" style="width:80px;text-align:center" value="${esc(m.pct)}" onchange="austSetR('outline.methods.${i}.pct',this.value)"> %</td>
+      <td class="no-print"><button class="icon-btn" onclick="delOutlineMethod(${i})">✕</button></td></tr>`).join("");
+  const methodTotal = o.methods.reduce((s,m)=>s+(parseFloat(m.pct)||0),0);
   const weekRows = o.weeks.map((w,i)=>`
     <tr><td style="text-align:center">${i+1}</td>
       <td><textarea class="di" rows="2" style="overflow-y:hidden" placeholder="Topics covered in week ${i+1}" oninput="autoGrowTA(this)" onchange="austSet('outline.weeks.${i}.t',this.value)">${esc(w.t)}</textarea></td>
@@ -3008,12 +3030,21 @@ function docOutline(c){
   <table class="tbl"><thead><tr><th style="width:90px">Course Outcome</th><th>Knowledge Profile (K1–K8)</th><th>Complex Problem Solving (P1–P7)</th><th>Complex Engineering Activities (A1–A5)</th></tr></thead>
     <tbody>${kpRows || '<tr><td colspan="4" style="text-align:center">—</td></tr>'}</tbody></table>
   <h2>15. Percentages of Assessment Methods</h2>
-  <table class="tbl" style="max-width:420px"><thead><tr><th>Method</th><th style="width:130px">Percentage</th></tr></thead>
-    <tbody>${methodRows || '<tr><td colspan="2" style="text-align:center">Define assessments first</td></tr>'}</tbody></table>
-  <p style="font-size:11.5px;color:var(--muted)">Percentages are pre-filled from each assessment's share of total marks — edit to match the approved grading policy (e.g., include Attendance).</p>
+  <table class="tbl" style="max-width:480px"><thead><tr><th>Method</th><th style="width:130px">Percentage</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
+    <tbody>${methodRows || '<tr><td colspan="3" style="text-align:center;color:var(--muted)">Add the methods of the approved grading policy</td></tr>'}
+    <tr><th style="text-align:right">Total</th><th style="text-align:center${Math.abs(methodTotal-100)>0.05? ';color:#c0392b':''}">${methodTotal.toFixed(1)} %${Math.abs(methodTotal-100)>0.05? " ⚠":""}</th><td class="no-print"></td></tr></tbody></table>
+  <div class="no-print btn-row">
+    <button class="btn secondary small" onclick="addOutlineMethod()">+ Add Method</button>
+    <button class="btn secondary small" onclick="prefillOutlineMethods()" title="Replaces the rows with this course's assessments and their shares of total marks — a starting point to edit">⛏ Prefill from Assessments tab</button>
+  </div>
+  <p style="font-size:11.5px;color:var(--muted)">This table is yours to edit and is <b>not linked</b> to the Assessments tab — state the approved grading policy (e.g., include Attendance). The total should be 100%.</p>
   <h2>16. Week wise distribution of contents and assessment methods</h2>
   <table class="tbl"><thead><tr><th style="width:60px">Week</th><th>Topics</th><th style="width:180px">Assessment Method(s)</th></tr></thead>
     <tbody>${weekRows}</tbody></table>
+  <div class="no-print btn-row">
+    <button class="btn secondary small" onclick="exportWeeksCSV()" title="Downloads a CSV (Week, Topics, Assessment Method(s)) with all 14 weeks — includes the current content, so it doubles as an export for editing in Excel">⬇ Download Template (CSV)</button>
+    <label class="btn secondary small" style="cursor:pointer" title="Weeks present in the file overwrite those weeks (after a confirmation); weeks missing from the file keep their current content. Multi-line cells (quoted, Excel's default) are supported.">⬆ Import (CSV)<input type="file" accept=".csv" style="display:none" onchange="importWeeksCSV(this)"></label>
+  </div>
   <h2>17. References</h2>
   <p><b>17.1. Required</b> ${dta('outline.refsReq', o.refsReq, 2, 'Required textbook(s)')}</p>
   <p><b>17.2. Recommended</b> ${dta('outline.refsRec', o.refsRec, 2, 'Recommended reference(s)')}</p>
@@ -3513,6 +3544,66 @@ function delTopic(i){
   const c = activeCourse(); if(!c) return;
   c.aust.spec.topics.splice(i,1);
   save(); renderDocs();
+}
+/* ---- Outline §15: standalone assessment-method percentages ---- */
+function addOutlineMethod(){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  c.aust.outline.methods.push({ name:"", pct:"" });
+  save(); renderDocs();
+}
+function delOutlineMethod(i){
+  const c = activeCourse(); if(!c) return;
+  c.aust.outline.methods.splice(i,1);
+  save(); renderDocs();
+}
+function prefillOutlineMethods(){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  if(!c.assessments.length){ toast("No assessments defined yet (Assessments tab)"); return; }
+  const existing = c.aust.outline.methods.filter(m=>m.name||m.pct).length;
+  if(existing && !confirm(`Replace the current ${existing} method row(s) with this course's ${c.assessments.length} assessment(s) and their shares of total marks?`)) return;
+  const totM = c.assessments.reduce((s,y)=>s+y.items.reduce((t,it)=>t+(parseFloat(it.max)||0),0),0);
+  c.aust.outline.methods = c.assessments.map(x=>{
+    const aMax = x.items.reduce((t,it)=>t+(parseFloat(it.max)||0),0);
+    return { name: x.name||x.type, pct: totM? (aMax/totM*100).toFixed(1) : "" };
+  });
+  save(); renderDocs();
+  toast("Prefilled — edit to match the approved grading policy");
+}
+/* ---- Outline §16: week-wise plan CSV template / import ---- */
+function exportWeeksCSV(){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  const lines = [["Week","Topics","Assessment Method(s)"].map(csvCell).join(",")];
+  c.aust.outline.weeks.forEach((w,i)=>lines.push([String(i+1), w.t||"", w.m||""].map(csvCell).join(",")));
+  downloadFile(`${(c.code||"course").replace(/\s+/g,"_")}_weekly_plan_template.csv`, lines.join("\n"), "text/csv");
+  toast("Template downloaded — edit in Excel, then ⬆ Import (CSV)");
+}
+function importWeeksCSV(input){
+  const c = activeCourse(); if(!c) return;
+  const file = input.files && input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    ensureAust(c);
+    let rows = parseCSV(String(e.target.result)).filter(r=>r.some(x=>String(x).trim()));
+    if(rows.length && /week/i.test(rows[0][0]||"")) rows = rows.slice(1);   // header row
+    const upd = {}; let skipped = 0;
+    rows.forEach(r=>{
+      const wk = parseInt(String(r[0]||"").trim());
+      if(!wk || wk<1 || wk>14){ skipped++; return; }
+      upd[wk] = { t: String(r[1]||"").trim(), m: String(r[2]||"").trim() };
+    });
+    const n = Object.keys(upd).length;
+    if(!n){ toast("No valid rows found — expected columns: Week (1–14), Topics, Assessment Method(s)"); input.value=""; return; }
+    const filled = c.aust.outline.weeks.filter(w=>w.t||w.m).length;
+    if(filled && !confirm(`Import ${n} week row(s) from the file?\n\nWeeks present in the file overwrite the current content of those weeks; the other weeks stay unchanged.`)){ input.value=""; return; }
+    Object.entries(upd).forEach(([wk,v])=>{ c.aust.outline.weeks[wk-1] = { t: v.t, m: v.m }; });
+    save(); renderDocs();
+    toast(`${n} week(s) imported${skipped? " · "+skipped+" row(s) skipped":""}`);
+    input.value = "";
+  };
+  reader.readAsText(file);
 }
 
 /* ============ Data & Backup ============ */
