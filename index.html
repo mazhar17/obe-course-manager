@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.57</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.59</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.57</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.59</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.57";
+const APP_VERSION = "v1.59";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -231,6 +231,7 @@ function ensureAust(c){
   a.spec = Object.assign({submitDate:"", other:""}, a.spec||{});
   a.spec.slt = Object.assign({lecture:"42", active:"", reading:"", quiz:"", assign:"", finalPrep:"", finalExam:"3", total:"120"}, a.spec.slt||{});
   if(!Array.isArray(a.spec.topics)) a.spec.topics = [];
+  a.spec.topics.forEach(t=>{ if(!Array.isArray(t.cos)) t.cos = []; if(!Array.isArray(t.tla)) t.tla = []; });   // topic -> related CO ids + topic-specific activities (T&L tab's topic-wise plan)
   if(!Array.isArray(a.spec.cqiPrev) || a.spec.cqiPrev.length!==5)
     a.spec.cqiPrev = Array.from({length:5},(_,i)=>(a.spec.cqiPrev&&a.spec.cqiPrev[i])||{rec:"",ref:""});
   a.vet = Object.assign({vetter1:"",vetter2:""}, a.vet||{});
@@ -1000,6 +1001,106 @@ function tlaScore(c, act, co, cqi, bad){
   if(act.b.length<=2) s += 1;                                    // focused activities rank slightly higher
   return s;
 }
+/* Topic-wise T&L Plan — columns 1-3 shared with Course Specifications 4.1;
+   "Related COs" per topic + auto-filled T&L methods from the adopted activities. */
+function toggleTopicCO(i, coId){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  const t = c.aust.spec.topics[i]; if(!t) return;
+  if(!Array.isArray(t.cos)) t.cos = [];
+  const k = t.cos.indexOf(coId);
+  if(k>=0) t.cos.splice(k,1); else t.cos.push(coId);
+  save(); renderTLA();
+}
+function addTopicTLA(i){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  const t = c.aust.spec.topics[i]; if(!t) return;
+  const inp = document.getElementById("topicTla_"+i);
+  const name = (inp && inp.value || "").trim();
+  if(!name){ toast("Type or pick the activity first"); return; }
+  if(!Array.isArray(t.tla)) t.tla = [];
+  if(t.tla.some(n=>n.toLowerCase()===name.toLowerCase())){ toast("Already added to this topic"); return; }
+  t.tla.push(name);
+  save(); renderTLA();
+}
+function removeTopicTLA(i, k){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  const t = c.aust.spec.topics[i]; if(!t || !Array.isArray(t.tla)) return;
+  t.tla.splice(k,1);
+  save(); renderTLA();
+}
+function topicPlanCard(c){
+  const topics = c.aust.spec.topics;
+  const rows = topics.map((t,i)=>{
+    const chips = c.cos.length? `<div style="display:flex;flex-direction:column;gap:2px">${c.cos.map((co,j)=>`<label style="font-size:11.5px;white-space:nowrap"><input type="checkbox" ${Array.isArray(t.cos)&&t.cos.includes(co.id)?"checked":""} onchange="toggleTopicCO(${i},'${co.id}')"> CO${j+1}</label>`).join("")}</div>` : '<span class="badge grey">define COs first</span>';
+    const autoM = [...new Set((t.cos||[]).flatMap(id=>{ const co = c.cos.find(x=>x.id===id); return co? deliveryList(co) : []; }))];
+    const own = Array.isArray(t.tla)? t.tla : [];
+    return `<tr>
+      <td style="text-align:center">${i+1}</td>
+      <td><textarea class="di" rows="1" style="width:100%;overflow-y:hidden" placeholder="Topic" oninput="autoGrowTA(this)" onchange="austSet('spec.topics.${i}.name',this.value)">${esc(t.name)}</textarea></td>
+      <td style="text-align:center"><input class="di" style="width:56px;text-align:center" value="${esc(t.planned)}" placeholder="hrs" onchange="austSet('spec.topics.${i}.planned',this.value)"></td>
+      <td>${chips}</td>
+      <td style="font-size:12px">
+        ${autoM.map(m=>`<span class="badge blue" style="margin:1px 3px 1px 0" title="Auto — from the adopted activities of the ticked CO(s); remove by un-adopting in the CO cards above">${esc(m)}</span>`).join("")}
+        ${own.map((m,k)=>`<span class="badge green" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0" title="Topic-specific addition">${esc(m)}<button onclick="removeTopicTLA(${i},${k})" title="Remove from this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">×</button></span>`).join("")}
+        ${!autoM.length && !own.length? `<span class="badge grey">${(t.cos||[]).length? "no adopted activities for the ticked CO(s)":"tick the related CO(s)"}</span>`:""}
+        <div class="no-print" style="display:flex;gap:4px;margin-top:4px">
+          <input id="topicTla_${i}" list="tlaPoolList" placeholder="add for this topic…" style="flex:1;min-width:0;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:11.5px">
+          <button class="btn secondary small" style="padding:2px 9px" title="Add a topic-specific activity (from the Activity Pool or your own)" onclick="addTopicTLA(${i})">+</button>
+        </div>
+      </td>
+      <td><button class="icon-btn" style="color:#c0392b;font-weight:700" title="Delete this topic (also removes it from Course Specifications 4.1)" onclick="delTopic(${i});renderTLA()">✕</button></td>
+    </tr>`;
+  }).join("");
+  return `
+  <div class="card">
+    <h2>Topic-wise T&amp;L Plan <span class="badge blue" title="Sl./Topics/Planned Hours are the same data as Course Specifications 4.1 (and Course Report 3.1) — edit in either place">⛓ linked — same data as Course Specifications 4.1</span></h2>
+    <p class="hint">Plan each topic's teaching: tick the related CO(s) — the <b>blue</b> method chips fill in automatically from the activities adopted above — and add <b>topic-specific</b> activities (green chips, removable) from the pool or your own. Topics and planned hours are shared with Course Specifications 4.1; Related COs and topic-specific activities are planning fields kept with the course data (not printed in the Specifications table).</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th style="width:40px">Sl.</th><th style="width:45%">Topics</th><th style="width:70px">Planned Hours</th><th style="width:95px">Related COs</th><th style="width:260px">T&amp;L Methods</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="6" class="empty">No topics yet — add one below, or import the list from a CSV.</td></tr>'}</tbody>
+    </table></div>
+    <div class="btn-row">
+      <button class="btn secondary small" onclick="addTopic();renderTLA()">+ Add Topic</button>
+      <button class="btn secondary small" onclick="exportTopicsCSV()" title="Downloads a CSV (Topic, Planned Contact Hours) — includes the current topics, so it doubles as an export for editing in Excel">⬇ Topics Template (CSV)</button>
+      <label class="btn secondary small" style="cursor:pointer" title="The imported file becomes the topic list (after a confirmation) — topics whose name matches keep their Actual Hours, variation reasons, Related COs and topic-specific activities">⬆ Import Topics (CSV)<input type="file" accept=".csv" style="display:none" onchange="importTopicsCSV(this)"></label>
+    </div>
+  </div>`;
+}
+/* Activity Pool management card — lives in the Data & Backup tab (the pool travels in JSON backups). */
+function activityPoolCard(){
+  const poolRows = tlaPool().map((a,i)=>`
+    <tr><td><b>${esc(a.n)}</b>${a.custom? ' <span class="badge blue">custom</span>':''}</td>
+      <td style="font-size:12.5px">${esc(a.d)}</td>
+      <td style="font-size:12px">C${a.b.join(", C")}${a.dom? " · "+a.dom:""}</td>
+      <td style="font-size:12px">${a.mode} / ${a.size}</td>
+      <td>${a.custom? `<button class="icon-btn" onclick="delCustomTLA(${i-TLA_POOL.length})">✕</button>`:""}</td></tr>`).join("");
+  return `
+  <div class="card">
+    <h2>Activity Pool (${tlaPool().length})</h2>
+    <p class="hint">Built-in pedagogy pool plus your own additions — used by the T&amp;L tab's recommendations, autocomplete and summary-table tips. Custom activities are stored with your data and included in JSON backups, so a department can share a common pool.</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th style="width:220px">Activity</th><th>Description</th><th style="width:110px">Bloom's</th><th style="width:120px">Mode / Size</th><th style="width:36px"></th></tr></thead>
+      <tbody>${poolRows}</tbody></table></div>
+    <h3>Add a custom activity</h3>
+    <div class="grid c2">
+      <label class="fld">Name <input id="tla_n" placeholder="e.g., Industry-linked design sprint"></label>
+      <label class="fld">Description <input id="tla_d" placeholder="What it is and how it is run"></label>
+    </div>
+    <label class="fld" style="margin-top:8px">Practical tips (optional — shown in the T&amp;L Activities Summary Table) <input id="tla_tip" placeholder="e.g., Timebox to 20 minutes; require a one-page decision memo"></label>
+    <div style="margin-top:8px;font-size:13px"><b>Suitable Bloom's levels:</b>
+      ${BLOOMS.map((b,i)=>`<label style="margin-right:12px;font-size:13px"><input type="checkbox" id="tla_b${i+1}"> C${i+1} ${b}</label>`).join("")}
+    </div>
+    <div class="grid c3" style="max-width:560px;margin-top:8px">
+      <label class="fld">Mode <select id="tla_mode"><option>Any</option><option>In-person</option><option>Online</option></select></label>
+      <label class="fld">Class size <select id="tla_size"><option>Any</option><option>Small</option><option>Large</option></select></label>
+      <label class="fld">Other domains <input id="tla_dom" placeholder="A / P (optional)"></label>
+    </div>
+    <div class="btn-row"><button class="btn" onclick="addCustomTLA()">+ Add to Pool</button></div>
+  </div>`;
+}
 function renderTLA(){
   const el = document.getElementById("tab-tla");
   const c = activeCourse();
@@ -1043,15 +1144,9 @@ function renderTLA(){
         <label style="font-size:12.5px;white-space:nowrap;color:var(--muted)"><input type="checkbox" id="tlaPoolAlso_${co.id}"> also save to Activity Pool</label>
         <button class="btn small" onclick="addOwnTLA('${co.id}')">+ Add</button>
       </div>
-      <p style="font-size:11.5px;color:var(--muted);margin-top:4px">Start typing to get suggestions from the Activity Pool (keeps names consistent for CQI tracking), or enter a completely new activity. If saved to the pool, it is auto-tagged with this CO's domain/level — refine the tags in the Activity Pool below if needed.</p>
+      <p style="font-size:11.5px;color:var(--muted);margin-top:4px">Start typing to get suggestions from the Activity Pool (keeps names consistent for CQI tracking), or enter a completely new activity. If saved to the pool, it is auto-tagged with this CO's domain/level — the full Activity Pool (browse, tips, custom entries) lives under <b>Data &amp; Backup</b>.</p>
     </div>`;
   }).join("");
-  const poolRows = tlaPool().map((a,i)=>`
-    <tr><td><b>${esc(a.n)}</b>${a.custom? ' <span class="badge blue">custom</span>':''}</td>
-      <td style="font-size:12.5px">${esc(a.d)}</td>
-      <td style="font-size:12px">C${a.b.join(", C")}${a.dom? " · "+a.dom:""}</td>
-      <td style="font-size:12px">${a.mode} / ${a.size}</td>
-      <td>${a.custom? `<button class="icon-btn" onclick="delCustomTLA(${i-TLA_POOL.length})">✕</button>`:""}</td></tr>`).join("");
   const adoptedMap = {};
   c.cos.forEach((co,i)=>deliveryList(co).forEach(n=>{
     const key = n.toLowerCase();
@@ -1090,28 +1185,7 @@ function renderTLA(){
     </div>
   </div>
   ${coCards || '<div class="empty">Define COs first (COs &amp; CO–PO Mapping tab).</div>'}
-  <div class="card">
-    <h2>Activity Pool (${tlaPool().length})</h2>
-    <p class="hint">Built-in pedagogy pool plus your own additions. Custom activities are stored with your data and included in JSON backups, so a department can share a common pool.</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th style="width:220px">Activity</th><th>Description</th><th style="width:110px">Bloom's</th><th style="width:120px">Mode / Size</th><th style="width:36px"></th></tr></thead>
-      <tbody>${poolRows}</tbody></table></div>
-    <h3>Add a custom activity</h3>
-    <div class="grid c2">
-      <label class="fld">Name <input id="tla_n" placeholder="e.g., Industry-linked design sprint"></label>
-      <label class="fld">Description <input id="tla_d" placeholder="What it is and how it is run"></label>
-    </div>
-    <label class="fld" style="margin-top:8px">Practical tips (optional — shown in the T&amp;L Activities Summary Table) <input id="tla_tip" placeholder="e.g., Timebox to 20 minutes; require a one-page decision memo"></label>
-    <div style="margin-top:8px;font-size:13px"><b>Suitable Bloom's levels:</b>
-      ${BLOOMS.map((b,i)=>`<label style="margin-right:12px;font-size:13px"><input type="checkbox" id="tla_b${i+1}"> C${i+1} ${b}</label>`).join("")}
-    </div>
-    <div class="grid c3" style="max-width:560px;margin-top:8px">
-      <label class="fld">Mode <select id="tla_mode"><option>Any</option><option>In-person</option><option>Online</option></select></label>
-      <label class="fld">Class size <select id="tla_size"><option>Any</option><option>Small</option><option>Large</option></select></label>
-      <label class="fld">Other domains <input id="tla_dom" placeholder="A / P (optional)"></label>
-    </div>
-    <div class="btn-row"><button class="btn" onclick="addCustomTLA()">+ Add to Pool</button></div>
-  </div>
+  ${topicPlanCard(c)}
   ${tlaSummaryCard}`;
   autoGrowAll("tab-tla");
 }
@@ -1215,13 +1289,13 @@ function addCustomTLA(){
     size: document.getElementById("tla_size").value,
     dom: document.getElementById("tla_dom").value.trim(),
     tip: tipEl? tipEl.value.trim() : "", custom:true });
-  save(); renderTLA(); toast("Activity added to the pool");
+  save(); renderTab(window._currentTab || "data"); toast("Activity added to the pool");
 }
 function delCustomTLA(i){
   if(i<0 || i>=state.customTLA.length) return;
   if(!confirm(`Remove "${state.customTLA[i].n}" from the pool?`)) return;
   state.customTLA.splice(i,1);
-  save(); renderTLA();
+  save(); renderTab(window._currentTab || "data");
 }
 function pullCQI(){
   const c = activeCourse(); if(!c) return;
@@ -3400,9 +3474,10 @@ function importTopicsCSV(input){
     if(existing && !confirm(`Import ${parsed.length} topic(s) from the file?\n\nThis replaces the current list of ${existing} topic(s). ${matched} matching topic name(s) keep their Actual Hours and variation reasons.`)){ input.value=""; return; }
     c.aust.spec.topics = parsed.map(p=>{
       const old = keep[p.name.toLowerCase()];
-      return { name: p.name, planned: p.planned, actual: old? old.actual : "", reason: old? old.reason : "" };
+      return { name: p.name, planned: p.planned, actual: old? old.actual : "", reason: old? old.reason : "",
+               cos: (old && Array.isArray(old.cos))? old.cos : [], tla: (old && Array.isArray(old.tla))? old.tla : [] };
     });
-    save(); renderDocs();
+    save(); renderTab(window._currentTab || "docs");
     toast(`${parsed.length} topic(s) imported${matched? " — "+matched+" kept their actual hours":""}${skipped? " · "+skipped+" line(s)/value(s) skipped":""}`);
     input.value = "";
   };
@@ -3442,6 +3517,7 @@ function renderData(){
       <label class="btn secondary" style="cursor:pointer">⬆ Import JSON<input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>
     </div>
   </div>
+  ${activityPoolCard()}
   <div class="card">
     <h2>Danger Zone</h2>
     <div class="btn-row" style="margin-top:0">
