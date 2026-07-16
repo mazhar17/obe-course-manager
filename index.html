@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.55</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.56</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.55</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.56</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.55";
+const APP_VERSION = "v1.56";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -2351,7 +2351,7 @@ function buildAIPrompt(c){
   L.push(`3. "Process of designing and selecting assessment tools" — 3-5 sentences describing the CO-mapped, Bloom-levelled item design, the rubric practice (see the assessment plan) and the question-choice structure where applicable.`);
   L.push(`4. "Question moderation / vetting process" — 2-4 sentences based on the vetting information provided; if none is recorded above, describe the intended process cautiously and note that the signed Vetting Form is the evidence.`);
   L.push(`5. "Improvement actions from this offering (Course Report 6.1)" — one short block per loop row: (1) CO loop, direct; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect — focused on the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""} and their POs; if a row has no evidence-based action, output exactly: "No specific action this offering."`);
-  if(prevRows.some(r=>r.rec)) L.push(`6. "Actions from the previous offering & how they were reflected (Course Specifications 6.1, second column)" — for each numbered previous recommendation above, draft 2-4 sentences describing how it was reflected in this offering (synthesize from the working notes, the adopted activities and the assessment plan, naming the recommendation each action closes); if a recommendation had no matching action, output exactly: "No specific action this offering." Never alter the first column — it is the previous Course Report's text.`);
+  if(prevRows.some(r=>r.rec)) L.push(`6. "Actions from the previous offering & how they were reflected (Course Specifications 6.1, second column)" — produce EXACTLY five labelled blocks, one per loop row, never merging or omitting a row: (1) A. CQI Loop for COs — Direct; (2) A. CQI Loop for COs — Indirect (survey); (3) B. CQI Loop for POs — Direct; (4) B. CQI Loop for POs — Indirect (survey); (5) C. CQI Loop for PEOs — Indirect (survey). For each row that has a previous recommendation, draft 2-4 sentences describing how it was reflected in this offering (synthesize from the working notes, the adopted activities and the assessment plan, naming the recommendation each action closes). If a single recommendation cell mixes CO-level and PO-level material, distribute the reflections to the correct rows (CO actions under row 1, PO-level consequences under row 3) rather than answering everything under one row. Fallbacks: if a row's first column is empty, output exactly: "No previous recommendation for this loop."; if a recommendation exists but nothing this offering addressed it, output exactly: "No specific action this offering." Never alter the first column — it is the previous Course Report's text.`);
   L.push(`Items 1-4 will be pasted verbatim into the CQI tab's narrative boxes; item 5 into the linked Course Report 6.1 table${prevRows.some(r=>r.rec)? "; item 6 into the second column of the linked Specifications 6.1 table":""}.`);
   L.push("");
   L.push("== CONSTRAINTS ==");
