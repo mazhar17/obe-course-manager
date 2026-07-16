@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.53</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.54</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +188,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.53</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.54</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.53";
+const APP_VERSION = "v1.54";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -2259,7 +2259,7 @@ function buildAIPrompt(c){
   c.cos.forEach((co,i)=>{
     const dom = co.btDomain||"Cognitive";
     const tag = primeTag(co), lvl = primeLevelName(co);
-    L.push(`CO${i+1} [${dom}${tag? " "+tag:""}${lvl && dom==="Cognitive"? " "+lvl:""} -> ${posOf(co)||"unmapped"}]: ${co.statement||"(no statement)"}`);
+    L.push(`CO${i+1} [${dom}${tag? " "+tag:""}${lvl && dom==="Cognitive"? " "+lvl:""} -> ${posOf(co)||"unmapped"}${co.cep? " | CP: "+co.cep:""}${co.cea? " | CEA: "+co.cea:""}]: ${co.statement||"(no statement)"}`);
   });
   const mappedPOs = [...new Set(c.cos.flatMap(co=>Object.entries(co.po||{}).filter(([,v])=>v>0).map(([p])=>+p)))].sort((a,b)=>a-b);
   if(mappedPOs.length){
@@ -2281,7 +2281,8 @@ function buildAIPrompt(c){
         if(it.group) bits.push("group "+it.group);
         return `${it.label} [${bits.join(", ")}]`;
       }).join(", ");
-      L.push(`${a.name||a.type} (${a.type})${scheme}: ${items}`);
+      const rub = rubricTypes().includes(a.type)? (a.rubric? " [analytic rubric prepared & shared]":" [rubric pending]") : "";
+      L.push(`${a.name||a.type} (${a.type})${scheme}${rub}: ${items}`);
     });
   }
   const hasMarks = att.cos.some(x=>x.pct!==null);
@@ -2326,18 +2327,21 @@ function buildAIPrompt(c){
     if(effBits.length) L.push("Effectiveness recorded (Course Report 3.2): " + effBits.join("; "));
     if(prevCqi.length) L.push("Previous offering's CQI actions (Specifications 6.1): " + prevCqi.join("; "));
   }
-  L.push("");
-  L.push("== YOUR TASK — draft 3-5 sentences for each ==");
-  const failing = att.cos.filter(x=>x.pct!==null && !x.attained).map(x=>x.label);
-  let t = 1;
-  if(failing.length){
-    L.push(`${t++}. Analysis of the low attainment of ${failing.join(", ")} w.r.t. the teaching-learning activities.`);
-    L.push(`${t++}. Analysis of the low attainment of ${failing.join(", ")} w.r.t. the assessment techniques (note the weakest items above).`);
-  } else {
-    L.push(`${t++}. A short evaluation of the teaching-learning activities in light of the results.`);
+  const vet = c.aust.vet||{};
+  if(vet.vetter1 || vet.vetter2){
+    L.push("");
+    L.push("== MODERATION / VETTING ==");
+    L.push(`Final examination vetted by: ${[vet.vetter1, vet.vetter2].filter(Boolean).join(" and ")} (Final Examination Vetting Form on file).`);
   }
-  L.push(`${t++}. Recommended actions for quality improvement (Course Report 6.1 — CO loop and PO loop separately).`);
-  if(ind.n>0 && failing.length) L.push(`${t++}. A brief comment on any direct-vs-indirect gap for ${failing.join(", ")} (self-rating vs measured marks).`);
+  L.push("");
+  L.push("== YOUR TASK — draft each of the following, labelled exactly as below ==");
+  const failing = att.cos.filter(x=>x.pct!==null && !x.attained).map(x=>x.label);
+  L.push(`1. "How the teaching-learning methods and assessment tools address complex engineering problems and the POs" — 3-6 sentences grounded in the COs (note the CP/CEA tags where given), the mapped POs and the adopted methods/tools.`);
+  L.push(`2. "Why these methods and tools are effective and appropriate" — 3-6 sentences citing the attainment results${ind.n>0? ", the survey findings":""}${effBits.length? " and the recorded TLA effectiveness":""}; be honest about the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""}.`);
+  L.push(`3. "Process of designing and selecting assessment tools" — 3-5 sentences describing the CO-mapped, Bloom-levelled item design, the rubric practice (see the assessment plan) and the question-choice structure where applicable.`);
+  L.push(`4. "Question moderation / vetting process" — 2-4 sentences based on the vetting information provided; if none is recorded above, describe the intended process cautiously and note that the signed Vetting Form is the evidence.`);
+  L.push(`5. "Improvement actions from this offering (Course Report 6.1)" — one short block per loop row: (1) CO loop, direct; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect — focused on the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""} and their POs; if a row has no evidence-based action, output exactly: "No specific action this offering."`);
+  L.push(`Items 1-4 will be pasted verbatim into the CQI tab's narrative boxes; item 5 into the linked Course Report 6.1 table.`);
   L.push("");
   L.push("== CONSTRAINTS ==");
   L.push("Professional accreditation-report tone; every claim traceable to the");
@@ -3143,12 +3147,13 @@ function docCQI(c){
       <td style="text-align:center">${x.pct===null?"—":x.pct.toFixed(1)+"%"}</td>
       <td style="text-align:center">${x.pct===null?"—":(x.attained?"Attained":"Not attained")}</td></tr>`).join("");
   const narr = (title, val) => `<p style="font-size:12.5px"><b>${title}</b></p>
-    <p style="font-size:12.5px;border:1px solid var(--border);border-radius:6px;padding:8px;min-height:40px">${esc(val)||"<i>(to be completed in the CQI tab)</i>"}</p>`;
+    <p style="font-size:12.5px;border:1px solid var(--border);border-radius:6px;padding:8px;min-height:40px;white-space:pre-wrap">${esc(val)||"<i>(auto-filled from the CQI tab — currently empty there)</i>"}</p>`;
   const repRows = CQI_LABELS.map((L,i)=>`<tr><td>${L[0]}</td><td>${L[1]}</td><td>${esc(c.aust.report.cqi[i]||"")||"—"}</td></tr>`).join("");
   const specRows = CQI_LABELS.map((L,i)=>`<tr><td>${L[0]}</td><td>${L[1]}</td><td>${esc(c.aust.spec.cqiPrev[i].rec)||"—"}</td><td>${esc(c.aust.spec.cqiPrev[i].ref)||"—"}</td></tr>`).join("");
   const stRows = q.stakeholders.map(s=>`<tr><td>${esc(s.src)}</td><td>${esc(s.date)}</td><td>${esc(s.summary)}</td><td>${esc(s.action)}</td></tr>`).join("");
   const evRows = EVIDENCE_ITEMS.map(([k,label])=>`<tr><td style="width:44px;text-align:center;font-size:15px">${q.evid[k]?"☑":"☐"}</td><td>${label}</td></tr>`).join("");
   return `${docHead("Course CQI Report","Evidence for BAETE Criterion 3.8 (Teaching-Learning and Assessment) and Criterion 5.4.3 (CQI Loop for Courses and Curriculum) — Annexure H")}
+  <p class="no-print" style="background:rgba(15,107,92,.06);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12.5px">📄 This document is <b>fully auto-generated</b> — every section is drawn from the <b>CQI tab</b>, <b>Course Specifications</b> and <b>Course Report</b>. There is nothing to fill in here: complete those sources, then simply print.</p>
   <table class="tbl" style="max-width:620px"><tbody>
     <tr><th style="width:190px">Course Code &amp; Section</th><td>${esc(c.code)}${c.section? " ("+esc(c.section)+")":""}</td></tr>
     <tr><th>Course Title</th><td>${esc(c.title)}</td></tr>
