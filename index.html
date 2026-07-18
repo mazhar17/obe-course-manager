@@ -163,7 +163,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.67</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.68</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -201,14 +201,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.67</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.68</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.67";
+const APP_VERSION = "v1.68";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -2796,10 +2796,7 @@ function renderCQI(){
   </div>
   <div class="card">
     <h2>Continuous Quality Improvement (CQI)</h2>
-    <p class="hint">This tab consolidates the evidence BAETE asks for under <b>Criterion 3.8</b> (teaching-learning &amp; assessment) and <b>Criterion 5.4.3</b> (CQI loop for courses and curriculum). <b>Work top to bottom: diagnose (Low Attainment Analysis) → describe (3.8) → decide (5.4.3 action plans)</b> — each card carries its own 📋 AI prompt; run them in that order, pasting each result back before running the next (later prompts include what you have already entered, and the diagnosis also feeds the Suggested Modifications prompts in the T&amp;L and Assessments tabs). The printable CQI Report re-arranges everything into BAETE's reading order automatically. The action tables below are <b>the same data</b> as Course Report 6.1 and Course Specifications 6.1 — editing here updates the documents and vice versa. A printable <b>CQI Report</b> for Annexure H is available under Accreditation Documents.</p>
-    <div class="btn-row" style="margin-top:0">
-      <button class="btn" onclick="showDoc('cqi');showTab('docs')">🖨 Open Printable CQI Report (Annexure H)</button>
-    </div>
+    <p class="hint">This tab consolidates the evidence BAETE asks for under <b>Criterion 3.8</b> (teaching-learning &amp; assessment) and <b>Criterion 5.4.3</b> (CQI loop for courses and curriculum). <b>Work top to bottom: diagnose (Low Attainment Analysis) → describe (3.8) → decide (5.4.3 action plans)</b> — each card carries its own 📋 AI prompt; run them in that order, pasting each result back before running the next (later prompts include what you have already entered, and the diagnosis also feeds the Suggested Modifications prompts in the T&amp;L and Assessments tabs). The 6.1 action tables in the 5.4.3 card are <b>⛓ the same data</b> as Course Report 6.1 and Course Specifications 6.1 — editing here updates the documents and vice versa. When everything is complete, print the CQI Report from the bottom of this tab.</p>
   </div>
   ${lowAttainmentCard(c)}
   <div class="card">
@@ -2858,6 +2855,11 @@ function renderCQI(){
     <h2>Annexure H — Evidence Checklist</h2>
     <p class="hint">Tick what has been archived for the accreditation visit. The checklist prints with the CQI Report.</p>
     <table class="tbl"><tbody>${evRows}</tbody></table>
+  </div>
+  <div class="card">
+    <h2>Finish: print the CQI Report</h2>
+    <p class="hint">When the cards above are complete, print the consolidated <b>CQI Report</b> (Annexure H evidence for Criteria 3.8 and 5.4.3) — fully auto-generated: it re-arranges everything into BAETE's reading order, and there is nothing to fill in on the document itself.</p>
+    <div class="btn-row" style="margin-top:0"><button class="btn" onclick="showDoc('cqi');showTab('docs')">🖨 Open Printable CQI Report (Annexure H)</button></div>
   </div>`;
   autoGrowAll("tab-cqi");
 }
