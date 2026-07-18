@@ -83,7 +83,8 @@ table.tbl tr:nth-child(even) td{background:#fafcfd}
 .chart-box{max-width:900px;margin:10px auto}
 .empty{padding:26px;text-align:center;color:var(--muted);font-size:14px}
 .pill-note{font-size:12.5px;color:var(--muted);background:var(--primary-light);border-radius:8px;padding:8px 12px;margin:10px 0;display:inline-block}
-.item-row{display:grid;grid-template-columns:1.7fr 74px 0.9fr 150px 88px 30px;gap:8px;margin-bottom:6px;align-items:center}
+.item-row{display:grid;grid-template-columns:1.7fr 74px 0.9fr 150px 88px 96px;gap:8px;margin-bottom:6px;align-items:center}
+.print-only{display:none}
 .item-row input,.item-row select{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13.5px;font-family:inherit;width:100%}
 .icon-btn{background:none;border:none;color:var(--danger);font-size:17px;cursor:pointer;padding:2px}
 .report-sheet{background:#fff;padding:34px 40px;border-radius:var(--radius);box-shadow:var(--shadow);font-size:13.5px}
@@ -134,6 +135,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   .card{box-shadow:none}
   .report-sheet .di{border-color:transparent}
   .report-sheet textarea.di{border:none}
+  .print-only{display:inline}
   input,textarea,select{color:#000 !important}
 }
 </style>
@@ -163,7 +165,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.68</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.69</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -201,14 +203,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.68</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.69</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.68";
+const APP_VERSION = "v1.69";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -231,6 +233,11 @@ function defaultCfg(){ return { passMarks:40, kpiMarks:50, kpiTarget:50, likertP
 function ensureAust(c){
   if(!c.cfg || c.cfg.passMarks===undefined) c.cfg = defaultCfg();
   if(c.cfg.likertPass===undefined){ c.cfg.likertPass=4; c.cfg.wDirect=80; c.cfg.wIndirect=20; }
+  { // the weights are one setting: Indirect is always 100 − Direct (corrects any stored pair that does not sum to 100)
+    const wd = Math.max(0, Math.min(100, parseFloat(c.cfg.wDirect)));
+    c.cfg.wDirect = isNaN(wd)? 80 : wd;
+    c.cfg.wIndirect = 100 - c.cfg.wDirect;
+  }
   if(c.cohort===undefined) c.cohort = "";
   if(!c.marks) c.marks = {};
   ["cos","assessments","students"].forEach(k=>{ if(!Array.isArray(c[k])) c[k]=[]; });
@@ -749,7 +756,7 @@ function renderCourse(){
     <div class="grid c3">
       <label class="fld">Minimum Likert rating counted as attained (1–5) <input type="number" min="1" max="5" value="${c.cfg.likertPass}" onchange="setCfgField('likertPass',this.value)"></label>
       <label class="fld">Weight of Direct measurement (%) <input type="number" min="0" max="100" value="${c.cfg.wDirect}" onchange="setCfgField('wDirect',this.value)"></label>
-      <label class="fld">Weight of Indirect measurement (%) <input type="number" min="0" max="100" value="${c.cfg.wIndirect}" onchange="setCfgField('wIndirect',this.value)"></label>
+      <label class="fld">Weight of Indirect measurement (%) — auto <input type="number" value="${c.cfg.wIndirect}" disabled title="Always 100 − Direct, so the weights can never exceed 100%"></label>
     </div>
     <p class="hint" style="margin-top:8px">Edits save automatically and apply immediately to the Attainment tab and all documents.</p>
   </div>`;
@@ -763,6 +770,7 @@ function setCfgField(k, v){
   const c = activeCourse(); if(!c) return;
   if(k==="likertPass") c.cfg[k] = Math.max(1, Math.min(5, parseInt(v)||4));
   else c.cfg[k] = Math.max(0, Math.min(100, parseFloat(v)||0));
+  if(k==="wDirect"){ c.cfg.wIndirect = 100 - c.cfg.wDirect; renderCourse(); }
   save(); toast("Saved");
 }
 
@@ -1570,7 +1578,7 @@ function renderAssess(){
     const rows = a.items.map(it=>`
       <div class="item-row">
         <input value="${esc(it.label)}" placeholder="Item / question label (e.g., Q1a)" onchange="updateItem('${a.id}','${it.id}','label',this.value)">
-        <input type="number" min="0" step="0.5" value="${esc(it.max)}" placeholder="Marks" title="Maximum marks" onchange="updateItem('${a.id}','${it.id}','max',this.value)">
+        <input type="text" inputmode="decimal" value="${esc(it.max)}" placeholder="Marks" title="Maximum marks — e.g., 10, 1.67 or 1 2/3" onchange="updateItem('${a.id}','${it.id}','max',this.value,this)">
         <select onchange="updateItem('${a.id}','${it.id}','coId',this.value)">
           <option value="">— CO —</option>${coOptions(it.coId)}
         </select>
@@ -1585,7 +1593,11 @@ function renderAssess(){
             </select>${exceeds? '<span class="badge amber" title="Exceeds the CO\'s declared Bloom level — constructive alignment issue">↑</span>':''}</span>`;
         })()}
         <input type="checkbox" title="Mandatory: a blank mark counts as 0. Optional (unticked): a blank mark means the student legitimately skipped it and is not penalized." style="justify-self:center" ${it.mandatory!==false?"checked":""} onchange="updateItem('${a.id}','${it.id}','mandatory',this.checked)">
-        <button class="icon-btn" title="Delete this item (marks entered against it will be removed after confirmation)" style="color:#c0392b;font-weight:700;font-size:15px;border:1px solid var(--border);border-radius:6px" onclick="deleteItem('${a.id}','${it.id}')">✕</button>
+        <span style="display:flex;gap:4px;justify-content:center;align-items:center">
+          <button class="icon-btn" title="Move item up" onclick="moveItem('${a.id}','${it.id}',-1)">▲</button>
+          <button class="icon-btn" title="Move item down" onclick="moveItem('${a.id}','${it.id}',1)">▼</button>
+          <button class="icon-btn" title="Delete this item (marks entered against it will be removed after confirmation)" style="color:#c0392b;font-weight:700;font-size:15px;border:1px solid var(--border);border-radius:6px" onclick="deleteItem('${a.id}','${it.id}')">✕</button>
+        </span>
       </div>`).join("");
     const total = a.items.reduce((s,it)=>s+(parseFloat(it.max)||0),0);
     return `
@@ -1597,6 +1609,7 @@ function renderAssess(){
         </select>
         <span class="badge blue">Total: ${total} marks</span>
         ${rubricTypes().includes(a.type)? `<label style="font-size:12.5px;white-space:nowrap;color:var(--muted)" title="Analytic rubric prepared and shared with students — required for assignments, projects and oral assessments"><input type="checkbox" ${a.rubric?"checked":""} onchange="updateAssessment('${a.id}','rubric',this.checked)"> Rubric prepared</label>`:""}
+        <span style="display:flex;gap:4px"><button class="icon-btn" title="Move assessment up (the order flows to the marks grid and CSV)" onclick="moveAssessment('${a.id}',-1)">▲</button><button class="icon-btn" title="Move assessment down" onclick="moveAssessment('${a.id}',1)">▼</button></span>
         <button class="btn danger small" onclick="deleteAssessment('${a.id}')">Delete</button>
       </div>
       ${(()=>{
@@ -1622,7 +1635,7 @@ function renderAssess(){
         </div>`;
       })()}
       <h3>Items / Questions (each mapped to a CO)</h3>
-      <div class="item-row" style="color:var(--muted);font-size:12px;font-weight:600"><span>Label</span><span>Max marks</span><span>CO</span><span>Level</span><span style="justify-self:center">Mandatory?</span><span>Delete</span></div>
+      <div class="item-row" style="color:var(--muted);font-size:12px;font-weight:600"><span>Label</span><span>Max marks</span><span>CO</span><span>Level</span><span style="justify-self:center">Mandatory?</span><span style="justify-self:center">Move / Del</span></div>
       ${rows || '<p class="hint">No items yet.</p>'}
       <div class="btn-row"><button class="btn secondary small" onclick="addItem('${a.id}')">+ Add Item</button></div>
     </div>`;
@@ -1725,11 +1738,22 @@ function addItem(aid){
   a.items.push({ id: uid(), label:"Q"+(a.items.length+1), max:10, coId: co0? co0.id : "", level: co0? primeLevelName(co0) : "", mandatory:true, group:"" });
   save(); renderAssess();
 }
-function updateItem(aid, iid, field, val){
+function updateItem(aid, iid, field, val, el){
   const c = activeCourse(); if(!c) return;
   const a = c.assessments.find(x=>x.id===aid); if(!a) return;
   const it = a.items.find(x=>x.id===iid); if(!it) return;
-  it[field] = field==="max" ? (parseFloat(val)||0) : (val.trim ? val.trim() : val);
+  if(field==="max"){
+    const v = parseMarkInput(val);
+    if(v===null || isNaN(v)){
+      toast(`Could not read “${val}” — use e.g. 10, 1.67, 2/3 or 1 2/3`);
+      if(el) el.value = it.max;
+      return;
+    }
+    it.max = round4(Math.max(0, v));
+    save(); renderAssess(); toast("Saved");
+    return;
+  }
+  it[field] = (val.trim ? val.trim() : val);
   if(field==="coId"){
     const co = c.cos.find(x=>x.id===it.coId);
     it.level = co? primeLevelName(co) : "";   // level re-syncs to the new CO's declared level
@@ -1737,6 +1761,22 @@ function updateItem(aid, iid, field, val){
     return;
   }
   save(); toast("Saved");
+}
+/* Reordering — safe: marks are keyed by item id, and CSV import matches by header name. */
+function moveAssessment(aid, dir){
+  const c = activeCourse(); if(!c) return;
+  const i = c.assessments.findIndex(a=>a.id===aid); if(i<0) return;
+  const j = i + dir; if(j<0 || j>=c.assessments.length) return;
+  [c.assessments[i], c.assessments[j]] = [c.assessments[j], c.assessments[i]];
+  save(); renderAssess();
+}
+function moveItem(aid, iid, dir){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===aid); if(!a) return;
+  const i = a.items.findIndex(x=>x.id===iid); if(i<0) return;
+  const j = i + dir; if(j<0 || j>=a.items.length) return;
+  [a.items[i], a.items[j]] = [a.items[j], a.items[i]];
+  save(); renderAssess();
 }
 function deleteItem(aid, iid){
   const c = activeCourse(); if(!c) return;
@@ -1764,7 +1804,7 @@ function renderMarks(){
   const rows = c.students.map((s,si)=>{
     const cells = items.map(it=>{
       const v = c.marks[s.id]?.[it.id];
-      return `<td style="text-align:center"><input class="marks-input" type="number" min="0" max="${it.max}" step="0.25" value="${v??""}" onchange="setMark('${s.id}','${it.id}',this.value,${it.max})"></td>`;
+      return `<td style="text-align:center"><input class="marks-input" type="text" inputmode="decimal" title="e.g., 12, 1.67, 2/3 or 1 2/3 (max ${it.max})" value="${v??""}" onchange="setMark('${s.id}','${it.id}',this.value,${it.max},this)"></td>`;
     }).join("");
     return `<tr><td class="stick1">${si+1}</td><td class="stick2" style="white-space:nowrap">${esc(s.sid)}</td><td class="stick3" style="white-space:nowrap">${esc(s.name)}</td>${cells}
       <td><button class="icon-btn" title="Remove student" onclick="deleteStudent('${s.id}')">✕</button></td></tr>`;
@@ -1883,22 +1923,44 @@ function deleteStudent(id){
   delete c.marks[id];
   save(); renderMarks();
 }
-function setMark(sid, iid, val, max){
+/* Tolerant mark parser: decimals (1.67), fractions (2/3) and mixed numbers (1 2/3).
+   Returns null for blank, NaN for unreadable input; otherwise the decimal value. */
+function parseMarkInput(s){
+  s = String(s ?? "").trim();
+  if(s === "") return null;
+  if(/^\d+(?:\.\d+)?$/.test(s)) return parseFloat(s);
+  let m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);          // mixed: 1 2/3
+  if(m) return (+m[3])? (+m[1]) + (+m[2])/(+m[3]) : NaN;
+  m = s.match(/^(\d+)\s*\/\s*(\d+)$/);                       // fraction: 2/3
+  if(m) return (+m[2])? (+m[1])/(+m[2]) : NaN;
+  return NaN;
+}
+function round4(v){ return Math.round(v*10000)/10000; }
+function setMark(sid, iid, val, max, el){
   const c = activeCourse(); if(!c) return;
   if(!c.marks[sid]) c.marks[sid] = {};
-  if(val===""){ delete c.marks[sid][iid]; }
-  else{
-    let v = parseFloat(val);
-    if(isNaN(v)) return;
-    v = Math.max(0, Math.min(max, v));
-    c.marks[sid][iid] = v;
+  const v0 = parseMarkInput(val);
+  if(v0===null){ delete c.marks[sid][iid]; save(); return; }
+  if(isNaN(v0)){
+    toast(`Could not read “${val}” — use e.g. 12, 1.67, 2/3 or 1 2/3`);
+    if(el) el.value = c.marks[sid][iid] ?? "";
+    return;
   }
+  const v = round4(Math.max(0, Math.min(max, v0)));
+  c.marks[sid][iid] = v;
+  if(el) el.value = v;
   save();
 }
 
 /* ============ CSV Import/Export ============ */
 function csvCell(s){ s = String(s ?? ""); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }
-function itemHeader(c, it){ return `${it.aName} :: ${it.label}`; }
+/* CSV header: just the item label when it is unique across the course,
+   the qualified form only where labels collide (e.g., Q1 in two quizzes). */
+function itemHeader(c, it){
+  const lbl = String(it.label||"").trim();
+  const dup = allItems(c).filter(x=>String(x.label||"").trim().toLowerCase()===lbl.toLowerCase()).length > 1;
+  return dup? `${it.aName}::${it.label}` : (lbl || `${it.aName}::?`);
+}
 function exportMarksCSV(){
   const c = activeCourse(); if(!c) return;
   const items = allItems(c);
@@ -1949,8 +2011,14 @@ function importMarksCSV(input){
     const items = allItems(c);
     const head = rows[0];
     const colToItem = {};
+    const norm = s => String(s||"").trim().toLowerCase();
+    const byLabel = {};
+    items.forEach(it=>{ const k = norm(it.label); (byLabel[k] = byLabel[k]||[]).push(it); });
     head.forEach((h,ci)=>{
-      const it = items.find(x=>itemHeader(c,x).trim()===h.trim());
+      const hn = norm(h);
+      // accept the current header, the qualified form, and the legacy "Assessment :: Item" form
+      let it = items.find(x=> norm(itemHeader(c,x))===hn || norm(`${x.aName}::${x.label}`)===hn || norm(`${x.aName} :: ${x.label}`)===hn);
+      if(!it){ const cand = byLabel[hn]; if(cand && cand.length===1) it = cand[0]; }
       if(it) colToItem[ci] = it;
     });
     let applied = 0, newStu = 0;
@@ -1959,10 +2027,10 @@ function importMarksCSV(input){
       let s = c.students.find(x=>x.sid===sid);
       if(!s){ s = { id: uid(), sid, name:(r[1]||"").trim() }; c.students.push(s); newStu++; }
       Object.entries(colToItem).forEach(([ci,it])=>{
-        const v = parseFloat(r[ci]);
-        if(!isNaN(v)){
+        const v = parseMarkInput(r[ci]);
+        if(v!==null && !isNaN(v)){
           if(!c.marks[s.id]) c.marks[s.id] = {};
-          c.marks[s.id][it.id] = Math.max(0, Math.min(it.max, v));
+          c.marks[s.id][it.id] = round4(Math.max(0, Math.min(it.max, v)));
           applied++;
         }
       });
@@ -2164,6 +2232,7 @@ function combineAtt(c, att, ind){
 function setCombinedWeight(key, val){
   const c = activeCourse(); if(!c) return;
   c.cfg[key] = Math.max(0, Math.min(100, parseFloat(val)||0));
+  if(key==="wDirect") c.cfg.wIndirect = 100 - c.cfg.wDirect;   // one setting: the pair always sums to 100
   save(); renderAttain(); toast("Combined weights updated");
 }
 function setTally(coId, idx, val){
@@ -2315,10 +2384,10 @@ function indirectCards(c, att){
   </div>
   <div class="card">
     <h2>Combined Attainment</h2>
-    <p class="hint">Weighted combination of direct (marks-based) and indirect (survey-based) measurements. If one component has no data, the other is used alone. Set the weights here (they are the same setting as in Course Info → Attainment Settings; the combination is normalised, so they need not sum to 100).</p>
+    <p class="hint">Weighted combination of direct (marks-based) and indirect (survey-based) measurements. If one component has no data, the other is used alone. Set the Direct weight here (same setting as Course Info → Attainment Settings); the Indirect weight is always 100 − Direct, so the pair can never exceed 100%.</p>
     <div class="grid c3" style="max-width:480px;margin-bottom:12px">
       <label class="fld">Direct assessment (%) <input type="number" min="0" max="100" value="${c.cfg.wDirect}" onchange="setCombinedWeight('wDirect', this.value)"></label>
-      <label class="fld">Indirect assessment (%) <input type="number" min="0" max="100" value="${c.cfg.wIndirect}" onchange="setCombinedWeight('wIndirect', this.value)"></label>
+      <label class="fld">Indirect assessment (%) — auto <input type="number" value="${c.cfg.wIndirect}" disabled title="Always 100 − Direct"></label>
     </div>
     <div class="grid c2">
       <div><h3>Course Outcomes</h3>
@@ -3062,6 +3131,8 @@ function autoGrowAll(rootId){
   root.querySelectorAll("textarea.di, textarea.ag").forEach(t=>autoGrowTA(t));
 }
 function coIn(id, field, val, ph){ return `<input class="di" value="${esc(val)}" placeholder="${esc(ph||"")}" onchange="updateCO('${id}','${field}',this.value)">`; }
+/* Print an em-dash instead of an EMPTY in-place-editable control (screen behavior unchanged). */
+function pod(html, val){ return (val && String(val).trim())? html : `<span class="no-print">${html}</span><span class="print-only">—</span>`; }
 function coTa(id, field, val, ph){ return `<textarea class="di" rows="1" style="overflow-y:hidden" placeholder="${esc(ph||"")}" oninput="autoGrowTA(this)" onchange="updateCO('${id}','${field}',this.value)">${esc(val)}</textarea>`; }
 function coSel(id, field, val, list){
   return `<select class="di" onchange="updateCO('${id}','${field}',this.value)"><option value="">—</option>${list.map(b=>`<option ${val===b?"selected":""}>${b}</option>`).join("")}</select>`;
@@ -3132,13 +3203,13 @@ function docOutline(c){
       <td>${esc(co.statement)}</td>
       <td style="text-align:center">${posOf(co)||"—"}</td>
       <td style="text-align:center">${cLevel(co)}</td>
-      <td style="text-align:center">${lvlTag(co.bloomA)||coSel(co.id,'bloomA',co.bloomA,BLOOM_A)}</td>
-      <td style="text-align:center">${lvlTag(co.bloomP)||coSel(co.id,'bloomP',co.bloomP,BLOOM_P)}</td></tr>`).join("");
+      <td style="text-align:center">${lvlTag(co.bloomA)||pod(coSel(co.id,'bloomA',co.bloomA,BLOOM_A),"")}</td>
+      <td style="text-align:center">${lvlTag(co.bloomP)||pod(coSel(co.id,'bloomP',co.bloomP,BLOOM_P),"")}</td></tr>`).join("");
   const kpRows = c.cos.map((co,i)=>`
     <tr><td><b>CO${i+1}</b></td>
-      <td>${coIn(co.id,'kp',co.kp,'e.g., K3, K4')}</td>
-      <td>${coIn(co.id,'cep',co.cep,'e.g., P1, P3')}</td>
-      <td>${coIn(co.id,'cea',co.cea,'e.g., A1, A2')}</td></tr>`).join("");
+      <td>${pod(coIn(co.id,'kp',co.kp,'e.g., K3, K4'), co.kp)}</td>
+      <td>${pod(coIn(co.id,'cep',co.cep,'e.g., P1, P3'), co.cep)}</td>
+      <td>${pod(coIn(co.id,'cea',co.cea,'e.g., A1, A2'), co.cea)}</td></tr>`).join("");
   const methodRows = o.methods.map((m,i)=>`<tr>
       <td>${di('outline.methods.'+i+'.name', m.name, 'e.g., Attendance')}</td>
       <td style="text-align:center"><input class="di" style="width:80px;text-align:center" value="${esc(m.pct)}" onchange="austSetR('outline.methods.${i}.pct',this.value)"> %</td>
@@ -3213,8 +3284,8 @@ function docSpec(c){
       <td>${esc(co.statement)}</td>
       <td style="text-align:center">${posOf(co)||"—"}</td>
       <td style="text-align:center">${cLevel(co)}</td>
-      <td style="text-align:center">${lvlTag(co.bloomA)||coSel(co.id,'bloomA',co.bloomA,BLOOM_A)}</td>
-      <td style="text-align:center">${lvlTag(co.bloomP)||coSel(co.id,'bloomP',co.bloomP,BLOOM_P)}</td>
+      <td style="text-align:center">${lvlTag(co.bloomA)||pod(coSel(co.id,'bloomA',co.bloomA,BLOOM_A),"")}</td>
+      <td style="text-align:center">${lvlTag(co.bloomP)||pod(coSel(co.id,'bloomP',co.bloomP,BLOOM_P),"")}</td>
       <td>${coTa(co.id,'delivery',co.delivery,'e.g., Lecture, demonstration, problem solving')}</td>
       <td>${(tools=> (tools? `<div style="font-size:12px;white-space:pre-wrap;padding:2px 0">${esc(tools)}</div>`:"") + coTa(co.id,'assess',co.assess, tools? 'Additional methods (optional)':'e.g., Quiz 1, Final Q2'))([...new Set(c.assessments.filter(a=>a.items.some(it=>it.coId===co.id)).map(a=>a.name||a.type))].join(", "))}</td></tr>`).join("");
   const topicRows = sp.topics.map((t,i)=>`
