@@ -51,6 +51,19 @@ table.tbl th{background:var(--primary-light);color:var(--primary-dark);text-alig
 table.tbl td{padding:7px 10px;border:1px solid var(--border);vertical-align:top}
 table.tbl tr:nth-child(even) td{background:#fafcfd}
 .tbl-wrap{overflow-x:auto}
+/* Marks Entry grid: its own scroll box with frozen header rows and frozen #/ID/Name columns */
+.marks-wrap{max-height:70vh;overflow:auto;border:1px solid var(--border);border-radius:8px}
+.marks-wrap table.tbl{border-collapse:separate;border-spacing:0}
+.marks-wrap table.tbl th,.marks-wrap table.tbl td{border-width:0 1px 1px 0}
+.marks-wrap thead th{position:sticky;top:0;z-index:5}
+.marks-wrap thead tr:nth-child(2) th{top:var(--mh1,41px)}
+.marks-wrap .stick1,.marks-wrap .stick2,.marks-wrap .stick3{position:sticky;background:#fff}
+.marks-wrap td.stick1,.marks-wrap td.stick2,.marks-wrap td.stick3{z-index:3}
+.marks-wrap th.stick1,.marks-wrap th.stick2,.marks-wrap th.stick3{z-index:7;background:var(--primary-light)}
+.marks-wrap .stick1{left:0;width:38px;min-width:38px}
+.marks-wrap .stick2{left:38px;width:130px;min-width:130px}
+.marks-wrap .stick3{left:168px;min-width:150px}
+.marks-wrap tbody tr:nth-child(even) td.stick1,.marks-wrap tbody tr:nth-child(even) td.stick2,.marks-wrap tbody tr:nth-child(even) td.stick3{background:#fafcfd}
 .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:600}
 .badge.green{background:#e3f4e8;color:var(--ok)}
 .badge.amber{background:#fdf1e0;color:var(--warn)}
@@ -150,7 +163,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.63</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.67</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -188,14 +201,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.63</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.67</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.63";
+const APP_VERSION = "v1.67";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -593,7 +606,7 @@ function renderDashboard(){
     5: `Check the Biggs triangle and per-CO alignment cards; close gaps using the suggestions (one-click Adopt).`,
     6: `Add students or paste from Excel; enter marks in the grid or via CSV (Empty Template / Import / Export).`,
     7: `Direct CO/PO attainment is computed automatically (AUST method); add the Course Evaluation Survey for Indirect and the 80/20 (editable) Combined attainment.`,
-    8: `BAETE 3.8 &amp; 5.4.3 evidence: narratives, loop status, low-attainment analysis, stakeholder feedback register, Annexure H checklist (incl. rubrics); 📋 Copy AI Prompt (CQI narratives &amp; action plans); record next semester's actions in Course Report 6.1 — the loop then restarts via “⟳ Duplicate for New Semester”. The full loop map is shown atop the CQI tab.`,
+    8: `BAETE 3.8 &amp; 5.4.3 evidence, worked top to bottom: diagnose (low-attainment analysis), describe (3.8 narratives), decide (5.4.3 action plans) — each card has its own 📋 AI prompt; run them in that order. Also: stakeholder feedback register &amp; Annexure H checklist (incl. rubrics). Recording next semester's actions in Course Report 6.1 restarts the loop via “⟳ Duplicate for New Semester”. The full loop map is shown atop the CQI tab.`,
     9: `Course Outline, Course Specifications, Final Exam Vetting Form, Direct CO-PO Calculations, Course Evaluation Survey, Course Report &amp; CQI Report — several key information are auto-filled and printable.`
   };
   const cqiStarted = !!(c.aust&&c.aust.cqi&&(c.aust.cqi.complex||c.aust.cqi.effective));
@@ -1753,7 +1766,7 @@ function renderMarks(){
       const v = c.marks[s.id]?.[it.id];
       return `<td style="text-align:center"><input class="marks-input" type="number" min="0" max="${it.max}" step="0.25" value="${v??""}" onchange="setMark('${s.id}','${it.id}',this.value,${it.max})"></td>`;
     }).join("");
-    return `<tr><td>${si+1}</td><td style="white-space:nowrap">${esc(s.sid)}</td><td style="white-space:nowrap">${esc(s.name)}</td>${cells}
+    return `<tr><td class="stick1">${si+1}</td><td class="stick2" style="white-space:nowrap">${esc(s.sid)}</td><td class="stick3" style="white-space:nowrap">${esc(s.name)}</td>${cells}
       <td><button class="icon-btn" title="Remove student" onclick="deleteStudent('${s.id}')">✕</button></td></tr>`;
   }).join("");
   el.innerHTML = `
@@ -1778,9 +1791,9 @@ function renderMarks(){
     <h2>Marks Entry</h2>
     <p class="hint">${items.length? "Enter marks per item. Cells save automatically. Leave a cell blank when the student did not attempt the item: on a mandatory item a blank counts as 0, while on an optional item (marked †) the student is not penalized — the item is simply excluded from that student's CO calculation." : "Define assessment items first (Assessments tab)."}</p>
     ${items.length && c.students.length ? `
-    <div class="tbl-wrap"><table class="tbl">
+    <div class="tbl-wrap marks-wrap"><table class="tbl">
       <thead>
-        <tr><th rowspan="2">#</th><th rowspan="2">Student ID</th><th rowspan="2">Name</th>${head1}<th rowspan="2"></th></tr>
+        <tr><th rowspan="2" class="stick1">#</th><th rowspan="2" class="stick2">Student ID</th><th rowspan="2" class="stick3">Name</th>${head1}<th rowspan="2"></th></tr>
         <tr>${head2}</tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -1791,6 +1804,21 @@ function renderMarks(){
       <button class="btn secondary" onclick="exportMarksCSV()">⬇ Export Marks (CSV)</button>
     </div>` : c.students.length? "" : '<div class="empty">No students yet.</div>'}
   </div>`;
+  requestAnimationFrame(measureMarksHeader);
+  if(window.addEventListener && !window._marksResizeHooked){
+    window._marksResizeHooked = true;
+    window.addEventListener("resize", measureMarksHeader);
+  }
+}
+/* Frozen-header offset for the marks grid: the second header row sticks just below the
+   first. Measure the first header ROW, not its first cell — the #/ID/Name cells span
+   both header rows (rowspan=2), so a cell's offsetHeight is the WHOLE header height
+   and would pin the item-label row mid-table (the original frozen-header glitch). */
+function measureMarksHeader(){
+  const w = document.querySelector && document.querySelector("#tab-marks .marks-wrap");
+  if(!w || !w.querySelector || !w.style || !w.style.setProperty) return;
+  const tr1 = w.querySelector("thead tr:first-child");
+  if(tr1 && tr1.offsetHeight) w.style.setProperty("--mh1", tr1.offsetHeight + "px");
 }
 function addStudent(){
   const c = activeCourse(); if(!c) return;
@@ -2351,15 +2379,16 @@ function cqiStatus(c){
 }
 /* ---- AI prompt generator: assembles a complete, curated CQI prompt from the course
    data (aggregates only — never student names or IDs) for pasting into any AI tool. ---- */
-function buildAIPrompt(c){
+function aiIntro(L, purpose){
+  L.push("You are an expert in Outcome-Based Education and engineering accreditation");
+  L.push("(Washington Accord / BAETE, Bangladesh). Help me, the course teacher, " + purpose);
+  L.push("Ground every statement in the evidence provided; do not invent data.");
+}
+function buildAIContext(c){
   const att = computeAttainment(c);
   const ind = computeIndirect(c);
   const d = studentCOData(c);
   const L = [];
-  L.push("You are an expert in Outcome-Based Education and engineering accreditation");
-  L.push("(Washington Accord / BAETE, Bangladesh). Help me, the course teacher, draft");
-  L.push("CQI analysis and improvement actions for the course below. Ground every");
-  L.push("statement in the evidence provided; do not invent data.");
   L.push("");
   L.push("== METHODOLOGY (how to read the numbers) ==");
   L.push("A student's CO score = % of marks obtained out of the marks assessed under");
@@ -2461,16 +2490,32 @@ function buildAIPrompt(c){
     L.push("== MODERATION / VETTING ==");
     L.push(`Final examination vetted by: ${[vet.vetter1, vet.vetter2].filter(Boolean).join(" and ")} (Final Examination Vetting Form on file).`);
   }
-  L.push("");
-  L.push("== YOUR TASK — draft each of the following, labelled exactly as below ==");
   const failing = att.cos.filter(x=>x.pct!==null && !x.attained).map(x=>x.label);
-  L.push(`1. "How the teaching-learning methods and assessment tools address complex engineering problems and the POs" — 3-6 sentences grounded in the COs (note the CP/CEA tags where given), the mapped POs and the adopted methods/tools.`);
-  L.push(`2. "Why these methods and tools are effective and appropriate" — 3-6 sentences citing the attainment results${ind.n>0? ", the survey findings":""}${effBits.length? " and the recorded TLA effectiveness":""}; be honest about the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""}.`);
-  L.push(`3. "Process of designing and selecting assessment tools" — 3-5 sentences describing the CO-mapped, Bloom-levelled item design, the rubric practice (see the assessment plan) and the question-choice structure where applicable.`);
-  L.push(`4. "Question moderation / vetting process" — 2-4 sentences based on the vetting information provided; if none is recorded above, describe the intended process cautiously and note that the signed Vetting Form is the evidence.`);
-  L.push(`5. "Improvement actions from this offering (Course Report 6.1)" — one short block per loop row: (1) CO loop, direct; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect — focused on the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""} and their POs; if a row has no evidence-based action, output exactly: "No specific action this offering."`);
-  if(prevRows.some(r=>r.rec)) L.push(`6. "Actions from the previous offering & how they were reflected (Course Specifications 6.1, second column)" — produce EXACTLY five labelled blocks, one per loop row, never merging or omitting a row: (1) A. CQI Loop for COs — Direct; (2) A. CQI Loop for COs — Indirect (survey); (3) B. CQI Loop for POs — Direct; (4) B. CQI Loop for POs — Indirect (survey); (5) C. CQI Loop for PEOs — Indirect (survey). For each row that has a previous recommendation, draft 2-4 sentences describing how it was reflected in this offering (synthesize from the working notes, the adopted activities and the assessment plan, naming the recommendation each action closes). If a single recommendation cell mixes CO-level and PO-level material, distribute the reflections to the correct rows (CO actions under row 1, PO-level consequences under row 3) rather than answering everything under one row. Fallbacks: if a row's first column is empty, output exactly: "No previous recommendation for this loop."; if a recommendation exists but nothing this offering addressed it, output exactly: "No specific action this offering." Never alter the first column — it is the previous Course Report's text.`);
-  L.push(`Items 1-4 will be pasted verbatim into the CQI tab's narrative boxes; item 5 into the linked Course Report 6.1 table${prevRows.some(r=>r.rec)? "; item 6 into the second column of the linked Specifications 6.1 table":""}.`);
+  return { L, att, ind, effBits, prevRows, failing };
+}
+/* Recorded low-attainment analyses (CQI tab) — chained into the later prompts */
+function aiLowAnalysisLines(c){
+  const out = [];
+  c.cos.forEach((co,i)=>{
+    const an = (c.aust.cqi.lowAnalysis||{})[co.id] || {};
+    const parts = [];
+    if((an.tla||"").trim()) parts.push("(a) w.r.t. T&L activities: " + an.tla.trim());
+    if((an.assess||"").trim()) parts.push("(b) w.r.t. assessment techniques: " + an.assess.trim());
+    if((an.comment||"").trim()) parts.push("(c) overall comment: " + an.comment.trim());
+    if(parts.length) out.push(`CO${i+1}: ${parts.join(" | ")}`);
+  });
+  return out;
+}
+/* Entered 3.8 narratives — chained into the 5.4.3 prompt */
+function aiNarrativeLines(c){
+  const q = c.aust.cqi, out = [];
+  if((q.complex||"").trim()) out.push("[Complex problems & POs] " + q.complex.trim());
+  if((q.effective||"").trim()) out.push("[Effectiveness] " + q.effective.trim());
+  if((q.design||"").trim()) out.push("[Tool design] " + q.design.trim());
+  if((q.moderation||"").trim()) out.push("[Moderation/vetting] " + q.moderation.trim());
+  return out;
+}
+function aiConstraints(L){
   L.push("");
   L.push("== CONSTRAINTS ==");
   L.push("Professional accreditation-report tone; every claim traceable to the");
@@ -2483,16 +2528,65 @@ function buildAIPrompt(c){
   L.push("participation data is not tracked by this tool — do not speculate about");
   L.push("engagement; blank marks mean 'not attempted', entered zeros mean");
   L.push("'attempted and scored zero'.");
+}
+/* --- Prompt 1 of 3 (describe): the four BAETE 3.8 narratives --- */
+function buildNarrativesPrompt(c){
+  const ctx = buildAIContext(c);
+  const { ind, effBits, failing } = ctx;
+  const L = [];
+  aiIntro(L, "draft the four BAETE Criterion 3.8 narratives for the course below.");
+  L.push(...ctx.L);
+  const low = aiLowAnalysisLines(c);
+  if(low.length){
+    L.push("");
+    L.push("== RECORDED LOW-ATTAINMENT ANALYSES (Step 1 of the CQI workflow — engage with these critically) ==");
+    low.forEach(l=>L.push(l));
+  }
+  L.push("");
+  L.push("== YOUR TASK — draft the four narratives, labelled exactly as below ==");
+  L.push(`1. "How the teaching-learning methods and assessment tools address complex engineering problems and the POs" — 3-6 sentences grounded in the COs (note the CP/CEA tags where given), the mapped POs and the adopted methods/tools.`);
+  L.push(`2. "Why these methods and tools are effective and appropriate" — 3-6 sentences citing the attainment results${ind.n>0? ", the survey findings":""}${effBits.length? " and the recorded TLA effectiveness":""}; be honest about the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""}${low.length? "; engage critically with the recorded low-attainment analyses above — acknowledge the diagnosed causes and state the response, do not gloss over them":""}.`);
+  L.push(`3. "Process of designing and selecting assessment tools" — 3-5 sentences describing the CO-mapped, Bloom-levelled item design, the rubric practice (see the assessment plan) and the question-choice structure where applicable.`);
+  L.push(`4. "Question moderation / vetting process" — 2-4 sentences based on the vetting information provided; if none is recorded above, describe the intended process cautiously and note that the signed Vetting Form is the evidence.`);
+  L.push("Each block will be pasted verbatim into the CQI tab's narrative boxes (and printed verbatim in the CQI Report). Output the four labelled blocks and nothing else — action plans are drafted by a separate prompt.");
+  aiConstraints(L);
   return L.join("\n");
 }
-function copyAIPrompt(){
-  const c = activeCourse(); if(!c) return;
-  const txt = buildAIPrompt(c);
+/* --- Prompt 3 of 3 (decide): Course Report 6.1 action plans + Specifications 6.1 closure --- */
+function buildActionsPrompt(c){
+  const ctx = buildAIContext(c);
+  const { prevRows, failing } = ctx;
+  const L = [];
+  aiIntro(L, "draft the CQI improvement action plans (and loop-closure text) for the course below.");
+  L.push(...ctx.L);
+  const narr = aiNarrativeLines(c);
+  if(narr.length){
+    L.push("");
+    L.push("== ENTERED BAETE 3.8 NARRATIVES (already finalized — be consistent with them) ==");
+    narr.forEach(l=>L.push(l));
+  }
+  const low = aiLowAnalysisLines(c);
+  if(low.length){
+    L.push("");
+    L.push("== RECORDED LOW-ATTAINMENT ANALYSES (already finalized — your actions must follow from them) ==");
+    low.forEach(l=>L.push(l));
+  }
+  L.push("");
+  L.push("== YOUR TASK — draft each of the following, labelled exactly as below ==");
+  L.push(`1. "Improvement actions from this offering (Course Report 6.1)" — one short block per loop row: (1) CO loop, direct; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect — focused on the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""} and their POs; each action must be consistent with (and may cite) the low-attainment analyses, narratives and working notes above where provided — the plans are the conclusion of those earlier steps; if a row has no evidence-based action, output exactly: "No specific action this offering."`);
+  if(prevRows.some(r=>r.rec)) L.push(`2. "Actions from the previous offering & how they were reflected (Course Specifications 6.1, second column)" — produce EXACTLY five labelled blocks, one per loop row, never merging or omitting a row: (1) A. CQI Loop for COs — Direct; (2) A. CQI Loop for COs — Indirect (survey); (3) B. CQI Loop for POs — Direct; (4) B. CQI Loop for POs — Indirect (survey); (5) C. CQI Loop for PEOs — Indirect (survey). For each row that has a previous recommendation, draft 2-4 sentences describing how it was reflected in this offering (synthesize from the working notes, the adopted activities and the assessment plan, naming the recommendation each action closes). If a single recommendation cell mixes CO-level and PO-level material, distribute the reflections to the correct rows (CO actions under row 1, PO-level consequences under row 3) rather than answering everything under one row. Fallbacks: if a row's first column is empty, output exactly: "No previous recommendation for this loop."; if a recommendation exists but nothing this offering addressed it, output exactly: "No specific action this offering." Never alter the first column — it is the previous Course Report's text.`);
+  L.push(`Item 1 will be pasted into the linked Course Report 6.1 table${prevRows.some(r=>r.rec)? "; item 2 into the second column of the linked Specifications 6.1 table":""}. Output only the labelled blocks.`);
+  aiConstraints(L);
+  return L.join("\n");
+}
+function copyPromptText(txt){
   const done = ()=>toast("AI prompt copied — paste it into ChatGPT, Claude, Gemini, etc.");
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(done).catch(()=>copyAIFallback(txt, done));
   } else copyAIFallback(txt, done);
 }
+function copyNarrativesPrompt(){ const c = activeCourse(); if(c) copyPromptText(buildNarrativesPrompt(c)); }
+function copyActionsPrompt(){ const c = activeCourse(); if(c) copyPromptText(buildActionsPrompt(c)); }
 function copyAIFallback(txt, done){
   const ta = document.createElement("textarea");
   ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
@@ -2547,27 +2641,47 @@ const AI_ASSESS_TASK = "Assessment: for each CO touched by the recommendations, 
 const AI_COMMON_RULES = ["- Be concise; group the output by CO number.","- Suggestions must be feasible for the stated class size within a regular semester.","- Keep each justification to a single sentence — I may reuse them in the CQI narratives."];
 const AI_TLA_IMPL = "- I will adopt T&L suggestions in the app's T&L tab (+ Adopt buttons, or typed with pool-name autocomplete).";
 const AI_ASSESS_IMPL = "- I will implement assessment suggestions in the app's Assessments tab (items with CO/marks/Level, Mandatory ticks, ⚙ question choice, “Rubric prepared”).";
+/* Lens-scoped low-attainment findings (⛓ CQI tab, Step 1) for the two scoped prompts */
+function aiLowLensBlock(c, lens){
+  const out = [];
+  c.cos.forEach((co,i)=>{
+    const an = ((c.aust.cqi||{}).lowAnalysis||{})[co.id] || {};
+    const main = lens==="tla"? (an.tla||"") : (an.assess||"");
+    const bits = [];
+    if(main.trim()) bits.push(main.trim());
+    if((an.comment||"").trim()) bits.push("overall: " + an.comment.trim());
+    if(bits.length) out.push(`CO${i+1}: ${bits.join(" | ")}`);
+  });
+  if(!out.length) return [];
+  return [`== RECORDED LOW-ATTAINMENT FINDINGS (${lens==="tla"? "w.r.t. T&L activities":"w.r.t. assessment techniques"} — from the CQI tab's Low Attainment Analysis) ==`, ...out, ""];
+}
 function buildTlaAIPrompt(c){
+  const lowBlock = aiLowLensBlock(c, "tla");
   return [
-    "You are an experienced engineering-education (OBE) consultant. From the CQI recommendations below, extract ONLY the teaching-learning (T&L) related suggestions and turn them into concrete actions for my T&L plan. IGNORE assessment-related advice (quizzes, exams, rubrics, marking) — that is handled separately.",
+    "You are an experienced engineering-education (OBE) consultant. From the CQI recommendations and low-attainment findings below, extract ONLY the teaching-learning (T&L) related suggestions and turn them into concrete actions for my T&L plan. IGNORE assessment-related advice (quizzes, exams, rubrics, marking) — that is handled separately.",
     "", aiCtxHeader(c), "",
     ...aiRecBlock(c), "",
+    ...lowBlock,
     ...aiTlaContext(c), "",
     "== TASK ==", AI_TLA_TASK, "",
     "== CONSTRAINTS ==",
     "- T&L only — exclude assessment advice entirely.",
+    ...(lowBlock.length? ["- Every low-attainment finding listed above must be addressed by at least one suggestion, or explicitly deferred with a one-sentence reason."]:[]),
     ...AI_COMMON_RULES, AI_TLA_IMPL
   ].join("\n");
 }
 function buildAssessSuggestPrompt(c){
+  const lowBlock = aiLowLensBlock(c, "assess");
   return [
-    "You are an experienced engineering-education (OBE) consultant. From the CQI recommendations below, extract ONLY the assessment-related suggestions and turn them into concrete actions for my assessment plan. IGNORE teaching-delivery (T&L) advice — that is handled separately.",
+    "You are an experienced engineering-education (OBE) consultant. From the CQI recommendations and low-attainment findings below, extract ONLY the assessment-related suggestions and turn them into concrete actions for my assessment plan. IGNORE teaching-delivery (T&L) advice — that is handled separately.",
     "", aiCtxHeader(c), "",
     ...aiRecBlock(c), "",
+    ...lowBlock,
     ...aiAssessContext(c), "",
     "== TASK ==", AI_ASSESS_TASK, "",
     "== CONSTRAINTS ==",
     "- Assessment only — exclude teaching-delivery advice entirely.",
+    ...(lowBlock.length? ["- Every low-attainment finding listed above must be addressed by at least one suggestion, or explicitly deferred with a one-sentence reason."]:[]),
     ...AI_COMMON_RULES, AI_ASSESS_IMPL
   ].join("\n");
 }
@@ -2576,8 +2690,8 @@ function buildAssessSuggestPrompt(c){
 function copyScopedPrompt(builder){
   const c = activeCourse(); if(!c) return;
   ensureAust(c);
-  if(!specRecList(c).length){
-    toast("Fill out “Recommended Actions for Quality Improvement” in Course Specifications 6.1 first"); return;
+  if(!specRecList(c).length && !aiLowAnalysisLines(c).length){
+    toast("Fill out “Recommended Actions for Quality Improvement” in Course Specifications 6.1 (or record a Low Attainment Analysis in the CQI tab) first"); return;
   }
   const txt = builder(c);
   const done = ()=>toast("AI prompt copied — paste it into ChatGPT, Claude, Gemini, etc.");
@@ -2682,12 +2796,12 @@ function renderCQI(){
   </div>
   <div class="card">
     <h2>Continuous Quality Improvement (CQI)</h2>
-    <p class="hint">This tab consolidates the evidence BAETE asks for under <b>Criterion 3.8</b> (teaching-learning &amp; assessment) and <b>Criterion 5.4.3</b> (CQI loop for courses and curriculum). The action tables below are <b>the same data</b> as Course Report 6.1 and Course Specifications 6.1 — editing here updates the documents and vice versa. A printable <b>CQI Report</b> for Annexure H is available under Accreditation Documents.</p>
+    <p class="hint">This tab consolidates the evidence BAETE asks for under <b>Criterion 3.8</b> (teaching-learning &amp; assessment) and <b>Criterion 5.4.3</b> (CQI loop for courses and curriculum). <b>Work top to bottom: diagnose (Low Attainment Analysis) → describe (3.8) → decide (5.4.3 action plans)</b> — each card carries its own 📋 AI prompt; run them in that order, pasting each result back before running the next (later prompts include what you have already entered, and the diagnosis also feeds the Suggested Modifications prompts in the T&amp;L and Assessments tabs). The printable CQI Report re-arranges everything into BAETE's reading order automatically. The action tables below are <b>the same data</b> as Course Report 6.1 and Course Specifications 6.1 — editing here updates the documents and vice versa. A printable <b>CQI Report</b> for Annexure H is available under Accreditation Documents.</p>
     <div class="btn-row" style="margin-top:0">
       <button class="btn" onclick="showDoc('cqi');showTab('docs')">🖨 Open Printable CQI Report (Annexure H)</button>
-      <button class="btn secondary" title="Copies a complete, curated prompt (methodology, COs, mapped POs, assessment plan, results, T&L history — aggregates only, no student identities) for pasting into any AI tool to draft CQI narratives." onclick="copyAIPrompt()">📋 Copy AI Prompt (CQI narratives &amp; action plans)</button>
     </div>
   </div>
+  ${lowAttainmentCard(c)}
   <div class="card">
     <h2>BAETE 3.8 — Teaching-Learning Methods &amp; Assessment Tools</h2>
     <p class="hint">The table is compiled automatically from your COs, adopted T&amp;L activities, and assessment plan. CP/CEA come from the Knowledge-Profile mapping in the Course Outline (item 14).</p>
@@ -2704,7 +2818,10 @@ function renderCQI(){
     ${dta('cqi.design', q.design, 3, 'e.g., Assessment items are designed per CO through constructive alignment: each item is tagged with a CO and Bloom’s level in the assessment blueprint (Course Specifications 5.1); mark distribution is reviewed against the CO weights before each assessment…')}
     <p style="font-size:13px;margin-top:10px"><b>Question moderation / vetting process:</b></p>
     ${dta('cqi.moderation', q.moderation, 3, 'e.g., Every final examination is moderated by two vetters using the AUST Final Examination Vetting Form: CO coverage, Bloom’s alignment, mark distribution and clarity are checked; required modifications are documented and approved by the Head of the Department…')}
-    <div class="btn-row"><button class="btn secondary small" onclick="showDoc('vet');showTab('docs')">Open Final Exam Vetting Form</button></div>
+    <div class="btn-row">
+      <button class="btn secondary" title="Copies a curated prompt (methodology, COs, mapped POs, assessment plan, results, T&L history — aggregates only, no student identities) that drafts ONLY the four 3.8 narrative boxes above. Step 2 of 3 — run after the low-attainment analysis prompt: its recorded findings are included and must be engaged critically." onclick="copyNarrativesPrompt()">📋 Copy AI Prompt (3.8 narratives)</button>
+      <button class="btn secondary small" onclick="showDoc('vet');showTab('docs')">Open Final Exam Vetting Form</button>
+    </div>
   </div>
   <div class="card">
     <h2>BAETE 5.4.3 — CQI Loop Status for This Course</h2>
@@ -2724,9 +2841,11 @@ function renderCQI(){
     <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th style="width:140px">Loop</th><th style="width:190px">Assessment Type</th><th>Recommended Actions (previous Course Report)</th><th>Reflected in the Current Course Specification</th></tr></thead>
       <tbody>${specRows}</tbody></table></div>
-    <div class="btn-row"><button class="btn secondary small" onclick="pullCQI()">⟳ Pull CQI actions from Course Report into Specifications 6.1</button></div>
+    <div class="btn-row">
+      <button class="btn secondary" title="Copies a curated prompt that drafts the five Course Report 6.1 loop rows and the Specifications 6.1 closure text — it includes your recorded low-attainment analyses, entered 3.8 narratives and working notes as context, so run Steps 1 and 2 (and paste their results back) first. Step 3 of 3." onclick="copyActionsPrompt()">📋 Copy AI Prompt (5.4.3 action plans)</button>
+      <button class="btn secondary small" onclick="pullCQI()">⟳ Pull CQI actions from Course Report into Specifications 6.1</button>
+    </div>
   </div>
-  ${lowAttainmentCard(c)}
   <div class="card">
     <h2>Stakeholder Feedback Register</h2>
     <p class="hint">Systematic record of how stakeholder input (students, alumni, employers, advisory board, external examiners, committee meetings) is used to improve the COs and curriculum — the core of BAETE 5.4.3. Attach the underlying documents (survey results, minutes) as Annexure H evidence.</p>
@@ -2774,53 +2893,83 @@ function studentCOData(c){
 }
 /* Scoped AI prompt for the Low Attainment Analysis section — covers ONLY the
    not-attained COs, with tasks matching the section's (a)/(b)/(c) boxes. */
+/* Tier per CO: 1 = not attained (full diagnosis), 2 = attained but borderline
+   (below KPI + 15 points, or carrying a weak item), 3 = strongly attained (no analysis). */
+function lowAttTiers(c){
+  const att = computeAttainment(c);
+  const data = studentCOData(c).filter(d=>d.totalMax>0 && d.scores.length);
+  const t1 = [], t2 = [], t3 = [];
+  data.forEach(d=>{
+    const a = att.cos.find(x=>x.id===d.co.id);
+    if(!a || a.pct===null) return;
+    const weak = d.itemAvgs.some(it=>it.avg!==null && it.avg < c.cfg.passMarks);
+    if(!a.attained) t1.push({d, a});
+    else if(a.pct < c.cfg.kpiTarget + 15 || weak) t2.push({d, a});
+    else t3.push({d, a});
+  });
+  return { t1, t2, t3 };
+}
 function buildLowAttPrompt(c){
   const th = (window._lowTh===undefined || window._lowTh===null)? c.cfg.passMarks : window._lowTh;
   const att = computeAttainment(c);
-  const data = studentCOData(c).filter(d=>d.totalMax>0 && d.scores.length);
-  const targets = data.filter(d=>{ const a = att.cos.find(x=>x.id===d.co.id); return a && a.pct!==null && !a.attained; });
+  const { t1, t2, t3 } = lowAttTiers(c);
   const L = [];
-  L.push("You are an expert in Outcome-Based Education and engineering accreditation (Washington Accord / BAETE, Bangladesh). Help me, the course teacher, analyze the LOW ATTAINMENT of the course outcomes below. Ground every statement in the evidence provided; do not invent data.");
+  L.push("You are an expert in Outcome-Based Education and engineering accreditation (Washington Accord / BAETE, Bangladesh). Help me, the course teacher, analyze the attainment of the course outcomes below — a full diagnosis for the NOT-ATTAINED CO(s), and brief preventive notes for the attained-but-borderline CO(s). Ground every statement in the evidence provided; do not invent data.");
   L.push("");
   L.push("== METHODOLOGY (how to read the numbers) ==");
-  L.push(`A student's CO score = % of marks obtained out of the marks assessed under that CO (blank mandatory items = 0; legitimately skipped optional questions are excluded; partial answers to a chosen question are penalized). CO attainment = % of assessed students scoring STRICTLY ABOVE ${c.cfg.passMarks}% (Target Pass Marks); attained if this reaches the Target KPI of ${c.cfg.kpiTarget}%. The low-student filter threshold used below: ${th}%.`);
+  L.push(`A student's CO score = % of marks obtained out of the marks assessed under that CO (blank mandatory items = 0; legitimately skipped optional questions are excluded; partial answers to a chosen question are penalized). CO attainment = % of assessed students scoring STRICTLY ABOVE ${c.cfg.passMarks}% (Target Pass Marks); attained if this reaches the Target KPI of ${c.cfg.kpiTarget}%. Borderline = attained but below ${c.cfg.kpiTarget+15}% (KPI + 15 points) or carrying an item whose class average is below the pass marks. The low-student filter threshold used below: ${th}%.`);
   L.push("");
   L.push(aiCtxHeader(c));
   const attemptsOf = id => c.students.filter(s=>(c.marks[s.id]||{})[id]!==undefined).length;
-  targets.forEach(d=>{
-    const a = att.cos.find(x=>x.id===d.co.id);
+  const coBlock = (d, a, header) => {
     const info = coLevelInfo(d.co);
     const low = d.scores.filter(s=>s.pct<th);
     const b = [0,0,0,0,0]; d.scores.forEach(s=>{ b[Math.min(4, Math.floor(s.pct/20))]++; });
     L.push("");
-    L.push(`== ${d.label} — NOT ATTAINED (${a.pct.toFixed(1)}% above pass marks vs KPI ${c.cfg.kpiTarget}%) ==`);
+    L.push(header);
     L.push(`Statement: ${d.co.statement||"(no statement)"} [${info.domain}${info.idx>=0? " — "+info.list[info.idx]:""}]`);
     L.push(`Adopted T&L activities: ${deliveryList(d.co).map(n=>{ const v=(c.aust.report.tlaA||{})[n]; return n+(v&&v.eff? " ("+(v.eff==="Yes"?"recorded effective":"recorded NOT effective")+")":""); }).join("; ")||"none"}`);
     L.push(`Assessment items measuring it (class averages): ${d.itemAvgs.map(it=>`${it.aName} ${it.label} [avg ${it.avg===null?"—":it.avg.toFixed(0)+"%"}${it.optional? ", optional, attempted by "+attemptsOf(it.id)+" of "+c.students.length:""}]`).join("; ")}`);
     const weak = d.itemAvgs.filter(it=>it.avg!==null && it.avg<th).map(it=>`${it.aName} ${it.label} (${it.avg.toFixed(0)}%)`);
     if(weak.length) L.push(`Weakest items (class average below ${th}%): ${weak.join("; ")}`);
     L.push(`Students below ${th}%: ${low.length} of ${d.scores.length}. Score distribution: 0-20%: ${b[0]}, 20-40%: ${b[1]}, 40-60%: ${b[2]}, 60-80%: ${b[3]}, 80-100%: ${b[4]}.`);
-  });
+  };
+  t1.forEach(({d,a})=>coBlock(d, a, `== ${d.label} — TIER 1: NOT ATTAINED (${a.pct.toFixed(1)}% above pass marks vs KPI ${c.cfg.kpiTarget}%) ==`));
+  t2.forEach(({d,a})=>coBlock(d, a, `== ${d.label} — TIER 2: ATTAINED BUT BORDERLINE (${a.pct.toFixed(1)}% above pass marks) ==`));
+  if(t3.length){
+    L.push("");
+    L.push(`== TIER 3: STRONGLY ATTAINED (no analysis needed) == ${t3.map(({d,a})=>`${d.label} (${a.pct.toFixed(1)}%)`).join(", ")}`);
+  }
   L.push("");
-  L.push(`== YOUR TASK — for EACH CO above (${targets.map(d=>d.label).join(", ")}), draft the three fields, labelled exactly ==`);
-  L.push(`(a) "Analysis w.r.t. Teaching-Learning activities" — 3-5 sentences: which adopted activities plausibly under-served this CO and why, tied to the score evidence, each cause with a one-sentence justification.`);
-  L.push(`(b) "Analysis w.r.t. Assessment techniques" — 3-5 sentences explicitly referencing the weakest items (design, level, optional-choice effects), each observation justified by the item figures.`);
-  L.push(`(c) "Comment on the low attainment level" — 2-4 sentences: overall judgement, the affected student group (use the score distribution), and the corrective action to carry into Course Report 6.1.`);
+  L.push("== YOUR TASK — labelled exactly as below ==");
+  if(t1.length){
+    L.push(`For EACH Tier-1 CO (${t1.map(x=>x.d.label).join(", ")}), draft the three fields in full:`);
+    L.push(`(a) "Analysis w.r.t. Teaching-Learning activities" — 3-5 sentences: which adopted activities plausibly under-served this CO and why, tied to the score evidence, each cause with a one-sentence justification.`);
+    L.push(`(b) "Analysis w.r.t. Assessment techniques" — 3-5 sentences explicitly referencing the weakest items (design, level, optional-choice effects), each observation justified by the item figures.`);
+    L.push(`(c) "Comment on the low attainment level" — 2-4 sentences: overall judgement, the affected student group (use the score distribution), and the corrective action to carry into Course Report 6.1.`);
+  }
+  if(t2.length){
+    L.push(`For EACH Tier-2 CO (${t2.map(x=>x.d.label).join(", ")}), draft the same three labelled fields BRIEFLY — 1-2 sentences each, framed as a preventive "improvement watch" (what to monitor or strengthen so it does not slip below the KPI), not as remediation. Where an item is weak despite overall attainment, name it in (b).`);
+  }
+  if(t3.length){
+    L.push(`For the Tier-3 CO(s) (${t3.map(x=>x.d.label).join(", ")}), output ONE collective sentence confirming that the evidence warrants no specific action — do not invent improvements for them.`);
+  }
   L.push("");
   L.push("== CONSTRAINTS ==");
   L.push("- Professional accreditation-report tone; every claim traceable to the evidence above; if the evidence is insufficient for a conclusion, say so rather than speculating.");
   L.push("- Blank marks mean 'not attempted' and entered zeros mean 'attempted and scored zero'; a legitimately skipped optional question is NOT a failure. Attendance/participation is not tracked — do not speculate about engagement.");
+  L.push("- Keep the effort proportionate to the tier: full diagnosis only where attainment failed, brief watch notes where it is fragile, and no manufactured concerns where it is strong.");
   L.push("- Label the output by CO and (a)/(b)/(c) so each part can be pasted into its box in the Low Attainment Analysis section.");
   return L.join("\n");
 }
 function copyLowAttPrompt(){
   const c = activeCourse(); if(!c) return;
   ensureAust(c);
-  const att = computeAttainment(c);
   const data = studentCOData(c).filter(d=>d.totalMax>0 && d.scores.length);
   if(!data.length){ toast("Enter assessment items and marks first"); return; }
-  if(!data.some(d=>{ const a = att.cos.find(x=>x.id===d.co.id); return a && a.pct!==null && !a.attained; })){
-    toast("All COs are attained at the current data — nothing to analyze"); return;
+  const { t1, t2 } = lowAttTiers(c);
+  if(!t1.length && !t2.length){
+    toast("Every CO is strongly attained (above KPI + 15 with no weak items) — nothing to analyze"); return;
   }
   const txt = buildLowAttPrompt(c);
   const done = ()=>toast("AI prompt copied — paste it into ChatGPT, Claude, Gemini, etc.");
@@ -2877,11 +3026,11 @@ function lowAttainmentCard(c){
   return `
   <div class="card">
     <h2>Low Attainment Analysis <span class="badge blue">linked to Attainment</span></h2>
-    <p class="hint">Students are filtered by their per-CO score (same calculation as the Attainment tab). For each CO, analyze the causes with respect to (a) the teaching-learning activities and (b) the assessment techniques, and record your comment — these feed the printable CQI Report and support Course Report 6.1.</p>
+    <p class="hint">Students are filtered by their per-CO score (same calculation as the Attainment tab). For each CO, analyze the causes with respect to (a) the teaching-learning activities and (b) the assessment techniques, and record your comment — these feed the printable CQI Report, support Course Report 6.1, and flow into the later AI prompts: the (a) findings into the T&amp;L tab's Suggested Modifications prompt, the (b) findings into the Assessments tab's, and all of them into the 3.8 narratives and 5.4.3 action-plans prompts.</p>
     <label class="fld" style="max-width:340px;margin-bottom:8px">Filter: students scoring below (%)
       <input type="number" min="0" max="100" value="${th}" onchange="window._lowTh=Math.max(0,Math.min(100,parseFloat(this.value)||0));renderCQI()">
     </label>
-    <div class="btn-row no-print" style="margin:0 0 12px"><button class="btn secondary small" onclick="copyLowAttPrompt()" title="Builds a prompt covering ONLY the not-attained CO(s) — score bands, weakest items, attempt counts, adopted activities — with tasks matching the (a)/(b)/(c) boxes below. Run it before the narratives prompt: the pasted analyses strengthen that evidence.">📋 Copy AI Prompt (low-attainment analysis)</button></div>
+    <div class="btn-row no-print" style="margin:0 0 12px"><button class="btn secondary small" onclick="copyLowAttPrompt()" title="Builds a tiered prompt: full diagnosis for the not-attained CO(s), brief preventive notes for attained-but-borderline CO(s) (below KPI + 15 points, or carrying a weak item), and an explicit no-action line for strongly attained ones — tasks matching the (a)/(b)/(c) boxes below. Step 1 of 3: run first. The pasted analyses feed the 3.8 narratives prompt (Step 2), the 5.4.3 action-plans prompt (Step 3), and the Suggested Modifications prompts in the T&L and Assessments tabs.">📋 Copy AI Prompt (low-attainment analysis)</button></div>
     ${blocks}
   </div>`;
 }
