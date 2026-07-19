@@ -165,7 +165,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.71</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.72</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -203,14 +203,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.71</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.72</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.71";
+const APP_VERSION = "v1.72";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -258,7 +258,8 @@ function ensureAust(c){
   a.spec = Object.assign({submitDate:"", other:""}, a.spec||{});
   a.spec.slt = Object.assign({lecture:"42", active:"", reading:"", quiz:"", assign:"", finalPrep:"", finalExam:"3", total:"120"}, a.spec.slt||{});
   if(!Array.isArray(a.spec.topics)) a.spec.topics = [];
-  a.spec.topics.forEach(t=>{ if(!Array.isArray(t.cos)) t.cos = []; if(!Array.isArray(t.tla)) t.tla = []; });   // topic -> related CO ids + topic-specific activities (T&L tab's topic-wise plan)
+  a.spec.topics.forEach(t=>{ if(!Array.isArray(t.cos)) t.cos = []; if(!Array.isArray(t.tla)) t.tla = []; if(!Array.isArray(t.res)) t.res = []; });   // topic -> related CO ids, topic-specific activities, planned resources (T&L tab's topic-wise plan)
+  if(!Array.isArray(a.learnRes)) a.learnRes = [];   // learning resources shared with students: {type,title,url,rel,notes}
   if(!Array.isArray(a.spec.cqiPrev) || a.spec.cqiPrev.length!==5)
     a.spec.cqiPrev = Array.from({length:5},(_,i)=>(a.spec.cqiPrev&&a.spec.cqiPrev[i])||{rec:"",ref:""});
   a.vet = Object.assign({vetter1:"",vetter2:""}, a.vet||{});
@@ -682,7 +683,7 @@ function toggleDashStep(n){
 }
 function duplicateForNewSemester(){
   const c = activeCourse(); if(!c) return;
-  if(!confirm("Create a copy of this course for a new semester?\n\nKept: COs, CO-PO mapping, T&L activities, assessments, topics, settings — and the Course Report CQI actions are carried into the new Course Specifications (6.1).\nCleared: students, marks, survey tallies, actual hours, grades, report comments, the Suggested Modifications working boxes, and the CQI tab's narratives, low-attainment analyses, stakeholder register and evidence ticks.")) return;
+  if(!confirm("Create a copy of this course for a new semester?\n\nKept: COs, CO-PO mapping, T&L activities, learning resources, assessments, topics, settings — and the Course Report CQI actions are carried into the new Course Specifications (6.1).\nCleared: students, marks, survey tallies, actual hours, grades, report comments, the Suggested Modifications working boxes, and the CQI tab's narratives, low-attainment analyses, stakeholder register and evidence ticks.")) return;
   const n = ensureAust(JSON.parse(JSON.stringify(c)));
   n.id = uid();
   n.semester = "";
@@ -1089,6 +1090,62 @@ function removeTopicTLA(i, k){
   t.tla.splice(k,1);
   save(); renderTLA();
 }
+const LEARN_RES_TYPES = ["Class session slides","LMS course site","Companion site (e.g., NotebookLM)","Interactive infographic / e-module","Video / recording","Rubric","Reference / tip sheet","Other"];
+function toggleLearnRes(){ window._lrOpen = !window._lrOpen; renderTLA(); }
+function addLearnRes(){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  c.aust.learnRes.push({ type: LEARN_RES_TYPES[0], title:"", url:"", rel:"", notes:"" });
+  window._lrOpen = true;
+  save(); renderTLA();
+}
+function delLearnRes(i){
+  const c = activeCourse(); if(!c) return;
+  c.aust.learnRes.splice(i,1);
+  save(); renderTLA();
+}
+function addTopicRes(i){
+  const c = activeCourse(); if(!c) return;
+  const inp = document.getElementById("topicRes_"+i);
+  const v = (inp && inp.value || "").trim();
+  if(!v){ toast("Type or pick a resource title first"); return; }
+  const t = c.aust.spec.topics[i]; if(!t) return;
+  if(!Array.isArray(t.res)) t.res = [];
+  if(t.res.some(x=>x.toLowerCase()===v.toLowerCase())){ toast("Already listed for this topic"); return; }
+  t.res.push(v);
+  save(); renderTLA();
+}
+function removeTopicRes(i, k){
+  const c = activeCourse(); if(!c) return;
+  const t = c.aust.spec.topics[i]; if(!t || !Array.isArray(t.res)) return;
+  t.res.splice(k,1);
+  save(); renderTLA();
+}
+/* Learning Resources register — links only (the LMS stays the host). */
+function learnResCard(c){
+  const open = window._lrOpen;
+  const list = c.aust.learnRes;
+  const n = list.filter(r=>(r.title||"").trim()||(r.url||"").trim()).length;
+  const rows = list.map((r,i)=>`<tr>
+    <td><select class="di" style="width:100%" onchange="austSet('learnRes.${i}.type',this.value)">${LEARN_RES_TYPES.map(t=>`<option ${r.type===t?"selected":""}>${t}</option>`).join("")}</select></td>
+    <td>${di('learnRes.'+i+'.title', r.title, 'e.g., Module 4 slides')}</td>
+    <td>${di('learnRes.'+i+'.url', r.url, 'https://…  or LMS path')}</td>
+    <td>${di('learnRes.'+i+'.rel', r.rel, 'Topic / CO (optional)')}</td>
+    <td>${di('learnRes.'+i+'.notes', r.notes, '')}</td>
+    <td class="no-print"><button class="icon-btn" onclick="delLearnRes(${i})">✕</button></td></tr>`).join("");
+  return `
+  <div class="card">
+    <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Learning Resources shared with students <button class="btn secondary small" onclick="toggleLearnRes()">${open? "▾ Hide":"▸ Show / edit"}</button></h2>
+    ${open? `
+    <p class="hint">A register of the materials you share with students to aid the T&L activities — class session slides, the LMS course site, companion sites (e.g., NotebookLM), interactive infographics, videos, rubrics and tip sheets. <b>Links only:</b> the LMS (or hosting site) remains where the material lives; this register records what exists and where. It is kept by ⟳ Duplicate for New Semester, prints as <b>Course Outline 17.3</b> when non-empty, is cited by the CQI AI prompts, and its titles are assignable per topic in the Resources column of the Topic-wise T&L Plan below.</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th style="width:210px">Type</th><th style="width:180px">Title</th><th>Link / location</th><th style="width:140px">Related topic/CO</th><th style="width:160px">Notes</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="6" class="empty">No resources yet.</td></tr>'}</tbody>
+    </table></div>
+    <div class="btn-row"><button class="btn secondary small" onclick="addLearnRes()">+ Add Resource</button></div>`
+    : `<p class="hint" style="margin:0 0 4px">${n? n+" resource(s) registered — printed as Course Outline 17.3 and cited by the CQI prompts." : "None registered yet — expand to add the slides, LMS site, companion sites and other materials you share with students."}</p>`}
+  </div>`;
+}
 function topicPlanCard(c){
   const topics = c.aust.spec.topics;
   const rows = topics.map((t,i)=>{
@@ -1109,6 +1166,14 @@ function topicPlanCard(c){
           <button class="btn secondary small" style="padding:2px 9px" title="Add a topic-specific activity (from the T&L Activity Pool or your own)" onclick="addTopicTLA(${i})">+</button>
         </div>
       </td>
+      <td style="font-size:12px">
+        ${(Array.isArray(t.res)? t.res:[]).map((r,k)=>`<span class="badge green" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0" title="Planned resource for this topic">${esc(r)}<button onclick="removeTopicRes(${i},${k})" title="Remove from this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">×</button></span>`).join("")}
+        ${!(t.res||[]).length? '<span class="badge grey">none planned</span>':""}
+        <div class="no-print" style="display:flex;gap:4px;margin-top:4px">
+          <input id="topicRes_${i}" list="lrTitleList" placeholder="add a resource…" style="flex:1;min-width:0;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:11.5px">
+          <button class="btn secondary small" style="padding:2px 9px" title="Assign a resource to this topic (autocomplete from the Learning Resources register above, or type your own)" onclick="addTopicRes(${i})">+</button>
+        </div>
+      </td>
       <td><button class="icon-btn" style="color:#c0392b;font-weight:700" title="Delete this topic (also removes it from Course Specifications 4.1)" onclick="delTopic(${i});renderTLA()">✕</button></td>
     </tr>`;
   }).join("");
@@ -1117,8 +1182,8 @@ function topicPlanCard(c){
     <h2>Topic-wise T&amp;L Plan <span class="badge blue" title="Sl./Topics/Planned Hours are the same data as Course Specifications 4.1 (and Course Report 3.1) — edit in either place">⛓ linked — same data as Course Specifications 4.1</span></h2>
     <p class="hint">Plan each topic's teaching: tick the related CO(s) — the <b>blue</b> method chips fill in automatically from the activities adopted above — and add <b>topic-specific</b> activities (green chips, removable) from the pool or your own. Topics and planned hours are shared with Course Specifications 4.1; Related COs and topic-specific activities are planning fields kept with the course data (not printed in the Specifications table).</p>
     <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th style="width:40px">Sl.</th><th style="width:45%">Topics</th><th style="width:70px">Planned Hours</th><th style="width:95px">Related COs</th><th style="width:260px">T&amp;L Methods</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="6" class="empty">No topics yet — add one below, or import the list from a CSV.</td></tr>'}</tbody>
+      <thead><tr><th style="width:40px">Sl.</th><th style="width:38%">Topics</th><th style="width:70px">Planned Hours</th><th style="width:95px">Related COs</th><th style="width:230px">T&amp;L Methods</th><th style="width:200px">Resources</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="7" class="empty">No topics yet — add one below, or import the list from a CSV.</td></tr>'}</tbody>
     </table></div>
     <div class="btn-row">
       <button class="btn secondary small" onclick="addTopic();renderTLA()">+ Add Topic</button>
@@ -1254,7 +1319,9 @@ function renderTLA(){
     </div>
   </div>
   ${coCards || '<div class="empty">Define COs first (COs &amp; CO–PO Mapping tab).</div>'}
+  ${learnResCard(c)}
   ${topicPlanCard(c)}
+  <datalist id="lrTitleList">${c.aust.learnRes.filter(r=>(r.title||"").trim()).map(r=>`<option value="${esc(r.title)}">`).join("")}</datalist>
   ${tlaSummaryCard}`;
   autoGrowAll("tab-tla");
 }
@@ -2456,6 +2523,7 @@ const EVIDENCE_ITEMS = [
   ["report","Course Report (signed by instructor and HOD)"],
   ["minutes","Meeting minutes discussing course results (departmental / OBE committee)"],
   ["stake","Stakeholder survey instruments and analysis (alumni / employer, if applicable)"],
+  ["lres","Learning-resource register (class slides, LMS course site, companion sites, infographics — linked/archived)"],
   ["moderation","Moderated question papers with vetter remarks"],
   ["rubrics","Rubrics for rubric-graded assessments (assignments, projects, presentations/vivas)"],
 ];
@@ -2566,6 +2634,12 @@ function buildAIContext(c){
     if(tlaBits.length) L.push("Adopted activities — " + tlaBits.join("; "));
     if(effBits.length) L.push("Effectiveness recorded (Course Report 3.2): " + effBits.join("; "));
   }
+  const resLines = aiResourceLines(c);
+  if(resLines.length){
+    L.push("");
+    L.push("== LEARNING RESOURCES PROVIDED TO STUDENTS (register + per-topic plan) ==");
+    resLines.forEach(l=>L.push(l));
+  }
   const prevRows = (c.aust.spec.cqiPrev||[]).map((x,i)=>({label:CQI_SRC_LABELS[i], rec:(x.rec||"").trim()}));
   if(prevRows.some(r=>r.rec)){
     L.push("");
@@ -2586,6 +2660,19 @@ function buildAIContext(c){
   }
   const failing = att.cos.filter(x=>x.pct!==null && !x.attained).map(x=>x.label);
   return { L, att, ind, effBits, prevRows, failing };
+}
+/* Learning resources shared with students — cited across the prompts */
+function aiResourceLines(c){
+  const out = [];
+  ((c.aust||{}).learnRes||[]).forEach(r=>{
+    if((r.title||"").trim() || (r.url||"").trim())
+      out.push(`- [${r.type||"Resource"}] ${(r.title||"").trim()||"(untitled)"}${(r.rel||"").trim()? " (for: "+r.rel.trim()+")":""}${(r.url||"").trim()? " — "+r.url.trim():""}${(r.notes||"").trim()? " · "+r.notes.trim():""}`);
+  });
+  (((c.aust||{}).spec||{}).topics||[]).forEach(t=>{
+    if(Array.isArray(t.res) && t.res.length)
+      out.push(`- Topic "${String(t.name||"").split("\n")[0]}": ${t.res.join(", ")}`);
+  });
+  return out;
 }
 /* Recorded low-attainment analyses (CQI tab) — chained into the later prompts */
 function aiLowAnalysisLines(c){
@@ -2779,6 +2866,7 @@ function buildTlaAIPrompt(c){
     "", aiCtxHeader(c), "",
     ...aiRecBlock(c), "",
     ...lowBlock,
+    ...(aiResourceLines(c).length? ["== LEARNING RESOURCES PROVIDED TO STUDENTS ==", ...aiResourceLines(c), ""]:[]),
     ...aiTlaContext(c), "",
     "== TASK ==", AI_TLA_TASK, "",
     "== CONSTRAINTS ==",
@@ -2794,6 +2882,7 @@ function buildAssessSuggestPrompt(c){
     "", aiCtxHeader(c), "",
     ...aiRecBlock(c), "",
     ...lowBlock,
+    ...(aiResourceLines(c).length? ["== LEARNING RESOURCES PROVIDED TO STUDENTS ==", ...aiResourceLines(c), ""]:[]),
     ...aiAssessContext(c), "",
     "== TASK ==", AI_ASSESS_TASK, "",
     "== CONSTRAINTS ==",
@@ -3037,6 +3126,13 @@ function buildLowAttPrompt(c){
   L.push(`A student's CO score = % of marks obtained out of the marks assessed under that CO (blank mandatory items = 0; legitimately skipped choice questions are excluded; partial answers to a chosen question are penalized). CO attainment = % of assessed students scoring STRICTLY ABOVE ${c.cfg.passMarks}% (Target Pass Marks); attained if this reaches the Target KPI of ${c.cfg.kpiTarget}%. Borderline = attained but below ${c.cfg.kpiTarget+15}% (KPI + 15 points) or carrying an item whose class average is below the pass marks. The low-student filter threshold used below: ${th}%.`);
   L.push("");
   L.push(aiCtxHeader(c));
+  { const resLines = aiResourceLines(c);
+    if(resLines.length){
+      L.push("");
+      L.push("== LEARNING RESOURCES PROVIDED TO STUDENTS ==");
+      resLines.forEach(l=>L.push(l));
+      L.push("When diagnosing (a) w.r.t. T&L activities, consider whether the weak topics/COs were supported by these resources.");
+    } }
   const attemptsOf = id => c.students.filter(s=>(c.marks[s.id]||{})[id]!==undefined).length;
   const coBlock = (d, a, header) => {
     const info = coLevelInfo(d.co);
@@ -3313,6 +3409,10 @@ function docOutline(c){
   <h2>17. References</h2>
   <p><b>17.1. Required</b> ${dta('outline.refsReq', o.refsReq, 2, 'Required textbook(s)')}</p>
   <p><b>17.2. Recommended</b> ${dta('outline.refsRec', o.refsRec, 2, 'Recommended reference(s)')}</p>
+  ${c.aust.learnRes.filter(r=>(r.title||"").trim()||(r.url||"").trim()).length? `
+  <p><b>17.3. Learning Resources</b> <span class="no-print" style="font-size:11.5px;color:var(--muted)">(⛓ from the T&L tab's Learning Resources register)</span></p>
+  <table class="tbl"><thead><tr><th style="width:200px">Type</th><th style="width:200px">Title</th><th>Link / location</th><th style="width:160px">Related topic/CO</th></tr></thead>
+    <tbody>${c.aust.learnRes.filter(r=>(r.title||"").trim()||(r.url||"").trim()).map(r=>`<tr><td>${esc(r.type||"")}</td><td>${esc(r.title||"")}</td><td style="word-break:break-all">${esc(r.url||"")}</td><td>${esc(r.rel||"")}</td></tr>`).join("")}</tbody></table>` : ""}
   <table class="tbl" style="margin-top:18px"><tr>
     <td style="width:33%">Prepared by:<br><br>Signature: __________________<br>Name: ${di('outline.prepared', o.prepared || c.instructor)}</td>
     <td style="width:33%">Checked by:<br><br>Signature: __________________<br>Name: ${di('outline.checked', o.checked)}</td>
@@ -3797,7 +3897,8 @@ function importTopicsCSV(input){
     c.aust.spec.topics = parsed.map(p=>{
       const old = keep[p.name.toLowerCase()];
       return { name: p.name, planned: p.planned, actual: old? old.actual : "", reason: old? old.reason : "",
-               cos: (old && Array.isArray(old.cos))? old.cos : [], tla: (old && Array.isArray(old.tla))? old.tla : [] };
+               cos: (old && Array.isArray(old.cos))? old.cos : [], tla: (old && Array.isArray(old.tla))? old.tla : [],
+               res: (old && Array.isArray(old.res))? old.res : [] };
     });
     save(); renderTab(window._currentTab || "docs");
     toast(`${parsed.length} topic(s) imported${matched? " — "+matched+" kept their actual hours":""}${skipped? " · "+skipped+" line(s)/value(s) skipped":""}`);
