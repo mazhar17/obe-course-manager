@@ -165,7 +165,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.72</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.77</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -203,14 +203,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.72</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.77</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.72";
+const APP_VERSION = "v1.77";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -258,8 +258,15 @@ function ensureAust(c){
   a.spec = Object.assign({submitDate:"", other:""}, a.spec||{});
   a.spec.slt = Object.assign({lecture:"42", active:"", reading:"", quiz:"", assign:"", finalPrep:"", finalExam:"3", total:"120"}, a.spec.slt||{});
   if(!Array.isArray(a.spec.topics)) a.spec.topics = [];
-  a.spec.topics.forEach(t=>{ if(!Array.isArray(t.cos)) t.cos = []; if(!Array.isArray(t.tla)) t.tla = []; if(!Array.isArray(t.res)) t.res = []; });   // topic -> related CO ids, topic-specific activities, planned resources (T&L tab's topic-wise plan)
-  if(!Array.isArray(a.learnRes)) a.learnRes = [];   // learning resources shared with students: {type,title,url,rel,notes}
+  a.spec.topics.forEach(t=>{ if(!Array.isArray(t.cos)) t.cos = []; if(!Array.isArray(t.tla)) t.tla = []; if(!Array.isArray(t.res)) t.res = []; if(!Array.isArray(t.resExcl)) t.resExcl = []; });   // topic -> related CO ids, topic-specific activities, planned resources (T&L tab's topic-wise plan)
+  if(!Array.isArray(a.learnRes)) a.learnRes = [];   // learning resources shared with students: {type,title,url,cos,notes}
+  a.learnRes.forEach(r=>{
+    if(!Array.isArray(r.cos)) r.cos = [];
+    if(r.rel !== undefined){   // migrate the old free-text "Related topic/CO" field into Notes
+      if(String(r.rel).trim()) r.notes = (r.notes? r.notes + " · " : "") + "Related: " + String(r.rel).trim();
+      delete r.rel;
+    }
+  });
   if(!Array.isArray(a.spec.cqiPrev) || a.spec.cqiPrev.length!==5)
     a.spec.cqiPrev = Array.from({length:5},(_,i)=>(a.spec.cqiPrev&&a.spec.cqiPrev[i])||{rec:"",ref:""});
   a.vet = Object.assign({vetter1:"",vetter2:""}, a.vet||{});
@@ -296,7 +303,11 @@ function ensureAust(c){
     });
   }
   a.survey = a.survey || {};
-  a.survey.tally = a.survey.tally || {};   // coId -> [n1,n2,n3,n4,n5] counts per Likert rating
+  a.survey.tally = a.survey.tally || {};   // coId -> [n1,n2,n3,n4,n5] counts per Likert rating (Block A — the ONLY input to indirect attainment)
+  a.survey.fbOn = Object.assign({ tla:true, res:true, align:true, rubric:true, fbk:true, pace:true }, a.survey.fbOn||{});   // Block B toggles
+  a.survey.fbTally = a.survey.fbTally || {};    // Block B: item key -> [n1..n5]
+  if(a.survey.resFbOn === undefined) a.survey.resFbOn = true;
+  a.survey.resTally = a.survey.resTally || {};  // Block C: resource title -> [n1..n5]
   a.cqi = Object.assign({ complex:"", effective:"", design:"", moderation:"" }, a.cqi||{});
   if(!Array.isArray(a.cqi.stakeholders)) a.cqi.stakeholders = [];  // {src,date,summary,action}
   if(!a.cqi.evid || typeof a.cqi.evid!=="object") a.cqi.evid = {}; // evidence checklist flags
@@ -355,6 +366,7 @@ function load(){
   }catch(e){ console.warn("load failed", e); }
   if(!state || !Array.isArray(state.courses)) state = { courses: [], activeCourseId: null };
   if(!Array.isArray(state.customTLA)) state.customTLA = [];
+  if(!Array.isArray(state.customRes)) state.customRes = [];
   state.courses.forEach(ensureAust);
 }
 function save(){
@@ -395,6 +407,7 @@ function adoptState(data){
   state = data;
   if(!Array.isArray(state.courses)) state.courses = [];
   if(!Array.isArray(state.customTLA)) state.customTLA = [];
+  if(!Array.isArray(state.customRes)) state.customRes = [];
   state.courses.forEach(ensureAust);
   if(state.courses.length && !state.courses.find(x=>x.id===state.activeCourseId)) state.activeCourseId = state.courses[0].id;
 }
@@ -689,7 +702,7 @@ function duplicateForNewSemester(){
   n.semester = "";
   n.students = []; n.marks = {};
   n.cos.forEach(co=>{ co.modStatement=""; co.modPO=""; co.modBloom=""; });
-  n.aust.survey = { tally: {} };
+  n.aust.survey = { tally: {}, fbOn: Object.assign({}, c.aust.survey.fbOn), fbTally: {}, resFbOn: c.aust.survey.resFbOn, resTally: {} };
   n.aust.spec.submitDate = "";
   n.aust.spec.cqiPrev = n.aust.spec.cqiPrev.map((x,i)=>({ rec: (c.aust.report.cqi && c.aust.report.cqi[i]) || "", ref: "" }));
   n.aust.spec.topics.forEach(t=>{ t.actual=""; t.reason=""; });
@@ -1090,18 +1103,82 @@ function removeTopicTLA(i, k){
   t.tla.splice(k,1);
   save(); renderTLA();
 }
-const LEARN_RES_TYPES = ["Class session slides","LMS course site","Companion site (e.g., NotebookLM)","Interactive infographic / e-module","Video / recording","Rubric","Reference / tip sheet","Other"];
+const LEARN_RES_TYPES = ["Class session slides","LMS course site","Companion site (e.g., NotebookLM)","Interactive infographic / e-module","Video / recording","Simulation / virtual-lab tool","Computational tool","OER / courseware","Standards / datasheets","Rubric","Reference / tip sheet","Forum / collaboration","E-portfolio","Other"];
 function toggleLearnRes(){ window._lrOpen = !window._lrOpen; renderTLA(); }
+function todayISO(){ const t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); }
+function verStale(v){ if(!v) return true; const then=new Date(v); return isNaN(then)? true : (Date.now()-then.getTime()) > 180*24*3600*1000; }
+function setLearnResVer(i){
+  const c = activeCourse(); if(!c) return;
+  const r = c.aust.learnRes[i]; if(!r) return;
+  r.ver = todayISO();
+  save(); renderTLA(); toast("Marked as verified today");
+}
+function copyLmsResList(){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  const list = c.aust.learnRes.filter(r=>(r.title||"").trim()||(r.url||"").trim());
+  if(!list.length){ toast("No resources registered yet"); return; }
+  const L = [`Course resources — ${c.code||""} ${c.title||""}`.trim(), ""];
+  list.forEach(r=>{
+    const coLbls = (r.cos||[]).map(id=>{ const j=c.cos.findIndex(x=>x.id===id); return j>=0? "CO"+(j+1):null; }).filter(Boolean).join(", ");
+    L.push(`• [${r.type||"Resource"}] ${(r.title||"").trim()||"(untitled)"}${(r.url||"").trim()? " — "+r.url.trim():""}${coLbls? " ("+coLbls+")":""}`);
+  });
+  const txt = L.join("\n");
+  const done = ()=>toast("Resource list copied — paste it into your LMS, course email or notice");
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>copyAIFallback(txt, done));
+  } else copyAIFallback(txt, done);
+}
 function addLearnRes(){
   const c = activeCourse(); if(!c) return;
   ensureAust(c);
-  c.aust.learnRes.push({ type: LEARN_RES_TYPES[0], title:"", url:"", rel:"", notes:"" });
+  c.aust.learnRes.push({ type: LEARN_RES_TYPES[0], title:"", url:"", cos:[], notes:"", ver: todayISO() });
   window._lrOpen = true;
   save(); renderTLA();
 }
 function delLearnRes(i){
   const c = activeCourse(); if(!c) return;
   c.aust.learnRes.splice(i,1);
+  save(); renderTLA();
+}
+function setLearnResTitle(i, v){
+  const c = activeCourse(); if(!c) return;
+  const r = c.aust.learnRes[i]; if(!r) return;
+  r.title = String(v).trim();
+  const pe = resPool().find(x=>x.n.toLowerCase()===r.title.toLowerCase());
+  if(pe){
+    r.type = pe.t || r.type;
+    if(!(r.notes||"").trim() && (pe.tip||"").trim()) r.notes = pe.tip;
+    toast("Prefilled from the T&L Resource Pool — add your own link and tick the Related COs");
+  }
+  save(); renderTLA();
+}
+function toggleLearnResCO(i, coId){
+  const c = activeCourse(); if(!c) return;
+  const r = c.aust.learnRes[i]; if(!r) return;
+  if(!Array.isArray(r.cos)) r.cos = [];
+  const k = r.cos.indexOf(coId);
+  if(k>=0) r.cos.splice(k,1); else r.cos.push(coId);
+  save(); renderTLA();
+}
+/* Auto resources for a topic: register entries whose CO tags intersect the topic's ticked COs. */
+function topicAutoRes(c, t){
+  return (c.aust.learnRes||[]).filter(r=>(r.title||"").trim() && Array.isArray(r.cos) && r.cos.some(id=>(t.cos||[]).includes(id))).map(r=>r.title.trim());
+}
+/* Effective per-topic resources: auto minus deselected, plus manual additions. */
+function effectiveTopicRes(c, t){
+  const auto = topicAutoRes(c, t);
+  const excl = Array.isArray(t.resExcl)? t.resExcl : [];
+  const eff = auto.filter(a=>!excl.some(e=>e.toLowerCase()===a.toLowerCase()));
+  (Array.isArray(t.res)? t.res:[]).forEach(m=>{ if(!auto.some(a=>a.toLowerCase()===m.toLowerCase())) eff.push(m); });
+  return eff;
+}
+function toggleTopicResExcl(i, title){
+  const c = activeCourse(); if(!c) return;
+  const t = c.aust.spec.topics[i]; if(!t) return;
+  if(!Array.isArray(t.resExcl)) t.resExcl = [];
+  const k = t.resExcl.findIndex(e=>e.toLowerCase()===String(title).toLowerCase());
+  if(k>=0) t.resExcl.splice(k,1); else t.resExcl.push(String(title));
   save(); renderTLA();
 }
 function addTopicRes(i){
@@ -1111,6 +1188,14 @@ function addTopicRes(i){
   if(!v){ toast("Type or pick a resource title first"); return; }
   const t = c.aust.spec.topics[i]; if(!t) return;
   if(!Array.isArray(t.res)) t.res = [];
+  const auto = topicAutoRes(c, t);
+  const isAuto = auto.some(a=>a.toLowerCase()===v.toLowerCase());
+  if(isAuto){
+    const excl = Array.isArray(t.resExcl)? t.resExcl : (t.resExcl = []);
+    const k = excl.findIndex(e=>e.toLowerCase()===v.toLowerCase());
+    if(k>=0){ excl.splice(k,1); save(); renderTLA(); return; }   // restore a deselected auto resource
+    toast("Already included automatically via its CO tags"); return;
+  }
   if(t.res.some(x=>x.toLowerCase()===v.toLowerCase())){ toast("Already listed for this topic"); return; }
   t.res.push(v);
   save(); renderTLA();
@@ -1128,21 +1213,25 @@ function learnResCard(c){
   const n = list.filter(r=>(r.title||"").trim()||(r.url||"").trim()).length;
   const rows = list.map((r,i)=>`<tr>
     <td><select class="di" style="width:100%" onchange="austSet('learnRes.${i}.type',this.value)">${LEARN_RES_TYPES.map(t=>`<option ${r.type===t?"selected":""}>${t}</option>`).join("")}</select></td>
-    <td>${di('learnRes.'+i+'.title', r.title, 'e.g., Module 4 slides')}</td>
+    <td><input class="di" list="resPoolList" value="${esc(r.title)}" placeholder="type, or pick from the T&L Resource Pool…" onchange="setLearnResTitle(${i}, this.value)"></td>
     <td>${di('learnRes.'+i+'.url', r.url, 'https://…  or LMS path')}</td>
-    <td>${di('learnRes.'+i+'.rel', r.rel, 'Topic / CO (optional)')}</td>
+    <td>${c.cos.length? `<div style="display:flex;flex-direction:column;gap:2px">${c.cos.map((co,j)=>`<label style="font-size:11.5px;white-space:nowrap"><input type="checkbox" ${Array.isArray(r.cos)&&r.cos.includes(co.id)?"checked":""} onchange="toggleLearnResCO(${i},'${co.id}')"> CO${j+1}</label>`).join("")}</div>` : '<span class="badge grey">define COs first</span>'}</td>
     <td>${di('learnRes.'+i+'.notes', r.notes, '')}</td>
+    <td style="white-space:nowrap;font-size:11.5px">${r.ver? esc(r.ver) : ""} ${verStale(r.ver)? `<span class="badge amber" title="Link not verified in the last 6 months — open it, then click ✓">verify</span>`:""} <button class="icon-btn" title="Mark link as verified today" onclick="setLearnResVer(${i})">✓</button></td>
     <td class="no-print"><button class="icon-btn" onclick="delLearnRes(${i})">✕</button></td></tr>`).join("");
   return `
   <div class="card">
     <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Learning Resources shared with students <button class="btn secondary small" onclick="toggleLearnRes()">${open? "▾ Hide":"▸ Show / edit"}</button></h2>
     ${open? `
-    <p class="hint">A register of the materials you share with students to aid the T&L activities — class session slides, the LMS course site, companion sites (e.g., NotebookLM), interactive infographics, videos, rubrics and tip sheets. <b>Links only:</b> the LMS (or hosting site) remains where the material lives; this register records what exists and where. It is kept by ⟳ Duplicate for New Semester, prints as <b>Course Outline 17.3</b> when non-empty, is cited by the CQI AI prompts, and its titles are assignable per topic in the Resources column of the Topic-wise T&L Plan below.</p>
+    <p class="hint">A register of the materials you share with students to aid the T&L activities — class session slides, the LMS course site, companion sites (e.g., NotebookLM), interactive infographics, videos, rubrics and tip sheets. The Title box autocompletes from the <b>T&L Resource Pool</b> (Data &amp; Backup) — picking a pool entry prefills the Type and a practical tip. Re-verify links each offering — the Verified column dims to an amber badge after six months. <b>Links only:</b> the LMS (or hosting site) remains where the material lives; this register records what exists and where. It is kept by ⟳ Duplicate for New Semester, prints as <b>Course Outline 17.3</b> when non-empty, is cited by the CQI AI prompts, Tick each resource's <b>Related COs</b> and it flows automatically into the Resources column of the Topic-wise T&L Plan below for every topic ticked with those COs (deselectable per topic there); further topic-specific resources can be added manually.</p>
     <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th style="width:210px">Type</th><th style="width:180px">Title</th><th>Link / location</th><th style="width:140px">Related topic/CO</th><th style="width:160px">Notes</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="6" class="empty">No resources yet.</td></tr>'}</tbody>
+      <thead><tr><th style="width:210px">Type</th><th style="width:180px">Title</th><th>Link / location</th><th style="width:95px">Related COs</th><th style="width:140px">Notes</th><th style="width:110px" title="Links rot — re-verify each offering">Verified</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="7" class="empty">No resources yet.</td></tr>'}</tbody>
     </table></div>
-    <div class="btn-row"><button class="btn secondary small" onclick="addLearnRes()">+ Add Resource</button></div>`
+    <div class="btn-row">
+      <button class="btn secondary small" onclick="addLearnRes()">+ Add Resource</button>
+      <button class="btn secondary small" onclick="copyLmsResList()" title="Copies the whole register as a formatted list (titles, links, CO tags) for pasting into Google Classroom / Moodle / a course email">📋 Copy resource list (for LMS posting)</button>
+    </div>`
     : `<p class="hint" style="margin:0 0 4px">${n? n+" resource(s) registered — printed as Course Outline 17.3 and cited by the CQI prompts." : "None registered yet — expand to add the slides, LMS site, companion sites and other materials you share with students."}</p>`}
   </div>`;
 }
@@ -1167,8 +1256,21 @@ function topicPlanCard(c){
         </div>
       </td>
       <td style="font-size:12px">
-        ${(Array.isArray(t.res)? t.res:[]).map((r,k)=>`<span class="badge green" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0" title="Planned resource for this topic">${esc(r)}<button onclick="removeTopicRes(${i},${k})" title="Remove from this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">×</button></span>`).join("")}
-        ${!(t.res||[]).length? '<span class="badge grey">none planned</span>':""}
+        ${(()=>{
+          const auto = topicAutoRes(c, t);
+          const excl = Array.isArray(t.resExcl)? t.resExcl : [];
+          const isExcl = a => excl.some(e=>e.toLowerCase()===a.toLowerCase());
+          const bits = [];
+          auto.forEach(a=>{
+            if(isExcl(a)) bits.push(`<span class="badge grey" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0;opacity:.55" title="Deselected for this topic — click + to restore">${esc(a)}<button onclick="toggleTopicResExcl(${i},${JSON.stringify(a).replace(/"/g,"&quot;")})" title="Restore for this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">+</button></span>`);
+            else bits.push(`<span class="badge blue" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0" title="Auto — this resource's Related COs intersect the topic's ticked CO(s)">${esc(a)}<button onclick="toggleTopicResExcl(${i},${JSON.stringify(a).replace(/"/g,"&quot;")})" title="Deselect for this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">×</button></span>`);
+          });
+          (Array.isArray(t.res)? t.res:[]).forEach((r,k)=>{
+            if(auto.some(a=>a.toLowerCase()===r.toLowerCase())) return;
+            bits.push(`<span class="badge green" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0" title="Topic-specific resource">${esc(r)}<button onclick="removeTopicRes(${i},${k})" title="Remove from this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">×</button></span>`);
+          });
+          return bits.join("") || '<span class="badge grey">none planned</span>';
+        })()}
         <div class="no-print" style="display:flex;gap:4px;margin-top:4px">
           <input id="topicRes_${i}" list="lrTitleList" placeholder="add a resource…" style="flex:1;min-width:0;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:11.5px">
           <button class="btn secondary small" style="padding:2px 9px" title="Assign a resource to this topic (autocomplete from the Learning Resources register above, or type your own)" onclick="addTopicRes(${i})">+</button>
@@ -1190,6 +1292,72 @@ function topicPlanCard(c){
       <button class="btn secondary small" onclick="exportTopicsCSV()" title="Downloads a CSV (Topic, Planned Contact Hours) — includes the current topics, so it doubles as an export for editing in Excel">⬇ Topics Template (CSV)</button>
       <label class="btn secondary small" style="cursor:pointer" title="The imported file becomes the topic list (after a confirmation) — topics whose name matches keep their Actual Hours, variation reasons, Related COs and topic-specific activities">⬆ Import Topics (CSV)<input type="file" accept=".csv" style="display:none" onchange="importTopicsCSV(this)"></label>
     </div>
+  </div>`;
+}
+/* T&L Resource Pool — curated resource KINDS (Engineering Education perspective), most common first.
+   n=name, cat=category, t=register Type it prefills, d=description, j=justification, tip=practical tip, pair=suggested activity pairing. */
+const RES_POOL = [
+  {n:"Lecture Slides", cat:"Class materials", t:"Class session slides", d:"Per-session slide decks shared with students (PDF/PPT via the LMS or drive links).", j:"The most common shared resource in university teaching — a persistent, reviewable record of every session.", tip:"Share before class so students can annotate; number the slides so questions can reference them.", pair:"Traditional classroom lecture; BOPPPS-structured lecture"},
+  {n:"Recorded lecture library / YouTube playlist", cat:"Video & interactive content", t:"Video / recording", d:"Your recordings or curated channels, organized per topic.", j:"Revision equity — absent and weaker students re-watch at their own pace; the foundation of flipped delivery.", tip:"Timestamp the key moments in the description.", pair:"Flipped classroom"},
+  {n:"Google Classroom", cat:"LMS & course delivery", t:"LMS course site", d:"Lightweight LMS within Google Workspace.", j:"Minimal-friction distribution and collection where a full LMS is overkill.", tip:"One Classroom topic per course topic — matches the Topic-wise plan.", pair:"Online discussion forum task"},
+  {n:"NotebookLM companion site", cat:"AI & study companions", t:"Companion site (e.g., NotebookLM)", d:"AI notebook grounded in your uploaded course materials, shareable to students.", j:"Answers stay source-grounded in your slides/notes, reducing hallucination risk versus open chatbots; supports self-paced revision.", tip:"Upload only materials you authored or may share; tell students answers cite your sources.", pair:"Interactive e-learning module / infographics; Just-in-time teaching (JiTT)"},
+  {n:"Interactive HTML e-modules / infographics", cat:"Video & interactive content", t:"Interactive infographic / e-module", d:"Self-paced modules with embedded self-checks (H5P or custom-built).", j:"Supports self-paced, blended revision; the resource home of the matching pool activity.", tip:"Five screens max per module, one self-check per chunk.", pair:"Interactive e-learning module / infographics"},
+  {n:"Spreadsheet calculation templates (Excel/Sheets)", cat:"Computational notebooks & math tools", t:"Computational tool", d:"Structured engineering-calculation workbooks.", j:"The most transferable computational skill in practice; scaffolds unit discipline.", tip:"Lock the structure, leave the formulas to students.", pair:"Worked examples & tutorial problem solving"},
+  {n:"Q&A forum (Piazza / LMS forum)", cat:"Collaboration & communication", t:"Forum / collaboration", d:"Structured course Q&A with peer answering.", j:"Scales instructor attention; peer explanation benefits the explainer most.", tip:"Answer by endorsing good student answers, not replacing them.", pair:"Online discussion forum task"},
+  {n:"Interactive video with embedded questions (Edpuzzle / H5P)", cat:"Video & interactive content", t:"Video / recording", d:"Videos that pause to ask questions.", j:"Converts passive watching into active responding (multimedia and testing principles, Mayer).", tip:"2-3 questions per 10 minutes; completion counts as the pre-class task.", pair:"Flipped classroom; Just-in-time teaching (JiTT)"},
+  {n:"Google Colab / Jupyter notebooks", cat:"Computational notebooks & math tools", t:"Computational tool", d:"Zero-install Python notebooks in the browser.", j:"Computational thinking and data analysis without lab-PC dependence; shareable and reproducible.", tip:"Distribute half-completed notebooks students must finish.", pair:"Data analysis assignment; Research mini-project"},
+  {n:"PhET Interactive Simulations", cat:"Simulation & virtual labs", t:"Simulation / virtual-lab tool", d:"Free research-based interactive simulations for physics, math and circuits (CU Boulder).", j:"One of the strongest evidence bases in simulation-based learning (Wieman's group); studies show conceptual gains when sims replace or precede equipment.", tip:"Set a prediction task before students touch the sim.", pair:"Simulation / virtual lab; Demonstration with prediction"},
+  {n:"Virtual Labs", cat:"Simulation & virtual labs", t:"Simulation / virtual-lab tool", d:"India's NMEICT remote/virtual engineering laboratories.", j:"Regionally relevant, syllabus-aligned lab access beyond physical capacity (virtual-lab access/cost case: de Jong et al., Science 2013).", tip:"Pair each virtual experiment with a short results-comparison viva.", pair:"Laboratory experiment"},
+  {n:"MIT OpenCourseWare", cat:"OER & courseware", t:"OER / courseware", d:"Complete MIT course materials, notes and exams.", j:"Benchmark problem sets and alternative explanations for advanced topics.", tip:"Use their exam problems as parallel practice, not as your paper.", pair:"Worked examples & tutorial problem solving"},
+  {n:"Manufacturer datasheets & application notes", cat:"Reference, standards & practice", t:"Standards / datasheets", d:"Real component and equipment documentation.", j:"Reading datasheets is authentic professional practice no textbook replicates.", tip:"Base one assignment on selecting a component from real datasheets.", pair:"Troubleshooting / failure analysis exercise; Design review / critique session"},
+  {n:"Engineering standards & codes (IEEE, ASTM, ASME, BNBC)", cat:"Reference, standards & practice", t:"Standards / datasheets", d:"The governing documents used as constraints in design tasks.", j:"Authentic constraint sources; complex-engineering-activity (CEA) evidence in design work.", tip:"Require one cited clause per design deliverable.", pair:"Capstone-style mini design project; Case study analysis"},
+  {n:"Rubric banks & templates (AAC&U VALUE, departmental)", cat:"Assessment support", t:"Rubric", d:"Reusable analytic rubric collections.", j:"Rubric quality drives reliability (Jonsson & Svingby 2007); shared banks raise consistency across sections.", tip:"Adapt, never adopt verbatim — re-anchor descriptors to your CO levels.", pair:"Peer review with rubric; Design review / critique session"},
+  {n:"E-portfolios (Google Sites / Mahara)", cat:"Assessment support", t:"E-portfolio", d:"Student-curated evidence of their work.", j:"Longitudinal evidence of PO attainment; valued in accreditation visits.", tip:"One required artifact per CO.", pair:"Prototype / poster presentation"}
+];
+function resPool(){ return RES_POOL.concat(state.customRes||[]); }
+function addCustomRes(){
+  const g = id => (document.getElementById(id)||{}).value || "";
+  const n = g("res_n").trim();
+  if(!n){ toast("Resource name is required"); return; }
+  if(resPool().some(r=>r.n.toLowerCase()===n.toLowerCase())){ toast("A pool resource with this name already exists"); return; }
+  state.customRes = state.customRes||[];
+  state.customRes.push({ n, cat: g("res_cat")||"Other", t: g("res_t")||"Other", d: g("res_d").trim(), j: "", tip: g("res_tip").trim(), pair: "", custom: true });
+  save(); renderData(); toast("Added to the T&L Resource Pool");
+}
+function delCustomRes(i){
+  state.customRes = state.customRes||[];
+  state.customRes.splice(i,1);
+  save(); renderData();
+}
+/* Data & Backup card for the resource pool. */
+function resourcePoolCard(){
+  const rows = resPool().map((r,i)=>`
+    <tr><td><b>${esc(r.n)}</b>${r.custom? ' <span class="badge blue">custom</span>':''}</td>
+      <td style="font-size:12px">${esc(r.cat)}</td>
+      <td style="font-size:12.5px">${esc(r.d||"")}</td>
+      <td style="font-size:12px">${esc(r.j||"")}</td>
+      <td style="font-size:12px">${esc(r.tip||"")}</td>
+      <td style="font-size:12px">${esc(r.pair||"")}</td>
+      <td>${r.custom? `<button class="icon-btn" onclick="delCustomRes(${i-RES_POOL.length})">✕</button>`:""}</td></tr>`).join("");
+  const cats = [...new Set(RES_POOL.map(r=>r.cat))].concat(["Other"]);
+  return `
+  <div class="card">
+    <h2>T&amp;L Resource Pool (${resPool().length})</h2>
+    <p class="hint">Curated resource <b>kinds</b> from the engineering-education perspective, most common first — used by the T&amp;L tab's Learning Resources register: picking a pool name there (autocomplete) prefills the Type and a practical tip; you then add your own link and CO tags. Custom entries are stored with your data and included in JSON backups, so a department can share a common pool.</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th style="width:200px">Resource</th><th style="width:140px">Category</th><th>Description</th><th style="width:220px">Justification</th><th style="width:200px">Practical tip</th><th style="width:180px">Pairs with</th><th style="width:36px"></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <h3>Add a custom resource</h3>
+    <div class="grid c2">
+      <label class="fld">Name <input id="res_n" placeholder="e.g., Departmental video archive"></label>
+      <label class="fld">Description <input id="res_d" placeholder="What it is and how students use it"></label>
+    </div>
+    <div class="grid c3" style="margin-top:8px">
+      <label class="fld">Category <select id="res_cat">${cats.map(x=>`<option>${x}</option>`).join("")}</select></label>
+      <label class="fld">Register Type it prefills <select id="res_t">${LEARN_RES_TYPES.map(x=>`<option>${x}</option>`).join("")}</select></label>
+      <label class="fld">Practical tip (optional) <input id="res_tip" placeholder="e.g., Link per topic, not the archive root"></label>
+    </div>
+    <div class="btn-row"><button class="btn" onclick="addCustomRes()">+ Add to Pool</button></div>
   </div>`;
 }
 /* T&L Activity Pool management card — lives in the Data & Backup tab (the pool travels in JSON backups). */
@@ -1287,6 +1455,30 @@ function renderTLA(){
       <td style="font-size:12.5px">${tip? esc(tip) : "—"}</td>
       <td style="white-space:nowrap;font-size:12.5px">${e.cos.join(", ")}</td></tr>`;
   }).join("");
+  const resByName = {}; resPool().forEach(r=>{ resByName[r.n.toLowerCase()] = r; });
+  const regRes = c.aust.learnRes.filter(r=>(r.title||"").trim()||(r.url||"").trim());
+  const resSumRows = regRes.map(r=>{
+    const pe = resByName[(r.title||"").trim().toLowerCase()];
+    /* Real-world titles are custom ("PDF Slides"), so fall back on the entry's TYPE:
+       every pool entry declares the register Type it prefills, giving a two-way map. */
+    const pt = pe || resPool().find(x=>x.t===r.type);
+    const coLbls = (r.cos||[]).map(id=>{ const j = c.cos.findIndex(x=>x.id===id); return j>=0? "CO"+(j+1) : null; }).filter(Boolean).join(", ");
+    const desc = (pe && pe.d) || (pt && pt.d) || "";
+    const tip = (pe && pe.tip) || (r.notes||"").trim() || (pt && pt.tip) || "";
+    return `<tr>
+      <td><b>${esc((r.title||"").trim()||"(untitled)")}</b> <span class="badge blue">${esc(r.type||"")}</span>${(pe||pt)? "":' <span class="badge grey" title="No pool entry matches this title or type — pick a pool name in the register, choose a more specific Type, or add a custom pool entry to fill this row">free-text</span>'}</td>
+      <td style="font-size:12.5px">${desc? esc(desc) : "—"}</td>
+      <td style="font-size:12.5px">${tip? esc(tip) : "—"}</td>
+      <td style="white-space:nowrap;font-size:12.5px">${coLbls || "—"}</td></tr>`;
+  }).join("");
+  const resSummaryCard = `
+  <div class="card">
+    <h2>T&amp;L Resources Summary Table</h2>
+    <p class="hint">Every learning resource registered for this course, with guidance — the companion of the Activities Summary below. Descriptions and practical tips come from the T&amp;L Resource Pool: by title when a pool name was picked, otherwise via the entry's <b>Type</b> (your own Notes take precedence over the type-derived tip); Related CO comes from the register's CO tags.</p>
+    ${regRes.length? `<div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th style="width:240px">T&amp;L Resource</th><th>Brief Descriptions</th><th>Practical Tip</th><th style="width:100px">Related CO</th></tr></thead>
+      <tbody>${resSumRows}</tbody></table></div>` : `<p class="hint">No resources registered yet — add them in the “Learning Resources shared with students” card above.</p>`}
+  </div>`;
   const tlaSummaryCard = `
   <div class="card">
     <h2>T&amp;L Activities Summary Table</h2>
@@ -1321,7 +1513,9 @@ function renderTLA(){
   ${coCards || '<div class="empty">Define COs first (COs &amp; CO–PO Mapping tab).</div>'}
   ${learnResCard(c)}
   ${topicPlanCard(c)}
+  ${resSummaryCard}
   <datalist id="lrTitleList">${c.aust.learnRes.filter(r=>(r.title||"").trim()).map(r=>`<option value="${esc(r.title)}">`).join("")}</datalist>
+  <datalist id="resPoolList">${resPool().map(r=>`<option value="${esc(r.n)}">`).join("")}</datalist>
   ${tlaSummaryCard}`;
   autoGrowAll("tab-tla");
 }
@@ -2266,6 +2460,59 @@ function badgeFor(c, pct, attained){
 }
 
 /* ---- Indirect Measurement (Course Evaluation Survey) ---- */
+/* Block B — standard course-feedback items (Likert 1-5), separate from CO attainment. */
+const FB_ITEMS = [
+  ["tla","The teaching-learning activities (lectures, discussions, labs…) helped me learn."],
+  ["res","The shared learning resources (slides, sites, videos…) supported my learning."],
+  ["align","The assessments matched what was taught."],
+  ["rubric","Marking criteria/rubrics were clear in advance."],
+  ["fbk","Feedback on my work was timely and useful."],
+  ["pace","The pace and workload were manageable."]
+];
+function tallyStats(t){
+  if(!Array.isArray(t)) return { n:0, avg:null, pct:null };
+  const n = t.reduce((s,x)=>s+(parseInt(x)||0),0);
+  if(!n) return { n:0, avg:null, pct:null };
+  const sum = t.reduce((s,x,i)=>s+(parseInt(x)||0)*(i+1),0);
+  const ge = t.reduce((s,x,i)=>s+((i+1)>=4? (parseInt(x)||0):0),0);
+  return { n, avg: sum/n, pct: ge/n*100 };
+}
+/* All non-CO survey results (Blocks B and C) with n, average and % >= 4. */
+function computeFeedback(c){
+  const s = c.aust.survey;
+  const fb = FB_ITEMS.filter(([k])=>s.fbOn[k]).map(([k,label])=>Object.assign({ key:k, label }, tallyStats(s.fbTally[k])));
+  const res = [];
+  if(s.resFbOn){
+    c.aust.learnRes.filter(r=>(r.title||"").trim()).forEach(r=>{
+      res.push(Object.assign({ key:"res::"+r.title.trim(), label:`Usefulness: ${r.title.trim()}` }, tallyStats(s.resTally[r.title.trim()])));
+    });
+  }
+  return { fb, res, any: fb.some(x=>x.n>0) || res.some(x=>x.n>0) };
+}
+function setFbTally(key, idx, val){
+  const c = activeCourse(); if(!c) return;
+  if(!Array.isArray(c.aust.survey.fbTally[key])) c.aust.survey.fbTally[key] = [0,0,0,0,0];
+  c.aust.survey.fbTally[key][idx] = Math.max(0, parseInt(val)||0);
+  save(); renderAttain();
+}
+function toggleFbItem(key){
+  const c = activeCourse(); if(!c) return;
+  c.aust.survey.fbOn[key] = !c.aust.survey.fbOn[key];
+  save(); renderAttain();
+}
+function toggleResFb(){
+  const c = activeCourse(); if(!c) return;
+  c.aust.survey.resFbOn = !c.aust.survey.resFbOn;
+  save(); renderAttain();
+}
+function setResTally(i, idx, val){
+  const c = activeCourse(); if(!c) return;
+  const r = c.aust.learnRes[i]; if(!r || !(r.title||"").trim()) return;
+  const key = r.title.trim();
+  if(!Array.isArray(c.aust.survey.resTally[key])) c.aust.survey.resTally[key] = [0,0,0,0,0];
+  c.aust.survey.resTally[key][idx] = Math.max(0, parseInt(val)||0);
+  save(); renderAttain();
+}
 /* Students rate each CO on Likert 1-5. Indirect CO attainment = % of responses rated ≥ likertPass.
    Indirect PO = weighted average of indirect CO values over mapped COs (weights = CO allocated marks; equal if no marks). */
 function surveyTally(c, coId){
@@ -2335,8 +2582,10 @@ function setTally(coId, idx, val){
 }
 function clearSurvey(){
   const c = activeCourse(); if(!c) return;
-  if(!confirm("Clear all survey tallies for this course?")) return;
+  if(!confirm("Clear all survey tallies for this course (CO ratings, course-feedback items and resource ratings)?")) return;
   c.aust.survey.tally = {};
+  c.aust.survey.fbTally = {};
+  c.aust.survey.resTally = {};
   save(); renderAttain();
 }
 /* CSV from Google Forms etc.: one column per CO (header containing CO1/CO2/...), one row per respondent, ratings 1-5 */
@@ -2345,21 +2594,24 @@ function applySurveyCSV(text){
   const rows = parseCSV(text);
   if(rows.length<2) return 0;
   const head = rows[0];
-  const colToCo = {};
+  const colToCo = {}, colToFb = {}, colToRes = {};
+  const resTitles = c.aust.learnRes.map(r=>(r.title||"").trim()).filter(Boolean);
   head.forEach((h,ci)=>{
-    const m = /co\s*0*(\d+)/i.exec(h);
+    const hs = String(h||"");
+    let m = /^fb-(\w+)\b/i.exec(hs.trim());
+    if(m && FB_ITEMS.some(([k])=>k===m[1].toLowerCase())){ colToFb[ci] = m[1].toLowerCase(); return; }
+    m = /^resource\s*:\s*(.+)$/i.exec(hs.trim());
+    if(m){ const t = resTitles.find(x=>x.toLowerCase()===m[1].trim().toLowerCase()); if(t){ colToRes[ci] = t; return; } }
+    m = /co\s*0*(\d+)/i.exec(hs);
     if(m){ const co = c.cos[parseInt(m[1])-1]; if(co) colToCo[ci] = co.id; }
   });
   let applied = 0;
+  const bump = (obj, key, v) => { if(!Array.isArray(obj[key])) obj[key] = [0,0,0,0,0]; obj[key][v-1]++; applied++; };
   rows.slice(1).forEach(r=>{
-    Object.entries(colToCo).forEach(([ci,coId])=>{
-      const m = /[1-5]/.exec(String(r[ci]||""));
-      if(!m) return;
-      const v = parseInt(m[0]);
-      if(!Array.isArray(c.aust.survey.tally[coId])) c.aust.survey.tally[coId] = [0,0,0,0,0];
-      c.aust.survey.tally[coId][v-1]++;
-      applied++;
-    });
+    const rate = ci => { const m = /[1-5]/.exec(String(r[ci]||"")); return m? parseInt(m[0]) : null; };
+    Object.entries(colToCo).forEach(([ci,coId])=>{ const v = rate(ci); if(v) bump(c.aust.survey.tally, coId, v); });
+    Object.entries(colToFb).forEach(([ci,key])=>{ const v = rate(ci); if(v) bump(c.aust.survey.fbTally, key, v); });
+    Object.entries(colToRes).forEach(([ci,t])=>{ const v = rate(ci); if(v) bump(c.aust.survey.resTally, t, v); });
   });
   if(applied) save();
   return applied;
@@ -2367,7 +2619,11 @@ function applySurveyCSV(text){
 function exportSurveyTemplateCSV(){
   const c = activeCourse(); if(!c) return;
   if(!c.cos.length){ toast("Define your COs first (COs & CO–PO Mapping tab)"); return; }
-  const head = ["Timestamp", ...c.cos.map((co,i)=>`CO${i+1}: ${co.statement||""}`)];
+  ensureAust(c);
+  const s = c.aust.survey;
+  const head = ["Timestamp", ...c.cos.map((co,i)=>`CO${i+1}: ${co.statement||""}`),
+    ...FB_ITEMS.filter(([k])=>s.fbOn[k]).map(([k,label])=>`FB-${k}: ${label}`),
+    ...(s.resFbOn? c.aust.learnRes.filter(r=>(r.title||"").trim()).map(r=>`Resource: ${r.title.trim()}`):[])];
   downloadFile(`${(c.code||"course").replace(/\s+/g,"_")}_course_evaluation_survey_template.csv`,
     head.map(csvCell).join(",") + "\n", "text/csv");
   toast("Template downloaded — one row per respondent, ratings 1–5 per CO");
@@ -2378,7 +2634,7 @@ function importSurveyCSV(input){
   reader.onload = e => {
     const n = applySurveyCSV(e.target.result);
     renderAttain();
-    toast(n? n+" rating(s) imported" : "No CO columns/ratings recognized — headers must contain CO1, CO2, …");
+    toast(n? n+" rating(s) imported" : "No recognizable columns — headers must contain CO1, CO2, … (and optionally FB-… / Resource: … from the template)");
   };
   reader.readAsText(file);
   input.value = "";
@@ -2467,6 +2723,35 @@ function indirectCards(c, att){
       <tbody>${tallyRows || '<tr><td colspan="10" class="empty">Define COs first.</td></tr>'}</tbody>
     </table></div>
     <p style="font-size:11.5px;color:var(--muted);margin-top:4px">Note: the rating columns are ordered 5→1 for entry convenience — the counts are stored per rating value.</p>
+    ${(()=>{
+      const s = c.aust.survey;
+      const fbRows = FB_ITEMS.filter(([k])=>s.fbOn[k]).map(([k,label])=>{
+        const t = s.fbTally[k]||[]; const st = tallyStats(t);
+        return `<tr><td style="font-size:12.5px">${label}</td>
+          ${[4,3,2,1,0].map(x=>`<td style="text-align:center"><input class="marks-input" style="width:52px" type="number" min="0" value="${t[x]||""}" onchange="setFbTally('${k}',${x},this.value)"></td>`).join("")}
+          <td style="text-align:center">${st.n}</td><td style="text-align:center">${st.avg===null?"—":st.avg.toFixed(2)}</td><td style="text-align:center">${st.pct===null?"—":st.pct.toFixed(0)+"%"}</td></tr>`;
+      }).join("");
+      const regRes = c.aust.learnRes.filter(r=>(r.title||"").trim());
+      const resRows = (s.resFbOn? regRes:[]).map(r=>{
+        const key = r.title.trim(); const t = s.resTally[key]||[]; const st = tallyStats(t);
+        const i = c.aust.learnRes.indexOf(r);
+        return `<tr><td style="font-size:12.5px">${esc(key)} <span class="badge blue" style="font-size:10px">${esc(r.type||"")}</span></td>
+          ${[4,3,2,1,0].map(x=>`<td style="text-align:center"><input class="marks-input" style="width:52px" type="number" min="0" value="${t[x]||""}" onchange="setResTally(${i},${x},this.value)"></td>`).join("")}
+          <td style="text-align:center">${st.n}</td><td style="text-align:center">${st.avg===null?"—":st.avg.toFixed(2)}</td><td style="text-align:center">${st.pct===null?"—":st.pct.toFixed(0)+"%"}</td></tr>`;
+      }).join("");
+      return `
+    <h3 style="margin-top:14px">Course feedback items <span class="badge grey" title="Blocks B and C are separate evidence — they NEVER enter the CO/PO attainment calculations">not part of attainment</span></h3>
+    <p class="hint" style="margin-bottom:4px">Standard course-evaluation statements (Likert 1-5) — student-side evidence for the CQI narratives and action plans. Untick items to shorten the survey form.</p>
+    <div style="font-size:12px;margin-bottom:6px">${FB_ITEMS.map(([k,label])=>`<label style="margin-right:14px;white-space:nowrap"><input type="checkbox" ${s.fbOn[k]?"checked":""} onchange="toggleFbItem('${k}')"> ${label.split(" ").slice(0,3).join(" ")}…</label>`).join("")}</div>
+    ${fbRows? `<div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Statement</th><th style="width:64px">5 (SA)</th><th style="width:64px">4 (A)</th><th style="width:64px">3 (N)</th><th style="width:64px">2 (D)</th><th style="width:64px">1 (SD)</th><th style="width:56px">n</th><th style="width:64px">Avg</th><th style="width:70px">% ≥ 4</th></tr></thead>
+      <tbody>${fbRows}</tbody></table></div>` : '<p class="hint">All feedback items are unticked.</p>'}
+    <h3 style="margin-top:14px"><label style="font-weight:inherit;cursor:pointer"><input type="checkbox" ${s.resFbOn?"checked":""} onchange="toggleResFb()"> Per-resource usefulness ratings</label> <span class="badge grey">not part of attainment</span></h3>
+    ${s.resFbOn? (regRes.length? `<p class="hint" style="margin-bottom:4px">One item per registered Learning Resource (“This resource supported my learning”) — real usage evidence for keeping, revising or dropping resources.</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Resource</th><th style="width:64px">5</th><th style="width:64px">4</th><th style="width:64px">3</th><th style="width:64px">2</th><th style="width:64px">1</th><th style="width:56px">n</th><th style="width:64px">Avg</th><th style="width:70px">% ≥ 4</th></tr></thead>
+      <tbody>${resRows}</tbody></table></div>` : '<p class="hint">No resources registered yet (T&L tab → Learning Resources shared with students).</p>') : ""}`;
+    })()}
     <div class="btn-row">
       <button class="btn secondary" onclick="exportSurveyTemplateCSV()">⬇ Download Survey CSV Template</button>
       <label class="btn secondary" style="cursor:pointer">⬆ Import Survey CSV<input type="file" accept=".csv" style="display:none" onchange="importSurveyCSV(this)"></label>
@@ -2640,6 +2925,13 @@ function buildAIContext(c){
     L.push("== LEARNING RESOURCES PROVIDED TO STUDENTS (register + per-topic plan) ==");
     resLines.forEach(l=>L.push(l));
   }
+  const fbLines = aiFeedbackLines(c);
+  if(fbLines.length){
+    L.push("");
+    L.push("== COURSE FEEDBACK (survey, non-CO items — perception evidence, not attainment) ==");
+    fbLines.forEach(l=>L.push(l));
+    L.push("Use these where relevant: activity/alignment/rubric/pace items corroborate or challenge the narratives and actions; per-resource ratings justify keeping, revising or dropping a resource.");
+  }
   const prevRows = (c.aust.spec.cqiPrev||[]).map((x,i)=>({label:CQI_SRC_LABELS[i], rec:(x.rec||"").trim()}));
   if(prevRows.some(r=>r.rec)){
     L.push("");
@@ -2664,14 +2956,24 @@ function buildAIContext(c){
 /* Learning resources shared with students — cited across the prompts */
 function aiResourceLines(c){
   const out = [];
+  const coLbl = ids => (ids||[]).map(id=>{ const j = c.cos.findIndex(x=>x.id===id); return j>=0? "CO"+(j+1) : null; }).filter(Boolean).join(", ");
   ((c.aust||{}).learnRes||[]).forEach(r=>{
     if((r.title||"").trim() || (r.url||"").trim())
-      out.push(`- [${r.type||"Resource"}] ${(r.title||"").trim()||"(untitled)"}${(r.rel||"").trim()? " (for: "+r.rel.trim()+")":""}${(r.url||"").trim()? " — "+r.url.trim():""}${(r.notes||"").trim()? " · "+r.notes.trim():""}`);
+      out.push(`- [${r.type||"Resource"}] ${(r.title||"").trim()||"(untitled)"}${coLbl(r.cos)? " (for: "+coLbl(r.cos)+")":""}${(r.url||"").trim()? " — "+r.url.trim():""}${(r.notes||"").trim()? " · "+r.notes.trim():""}`);
   });
   (((c.aust||{}).spec||{}).topics||[]).forEach(t=>{
-    if(Array.isArray(t.res) && t.res.length)
-      out.push(`- Topic "${String(t.name||"").split("\n")[0]}": ${t.res.join(", ")}`);
+    const eff = (typeof effectiveTopicRes==="function")? effectiveTopicRes(c, t) : (t.res||[]);
+    if(eff.length)
+      out.push(`- Topic "${String(t.name||"").split("\n")[0]}": ${eff.join(", ")}`);
   });
+  return out;
+}
+/* Non-CO survey feedback (Blocks B/C) — cited across the prompts */
+function aiFeedbackLines(c){
+  const fbd = computeFeedback(c);
+  const out = [];
+  fbd.fb.filter(x=>x.n>0).forEach(x=>out.push(`- ${x.label} → n=${x.n}, avg ${x.avg.toFixed(2)}/5, ${x.pct.toFixed(0)}% rated ≥4`));
+  fbd.res.filter(x=>x.n>0).forEach(x=>out.push(`- ${x.label} → n=${x.n}, avg ${x.avg.toFixed(2)}/5, ${x.pct.toFixed(0)}% rated ≥4`));
   return out;
 }
 /* Recorded low-attainment analyses (CQI tab) — chained into the later prompts */
@@ -2728,7 +3030,7 @@ function buildNarrativesPrompt(c){
   L.push("");
   L.push("== YOUR TASK — draft the four narratives, labelled exactly as below ==");
   L.push(`1. "How the teaching-learning methods and assessment tools address complex engineering problems and the POs" — 3-6 sentences grounded in the COs (note the CP/CEA tags where given), the mapped POs and the adopted methods/tools.`);
-  L.push(`2. "Why these methods and tools are effective and appropriate" — 3-6 sentences citing the attainment results${ind.n>0? ", the survey findings":""}${effBits.length? " and the recorded TLA effectiveness":""}; be honest about the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""}${low.length? "; engage critically with the recorded low-attainment analyses above — acknowledge the diagnosed causes and state the response, do not gloss over them":""}.`);
+  L.push(`2. "Why these methods and tools are effective and appropriate" — 3-6 sentences citing the attainment results${ind.n>0? ", the survey findings":""}${effBits.length? " and the recorded TLA effectiveness":""}; be honest about the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""}${low.length? "; engage critically with the recorded low-attainment analyses above — acknowledge the diagnosed causes and state the response, do not gloss over them":""}${aiResourceLines(c).length? "; where the learning resources listed above supported a method, cite them as delivery evidence":""}.`);
   L.push(`3. "Process of designing and selecting assessment tools" — 3-5 sentences describing the CO-mapped, Bloom-levelled item design, the rubric practice (see the assessment plan) and the question-choice structure where applicable.`);
   L.push(`4. "Question moderation / vetting process" — 2-4 sentences based on the vetting information provided; if none is recorded above, describe the intended process cautiously and note that the signed Vetting Form is the evidence.`);
   L.push("Each block will be pasted verbatim into the CQI tab's narrative boxes (and printed verbatim in the CQI Report). Output the four labelled blocks and nothing else — action plans are drafted by a separate prompt.");
@@ -2757,7 +3059,7 @@ function buildReportActionsPrompt(c){
   }
   L.push("");
   L.push("== YOUR TASK — labelled exactly as below ==");
-  L.push(`"Improvement actions from this offering (Course Report 6.1)" — one short block per loop row: (1) CO loop, direct; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect — focused on the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""} and their POs; each action must be consistent with (and may cite) the low-attainment analyses, narratives and working notes above where provided — the plans are the conclusion of those earlier steps; if a row has no evidence-based action, output exactly: "No specific action this offering."`);
+  L.push(`"Improvement actions from this offering (Course Report 6.1)" — one short block per loop row: (1) CO loop, direct; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect — focused on the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""} and their POs; each action must be consistent with (and may cite) the low-attainment analyses, narratives and working notes above where provided — the plans are the conclusion of those earlier steps; if a row has no evidence-based action, output exactly: "No specific action this offering." Actions may include adding, revising or better integrating the learning resources listed above — name the resource when they do.`);
   L.push(`These are recommendations for the NEXT offering, derived from THIS offering's evidence. The five blocks will be pasted into the linked Course Report 6.1 table. Output only the labelled blocks — the Specifications 6.1 closure text is drafted by a separate prompt.`);
   aiConstraints(L);
   return L.join("\n");
@@ -2771,6 +3073,7 @@ function buildClosurePrompt(c){
   L.push("");
   L.push("== YOUR TASK — labelled exactly as below ==");
   L.push(`"Actions from the previous offering & how they were reflected (Course Specifications 6.1, second column)" — produce EXACTLY five labelled blocks, one per loop row, never merging or omitting a row: (1) A. CQI Loop for COs — Direct; (2) A. CQI Loop for COs — Indirect (survey); (3) B. CQI Loop for POs — Direct; (4) B. CQI Loop for POs — Indirect (survey); (5) C. CQI Loop for PEOs — Indirect (survey). For each row that has a previous recommendation, draft 2-4 sentences describing how it was reflected in this offering (synthesize from the working notes, the adopted activities and the assessment plan, naming the recommendation each action closes). If a single recommendation cell mixes CO-level and PO-level material, distribute the reflections to the correct rows (CO actions under row 1, PO-level consequences under row 3) rather than answering everything under one row. Fallbacks: if a row's first column is empty, output exactly: "No previous recommendation for this loop."; if a recommendation exists but nothing this offering addressed it, output exactly: "No specific action this offering." Never alter the first column — it is the previous Course Report's text.`);
+  L.push(`Learning resources added or revised this offering (see the resources block above, where present) count as IMPLEMENTED actions — cite them where they closed a recommendation.`);
   L.push(`This is BACKWARD-looking: it closes the PREVIOUS offering's loop by recording what was implemented in THIS offering — do not propose new actions here. The five blocks will be pasted into the second column of the linked Specifications 6.1 table. Output only the labelled blocks.`);
   aiConstraints(L);
   return L.join("\n");
@@ -2867,10 +3170,12 @@ function buildTlaAIPrompt(c){
     ...aiRecBlock(c), "",
     ...lowBlock,
     ...(aiResourceLines(c).length? ["== LEARNING RESOURCES PROVIDED TO STUDENTS ==", ...aiResourceLines(c), ""]:[]),
+    ...(aiFeedbackLines(c).length? ["== COURSE FEEDBACK (survey, non-CO items) ==", ...aiFeedbackLines(c), ""]:[]),
     ...aiTlaContext(c), "",
     "== TASK ==", AI_TLA_TASK, "",
     "== CONSTRAINTS ==",
     "- T&L only — exclude assessment advice entirely.",
+    ...(aiResourceLines(c).length? ["- Where a suggestion needs supporting material, name a suitable resource from the learning resources listed above (or a T&L Resource Pool kind)."]:[]),
     ...(lowBlock.length? ["- Every low-attainment finding listed above must be addressed by at least one suggestion, or explicitly deferred with a one-sentence reason."]:[]),
     ...AI_COMMON_RULES, AI_TLA_IMPL
   ].join("\n");
@@ -2883,10 +3188,12 @@ function buildAssessSuggestPrompt(c){
     ...aiRecBlock(c), "",
     ...lowBlock,
     ...(aiResourceLines(c).length? ["== LEARNING RESOURCES PROVIDED TO STUDENTS ==", ...aiResourceLines(c), ""]:[]),
+    ...(aiFeedbackLines(c).length? ["== COURSE FEEDBACK (survey, non-CO items) ==", ...aiFeedbackLines(c), ""]:[]),
     ...aiAssessContext(c), "",
     "== TASK ==", AI_ASSESS_TASK, "",
     "== CONSTRAINTS ==",
     "- Assessment only — exclude teaching-delivery advice entirely.",
+    ...(aiResourceLines(c).length? ["- Where relevant, name supporting resources (e.g., rubric banks/templates) from the learning resources listed above or the T&L Resource Pool kinds."]:[]),
     ...(lowBlock.length? ["- Every low-attainment finding listed above must be addressed by at least one suggestion, or explicitly deferred with a one-sentence reason."]:[]),
     ...AI_COMMON_RULES, AI_ASSESS_IMPL
   ].join("\n");
@@ -3132,6 +3439,12 @@ function buildLowAttPrompt(c){
       L.push("== LEARNING RESOURCES PROVIDED TO STUDENTS ==");
       resLines.forEach(l=>L.push(l));
       L.push("When diagnosing (a) w.r.t. T&L activities, consider whether the weak topics/COs were supported by these resources.");
+    }
+    const fbLines = aiFeedbackLines(c);
+    if(fbLines.length){
+      L.push("");
+      L.push("== COURSE FEEDBACK (survey, non-CO items) ==");
+      fbLines.forEach(l=>L.push(l));
     } }
   const attemptsOf = id => c.students.filter(s=>(c.marks[s.id]||{})[id]!==undefined).length;
   const coBlock = (d, a, header) => {
@@ -3411,8 +3724,8 @@ function docOutline(c){
   <p><b>17.2. Recommended</b> ${dta('outline.refsRec', o.refsRec, 2, 'Recommended reference(s)')}</p>
   ${c.aust.learnRes.filter(r=>(r.title||"").trim()||(r.url||"").trim()).length? `
   <p><b>17.3. Learning Resources</b> <span class="no-print" style="font-size:11.5px;color:var(--muted)">(⛓ from the T&L tab's Learning Resources register)</span></p>
-  <table class="tbl"><thead><tr><th style="width:200px">Type</th><th style="width:200px">Title</th><th>Link / location</th><th style="width:160px">Related topic/CO</th></tr></thead>
-    <tbody>${c.aust.learnRes.filter(r=>(r.title||"").trim()||(r.url||"").trim()).map(r=>`<tr><td>${esc(r.type||"")}</td><td>${esc(r.title||"")}</td><td style="word-break:break-all">${esc(r.url||"")}</td><td>${esc(r.rel||"")}</td></tr>`).join("")}</tbody></table>` : ""}
+  <table class="tbl"><thead><tr><th style="width:200px">Type</th><th style="width:200px">Title</th><th>Link / location</th><th style="width:120px">Related CO(s)</th></tr></thead>
+    <tbody>${c.aust.learnRes.filter(r=>(r.title||"").trim()||(r.url||"").trim()).map(r=>`<tr><td>${esc(r.type||"")}</td><td>${esc(r.title||"")}</td><td style="word-break:break-all">${esc(r.url||"")}</td><td>${(r.cos||[]).map(id=>{const j=c.cos.findIndex(x=>x.id===id); return j>=0? "CO"+(j+1):null;}).filter(Boolean).join(", ")||"—"}</td></tr>`).join("")}</tbody></table>` : ""}
   <table class="tbl" style="margin-top:18px"><tr>
     <td style="width:33%">Prepared by:<br><br>Signature: __________________<br>Name: ${di('outline.prepared', o.prepared || c.instructor)}</td>
     <td style="width:33%">Checked by:<br><br>Signature: __________________<br>Name: ${di('outline.checked', o.checked)}</td>
@@ -3626,9 +3939,27 @@ function docSurvey(c){
   <p style="font-size:13px"><b>After completing this course, I am able to:</b></p>
   <table class="tbl"><thead><tr><th style="width:50px">CO</th><th>Statement</th><th style="width:46px;text-align:center">5</th><th style="width:46px;text-align:center">4</th><th style="width:46px;text-align:center">3</th><th style="width:46px;text-align:center">2</th><th style="width:46px;text-align:center">1</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="7" style="text-align:center">Define COs first</td></tr>'}</tbody></table>
-  <p style="font-size:13px;margin-top:14px"><b>Any comments or suggestions for improving the course (optional):</b></p>
-  <p>…………………………………………………………………………………………………………………<br>…………………………………………………………………………………………………………………<br>…………………………………………………………………………………………………………………</p>
-  <p style="font-size:11.5px;color:var(--muted)">For online delivery, replicate this table as a Google Form (one Likert question per CO, column headers CO1, CO2, …) and import the response CSV in the Attainment tab.</p>`;
+  ${(()=>{
+    const s = c.aust.survey;
+    const fb = FB_ITEMS.filter(([k])=>s.fbOn[k]);
+    if(!fb.length) return "";
+    return `<p style="font-size:13px;margin-top:14px"><b>About the course:</b></p>
+  <table class="tbl"><thead><tr><th>Statement</th><th style="width:46px;text-align:center">5</th><th style="width:46px;text-align:center">4</th><th style="width:46px;text-align:center">3</th><th style="width:46px;text-align:center">2</th><th style="width:46px;text-align:center">1</th></tr></thead>
+    <tbody>${fb.map(([k,label])=>`<tr><td style="font-size:12.5px">${label}</td>${[5,4,3,2,1].map(()=>`<td style="text-align:center" class="cbx">□</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  })()}
+  ${(()=>{
+    const s = c.aust.survey;
+    const regRes = s.resFbOn? c.aust.learnRes.filter(r=>(r.title||"").trim()):[];
+    if(!regRes.length) return "";
+    return `<p style="font-size:13px;margin-top:14px"><b>How useful were the shared resources? (5 = very useful … 1 = not useful; leave blank if not used)</b></p>
+  <table class="tbl"><thead><tr><th>Resource</th><th style="width:46px;text-align:center">5</th><th style="width:46px;text-align:center">4</th><th style="width:46px;text-align:center">3</th><th style="width:46px;text-align:center">2</th><th style="width:46px;text-align:center">1</th></tr></thead>
+    <tbody>${regRes.map(r=>`<tr><td style="font-size:12.5px">${esc(r.title.trim())} <span style="color:var(--muted);font-size:11px">(${esc(r.type||"")})</span></td>${[5,4,3,2,1].map(()=>`<td style="text-align:center" class="cbx">□</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  })()}
+  <p style="font-size:13px;margin-top:14px"><b>The best aspect of this course (optional):</b></p>
+  <p>…………………………………………………………………………………………………………………<br>…………………………………………………………………………………………………………………</p>
+  <p style="font-size:13px;margin-top:10px"><b>One suggested improvement (optional):</b></p>
+  <p>…………………………………………………………………………………………………………………<br>…………………………………………………………………………………………………………………</p>
+  <p style="font-size:11.5px;color:var(--muted)">For online delivery, replicate this form as a Google Form and import the response CSV in the Attainment tab — CO columns headed CO1, CO2, …; the additional columns exactly as in ⬇ Download Survey CSV Template.</p>`;
 }
 
 /* ---- Printable CQI Report (BAETE Criteria 3.8 & 5.4.3, Annexure H) ---- */
@@ -3823,6 +4154,14 @@ function docReport(c){
   <h2>5. Indirect Assessments</h2>
   <p><b>5.1 Analysis of Student Feedback — Course Evaluation Survey${(()=>{const ind=computeIndirect(c);return ind.n? " (n = "+ind.n+" respondents)":"";})()}</b></p>
   ${(()=>{
+    const fbd = computeFeedback(c);
+    if(!fbd.any) return "";
+    const row = x=>`<tr><td style="font-size:12.5px">${esc(x.label)}</td><td style="text-align:center">${x.n}</td><td style="text-align:center">${x.avg===null?"—":x.avg.toFixed(2)}</td><td style="text-align:center">${x.pct===null?"—":x.pct.toFixed(0)+"%"}</td></tr>`;
+    return `<p style="font-size:12.5px"><b>Additional course feedback (survey, non-CO items — not part of attainment)</b></p>
+  <table class="tbl" style="max-width:720px"><thead><tr><th>Item</th><th style="width:56px">n</th><th style="width:70px">Avg</th><th style="width:70px">% ≥ 4</th></tr></thead>
+    <tbody>${fbd.fb.filter(x=>x.n>0).map(row).join("")}${fbd.res.filter(x=>x.n>0).map(row).join("")}</tbody></table>`;
+  })()}
+  ${(()=>{
     const ind = computeIndirect(c);
     if(!ind.cos.some(x=>x.n>0)) return `<p style="font-size:12.5px;color:var(--muted)">No survey data recorded — enter or import the Course Evaluation Survey results in the Attainment tab.</p>`;
     return `<table class="tbl"><thead><tr><th></th>${ind.cos.map(x=>`<th style="text-align:center">${x.label}</th>`).join("")}</tr></thead><tbody>
@@ -3898,7 +4237,8 @@ function importTopicsCSV(input){
       const old = keep[p.name.toLowerCase()];
       return { name: p.name, planned: p.planned, actual: old? old.actual : "", reason: old? old.reason : "",
                cos: (old && Array.isArray(old.cos))? old.cos : [], tla: (old && Array.isArray(old.tla))? old.tla : [],
-               res: (old && Array.isArray(old.res))? old.res : [] };
+               res: (old && Array.isArray(old.res))? old.res : [],
+               resExcl: (old && Array.isArray(old.resExcl))? old.resExcl : [] };
     });
     save(); renderTab(window._currentTab || "docs");
     toast(`${parsed.length} topic(s) imported${matched? " — "+matched+" kept their actual hours":""}${skipped? " · "+skipped+" line(s)/value(s) skipped":""}`);
@@ -4000,6 +4340,7 @@ function renderData(){
       <label class="btn secondary" style="cursor:pointer">⬆ Import JSON<input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>
     </div>
   </div>
+  ${resourcePoolCard()}
   ${activityPoolCard()}
   <div class="card">
     <h2>Danger Zone</h2>
