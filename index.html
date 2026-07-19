@@ -165,7 +165,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.70</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.71</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -203,14 +203,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.70</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.71</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.70";
+const APP_VERSION = "v1.71";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -613,7 +613,7 @@ function renderDashboard(){
     5: `Check the Biggs triangle and per-CO alignment cards; close gaps using the suggestions (one-click Adopt).`,
     6: `Add students or paste from Excel; enter marks in the grid or via CSV (Empty Template / Import / Export).`,
     7: `Direct CO/PO attainment is computed automatically (AUST method); add the Course Evaluation Survey for Indirect and the 80/20 (editable) Combined attainment.`,
-    8: `BAETE 3.8 &amp; 5.4.3 evidence, worked top to bottom: diagnose (low-attainment analysis), describe (3.8 narratives), decide (5.4.3 action plans) — each card has its own 📋 AI prompt; run them in that order. Also: stakeholder feedback register &amp; Annexure H checklist (incl. rubrics). Recording next semester's actions in Course Report 6.1 restarts the loop via “⟳ Duplicate for New Semester”. The full loop map is shown atop the CQI tab.`,
+    8: `BAETE 3.8 &amp; 5.4.3 evidence, worked top to bottom: diagnose (low-attainment analysis), describe (3.8 narratives), decide (Report 6.1 actions), close (Specifications 6.1 closure) — each section has its own 📋 AI prompt in its heading; run them in that order. Also: stakeholder feedback register &amp; Annexure H checklist (incl. rubrics). Recording next semester's actions in Course Report 6.1 restarts the loop via “⟳ Duplicate for New Semester”. The full loop map is shown atop the CQI tab.`,
     9: `Course Outline, Course Specifications, Final Exam Vetting Form, Direct CO-PO Calculations, Course Evaluation Survey, Course Report &amp; CQI Report — several key information are auto-filled and printable.`
   };
   const cqiStarted = !!(c.aust&&c.aust.cqi&&(c.aust.cqi.complex||c.aust.cqi.effective));
@@ -2649,11 +2649,12 @@ function buildNarrativesPrompt(c){
   return L.join("\n");
 }
 /* --- Prompt 3 of 3 (decide): Course Report 6.1 action plans + Specifications 6.1 closure --- */
-function buildActionsPrompt(c){
+/* --- Prompt 3 of 4 (decide): the five Course Report 6.1 action rows --- */
+function buildReportActionsPrompt(c){
   const ctx = buildAIContext(c);
-  const { prevRows, failing } = ctx;
+  const { failing } = ctx;
   const L = [];
-  aiIntro(L, "draft the CQI improvement action plans (and loop-closure text) for the course below.");
+  aiIntro(L, "draft the CQI improvement action plans (Course Report 6.1) for the course below.");
   L.push(...ctx.L);
   const narr = aiNarrativeLines(c);
   if(narr.length){
@@ -2668,10 +2669,22 @@ function buildActionsPrompt(c){
     low.forEach(l=>L.push(l));
   }
   L.push("");
-  L.push("== YOUR TASK — draft each of the following, labelled exactly as below ==");
-  L.push(`1. "Improvement actions from this offering (Course Report 6.1)" — one short block per loop row: (1) CO loop, direct; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect — focused on the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""} and their POs; each action must be consistent with (and may cite) the low-attainment analyses, narratives and working notes above where provided — the plans are the conclusion of those earlier steps; if a row has no evidence-based action, output exactly: "No specific action this offering."`);
-  if(prevRows.some(r=>r.rec)) L.push(`2. "Actions from the previous offering & how they were reflected (Course Specifications 6.1, second column)" — produce EXACTLY five labelled blocks, one per loop row, never merging or omitting a row: (1) A. CQI Loop for COs — Direct; (2) A. CQI Loop for COs — Indirect (survey); (3) B. CQI Loop for POs — Direct; (4) B. CQI Loop for POs — Indirect (survey); (5) C. CQI Loop for PEOs — Indirect (survey). For each row that has a previous recommendation, draft 2-4 sentences describing how it was reflected in this offering (synthesize from the working notes, the adopted activities and the assessment plan, naming the recommendation each action closes). If a single recommendation cell mixes CO-level and PO-level material, distribute the reflections to the correct rows (CO actions under row 1, PO-level consequences under row 3) rather than answering everything under one row. Fallbacks: if a row's first column is empty, output exactly: "No previous recommendation for this loop."; if a recommendation exists but nothing this offering addressed it, output exactly: "No specific action this offering." Never alter the first column — it is the previous Course Report's text.`);
-  L.push(`Item 1 will be pasted into the linked Course Report 6.1 table${prevRows.some(r=>r.rec)? "; item 2 into the second column of the linked Specifications 6.1 table":""}. Output only the labelled blocks.`);
+  L.push("== YOUR TASK — labelled exactly as below ==");
+  L.push(`"Improvement actions from this offering (Course Report 6.1)" — one short block per loop row: (1) CO loop, direct; (2) CO loop, indirect (survey); (3) PO loop, direct; (4) PO loop, indirect (survey); (5) PEO loop, indirect — focused on the not-attained CO(s)${failing.length? " ("+failing.join(", ")+")":""} and their POs; each action must be consistent with (and may cite) the low-attainment analyses, narratives and working notes above where provided — the plans are the conclusion of those earlier steps; if a row has no evidence-based action, output exactly: "No specific action this offering."`);
+  L.push(`These are recommendations for the NEXT offering, derived from THIS offering's evidence. The five blocks will be pasted into the linked Course Report 6.1 table. Output only the labelled blocks — the Specifications 6.1 closure text is drafted by a separate prompt.`);
+  aiConstraints(L);
+  return L.join("\n");
+}
+/* --- Prompt 4 of 4 (close): the Specifications 6.1 "how reflected" column --- */
+function buildClosurePrompt(c){
+  const ctx = buildAIContext(c);
+  const L = [];
+  aiIntro(L, "draft the loop-closure text (Course Specifications 6.1, second column) for the course below.");
+  L.push(...ctx.L);
+  L.push("");
+  L.push("== YOUR TASK — labelled exactly as below ==");
+  L.push(`"Actions from the previous offering & how they were reflected (Course Specifications 6.1, second column)" — produce EXACTLY five labelled blocks, one per loop row, never merging or omitting a row: (1) A. CQI Loop for COs — Direct; (2) A. CQI Loop for COs — Indirect (survey); (3) B. CQI Loop for POs — Direct; (4) B. CQI Loop for POs — Indirect (survey); (5) C. CQI Loop for PEOs — Indirect (survey). For each row that has a previous recommendation, draft 2-4 sentences describing how it was reflected in this offering (synthesize from the working notes, the adopted activities and the assessment plan, naming the recommendation each action closes). If a single recommendation cell mixes CO-level and PO-level material, distribute the reflections to the correct rows (CO actions under row 1, PO-level consequences under row 3) rather than answering everything under one row. Fallbacks: if a row's first column is empty, output exactly: "No previous recommendation for this loop."; if a recommendation exists but nothing this offering addressed it, output exactly: "No specific action this offering." Never alter the first column — it is the previous Course Report's text.`);
+  L.push(`This is BACKWARD-looking: it closes the PREVIOUS offering's loop by recording what was implemented in THIS offering — do not propose new actions here. The five blocks will be pasted into the second column of the linked Specifications 6.1 table. Output only the labelled blocks.`);
   aiConstraints(L);
   return L.join("\n");
 }
@@ -2682,7 +2695,15 @@ function copyPromptText(txt){
   } else copyAIFallback(txt, done);
 }
 function copyNarrativesPrompt(){ const c = activeCourse(); if(c) copyPromptText(buildNarrativesPrompt(c)); }
-function copyActionsPrompt(){ const c = activeCourse(); if(c) copyPromptText(buildActionsPrompt(c)); }
+function copyReportActionsPrompt(){ const c = activeCourse(); if(c) copyPromptText(buildReportActionsPrompt(c)); }
+function copyClosurePrompt(){
+  const c = activeCourse(); if(!c) return;
+  ensureAust(c);
+  if(!(c.aust.spec.cqiPrev||[]).some(x=>(x.rec||"").trim())){
+    toast("Nothing to close — Specifications 6.1 has no previous-offering recommendations (first offering?)"); return;
+  }
+  copyPromptText(buildClosurePrompt(c));
+}
 function copyAIFallback(txt, done){
   const ta = document.createElement("textarea");
   ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
@@ -2892,7 +2913,7 @@ function renderCQI(){
   </div>
   <div class="card">
     <h2>Continuous Quality Improvement (CQI)</h2>
-    <p class="hint">This tab consolidates the evidence BAETE asks for under <b>Criterion 3.8</b> (teaching-learning &amp; assessment) and <b>Criterion 5.4.3</b> (CQI loop for courses and curriculum). <b>Work top to bottom: diagnose (Low Attainment Analysis) → describe (3.8) → decide (5.4.3 action plans)</b> — each card carries its own 📋 AI prompt; run them in that order, pasting each result back before running the next (later prompts include what you have already entered, and the diagnosis also feeds the Suggested Modifications prompts in the T&amp;L and Assessments tabs). The 6.1 action tables in the 5.4.3 card are <b>⛓ the same data</b> as Course Report 6.1 and Course Specifications 6.1 — editing here updates the documents and vice versa. When everything is complete, print the CQI Report from the bottom of this tab.</p>
+    <p class="hint">This tab consolidates the evidence BAETE asks for under <b>Criterion 3.8</b> (teaching-learning &amp; assessment) and <b>Criterion 5.4.3</b> (CQI loop for courses and curriculum). <b>Work top to bottom: diagnose (Low Attainment Analysis) → describe (3.8 narratives) → decide (Report 6.1 actions) → close (Specifications 6.1 closure)</b> — each section carries its own 📋 AI prompt in its heading; run them in that order, pasting each result back before running the next (later prompts include what you have already entered, the diagnosis also feeds the Suggested Modifications prompts in the T&amp;L and Assessments tabs, and the closure prompt can be run any time once implementations begin). The 6.1 action tables in the 5.4.3 card are <b>⛓ the same data</b> as Course Report 6.1 and Course Specifications 6.1 — editing here updates the documents and vice versa. When everything is complete, print the CQI Report from the bottom of this tab.</p>
   </div>
   ${lowAttainmentCard(c)}
   <div class="card">
@@ -2902,7 +2923,7 @@ function renderCQI(){
       <thead><tr><th>CO</th><th>BT Domain (Level)</th><th>Complex Problem (P1–P7)</th><th>Complex Activities (A1–A5)</th><th>T&amp;L Methods (adopted)</th><th>Assessment Tools</th></tr></thead>
       <tbody>${coRows || '<tr><td colspan="6" class="empty">Define COs first.</td></tr>'}</tbody>
     </table></div>
-    <h3>Narratives (used verbatim in the printable CQI Report)</h3>
+    <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Narratives (used verbatim in the printable CQI Report) <button class="btn secondary small" title="Copies a curated prompt (methodology, COs, mapped POs, assessment plan, results, T&L history — aggregates only, no student identities) that drafts ONLY the four narrative boxes below. Step 2 of 4 — run after the low-attainment analysis prompt: its recorded findings are included and must be engaged critically." onclick="copyNarrativesPrompt()">📋 Copy AI Prompt (3.8 narratives)</button></h3>
     <p style="font-size:13px"><b>How the teaching-learning methods and assessment tools address complex engineering problems and the POs:</b></p>
     ${dta('cqi.complex', q.complex, 3, 'e.g., Create-level COs are delivered through project-based learning where student teams handle open-ended design problems with conflicting requirements (P1, P3); assessed through design reports and presentations mapped to PO3 and PO5…')}
     <p style="font-size:13px;margin-top:10px"><b>Why these methods and tools are effective and appropriate (cite attainment results, survey findings, TLA effectiveness):</b></p>
@@ -2912,7 +2933,6 @@ function renderCQI(){
     <p style="font-size:13px;margin-top:10px"><b>Question moderation / vetting process:</b></p>
     ${dta('cqi.moderation', q.moderation, 3, 'e.g., Every final examination is moderated by two vetters using the AUST Final Examination Vetting Form: CO coverage, Bloom’s alignment, mark distribution and clarity are checked; required modifications are documented and approved by the Head of the Department…')}
     <div class="btn-row">
-      <button class="btn secondary" title="Copies a curated prompt (methodology, COs, mapped POs, assessment plan, results, T&L history — aggregates only, no student identities) that drafts ONLY the four 3.8 narrative boxes above. Step 2 of 3 — run after the low-attainment analysis prompt: its recorded findings are included and must be engaged critically." onclick="copyNarrativesPrompt()">📋 Copy AI Prompt (3.8 narratives)</button>
       <button class="btn secondary small" onclick="showDoc('vet');showTab('docs')">Open Final Exam Vetting Form</button>
     </div>
   </div>
@@ -2926,16 +2946,15 @@ function renderCQI(){
       <tr><td>5. Close — actions reflected in the next offering (Course Specifications 6.1)</td><td>${okBadge(stat.reflected,"loop closed","use ⟳ Duplicate for New Semester, or fill below")}</td></tr>
       <tr><td>6. Stakeholder feedback utilised</td><td>${okBadge(stat.stakeholders,"register maintained","add entries to the register below")}</td></tr>
     </tbody></table></div>
-    <h3>Improvement actions from this offering <span class="badge blue" title="Same data as Course Report 6.1 — edit in either place">⛓ linked — same data as Course Report 6.1</span></h3>
+    <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Improvement actions from this offering <span class="badge blue" title="Same data as Course Report 6.1 — edit in either place">⛓ linked — same data as Course Report 6.1</span> <button class="btn secondary small" title="Copies a curated prompt that drafts ONLY the five action rows below — forward-looking recommendations for the NEXT offering, derived from this offering's evidence. It embeds your pasted analyses, narratives and working notes, so run Steps 1-2 first. Step 3 of 4." onclick="copyReportActionsPrompt()">📋 Copy AI Prompt (Report 6.1 actions)</button></h3>
     <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th style="width:140px">Loop</th><th style="width:190px">Assessment Type</th><th>Recommended Actions for Quality Improvement</th></tr></thead>
       <tbody>${repRows}</tbody></table></div>
-    <h3>Actions from the previous offering &amp; how they were reflected <span class="badge blue" title="Same data as Course Specifications 6.1 — edit in either place">⛓ linked — same data as Course Specifications 6.1</span></h3>
+    <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Actions from the previous offering &amp; how they were reflected <span class="badge blue" title="Same data as Course Specifications 6.1 — edit in either place">⛓ linked — same data as Course Specifications 6.1</span> <button class="btn secondary small" title="Copies a curated prompt that drafts ONLY the 'how they were reflected' column below — backward-looking: it closes the PREVIOUS offering's loop from your working notes, adopted activities and assessment plan. Runnable any time once implementations begin (it does not need marks). Step 4 of 4." onclick="copyClosurePrompt()">📋 Copy AI Prompt (Spec 6.1 closure)</button></h3>
     <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th style="width:140px">Loop</th><th style="width:190px">Assessment Type</th><th>Recommended Actions (previous Course Report)</th><th>Reflected in the Current Course Specification</th></tr></thead>
       <tbody>${specRows}</tbody></table></div>
     <div class="btn-row">
-      <button class="btn secondary" title="Copies a curated prompt that drafts the five Course Report 6.1 loop rows and the Specifications 6.1 closure text — it includes your recorded low-attainment analyses, entered 3.8 narratives and working notes as context, so run Steps 1 and 2 (and paste their results back) first. Step 3 of 3." onclick="copyActionsPrompt()">📋 Copy AI Prompt (5.4.3 action plans)</button>
       <button class="btn secondary small" onclick="pullCQI()">⟳ Pull CQI actions from Course Report into Specifications 6.1</button>
     </div>
   </div>
@@ -3124,12 +3143,11 @@ function lowAttainmentCard(c){
   }).join("");
   return `
   <div class="card">
-    <h2>Low Attainment Analysis <span class="badge blue">linked to Attainment</span></h2>
-    <p class="hint">Students are filtered by their per-CO score (same calculation as the Attainment tab). For each CO, analyze the causes with respect to (a) the teaching-learning activities and (b) the assessment techniques, and record your comment — these feed the printable CQI Report, support Course Report 6.1, and flow into the later AI prompts: the (a) findings into the T&amp;L tab's Suggested Modifications prompt, the (b) findings into the Assessments tab's, and all of them into the 3.8 narratives and 5.4.3 action-plans prompts.</p>
+    <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Low Attainment Analysis <span class="badge blue">linked to Attainment</span> <button class="btn secondary small" onclick="copyLowAttPrompt()" title="Builds a tiered prompt: full diagnosis for the not-attained CO(s), brief preventive notes for attained-but-borderline CO(s) (below KPI + 15 points, or carrying a weak item), and an explicit no-action line for strongly attained ones — tasks matching the (a)/(b)/(c) boxes below. Step 1 of 4: run first. The pasted analyses feed the 3.8 narratives prompt (Step 2), the Report 6.1 actions prompt (Step 3), and the Suggested Modifications prompts in the T&L and Assessments tabs.">📋 Copy AI Prompt (low-attainment analysis)</button></h2>
+    <p class="hint">Students are filtered by their per-CO score (same calculation as the Attainment tab). For each CO, analyze the causes with respect to (a) the teaching-learning activities and (b) the assessment techniques, and record your comment — these feed the printable CQI Report, support Course Report 6.1, and flow into the later AI prompts: the (a) findings into the T&amp;L tab's Suggested Modifications prompt, the (b) findings into the Assessments tab's, and all of them into the 3.8 narratives and Report 6.1 actions prompts.</p>
     <label class="fld" style="max-width:340px;margin-bottom:8px">Filter: students scoring below (%)
       <input type="number" min="0" max="100" value="${th}" onchange="window._lowTh=Math.max(0,Math.min(100,parseFloat(this.value)||0));renderCQI()">
     </label>
-    <div class="btn-row no-print" style="margin:0 0 12px"><button class="btn secondary small" onclick="copyLowAttPrompt()" title="Builds a tiered prompt: full diagnosis for the not-attained CO(s), brief preventive notes for attained-but-borderline CO(s) (below KPI + 15 points, or carrying a weak item), and an explicit no-action line for strongly attained ones — tasks matching the (a)/(b)/(c) boxes below. Step 1 of 3: run first. The pasted analyses feed the 3.8 narratives prompt (Step 2), the 5.4.3 action-plans prompt (Step 3), and the Suggested Modifications prompts in the T&L and Assessments tabs.">📋 Copy AI Prompt (low-attainment analysis)</button></div>
     ${blocks}
   </div>`;
 }
