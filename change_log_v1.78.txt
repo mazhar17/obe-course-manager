@@ -1,0 +1,1302 @@
+==========================================================================
+ OBE Course Manager — Change Log
+ (c) 2026 Prof. Mazharul Islam - CC BY 4.0 International License
+--------------------------------------------------------------------------
+ Versioning convention: major releases increment the whole number (v1, v2);
+ minor changes increment the number after the decimal point (v1.1, v1.2).
+ File naming: this log is named with the current version
+ (change_log_<version>.txt) and is renamed at every release.
+==========================================================================
+
+v1.78 — July 20, 2026 (minor)
+  Learning Resources register: choosing a Type now filters the Title
+  suggestions to only the T&L Resource Pool entries of that Type
+  (each row has its own suggestion list, refreshed the moment the
+  Type changes). Type "Other" shows the full pool as an escape
+  hatch; free-typed titles are always accepted. Picking a pool
+  entry still prefills a practical tip.
+  Topic-wise T&L Plan: the blue auto-filled T&L Method chips are
+  now deselectable per topic — click x to deselect for that topic
+  only (the activity stays adopted everywhere else); the dimmed
+  chip's + restores it, as does typing its name into "add for this
+  topic". Mirrors the Resources column behaviour. Deselections
+  travel with backups, Duplicate for New Semester, and name-matched
+  Topics CSV re-imports.
+  The Resources column's empty state is now context-aware: it says
+  "tick the related CO(s)" when the topic has none, and "no
+  register resources tagged with these CO(s)" when the CO join
+  finds nothing — explaining the two-sided tick mechanism.
+  Manual and both workflow infographics updated accordingly.
+
+v1.77 — July 19, 2026 (bug fix)
+  T&L Resources Summary Table no longer shows empty Description/Tip
+  columns for practically-named resources. Cause: lookups matched
+  only by exact pool TITLE, but real registers use specific names
+  ("PDF Slides", "NotebookLM pages for Different Topics") with the
+  Type set correctly. The lookup now falls back on the entry's Type
+  (every pool entry declares the register Type it prefills, giving a
+  two-way map). Precedence: title-matched pool entry → your own
+  register Notes (for the tip) → type-matched pool entry. The
+  "free-text" badge now appears only when neither title nor type
+  matches anything. Documents regenerated with v1.77 stamps.
+
+v1.76 — July 19, 2026 (minor)
+  Course Evaluation Survey enriched beyond CO evaluation (per
+  discussion). The CO block is untouched and remains the ONLY input
+  to indirect attainment — everything below is separate evidence:
+  - Block B: six standard course-feedback Likert items, each
+    toggleable to keep forms short — activities helped me learn;
+    resources supported my learning; assessments matched what was
+    taught (student-perceived constructive alignment); marking
+    criteria/rubrics clear in advance; feedback timely and useful;
+    pace and workload manageable. Tally grid with n / average /
+    % ≥ 4 in the Attainment tab, marked "not part of attainment".
+  - Block C (toggleable): one usefulness item per registered
+    Learning Resource — real usage evidence for keeping, revising or
+    dropping resources.
+  - Printable survey form gains the "About the course" block, the
+    resource-usefulness block, and two open questions (best aspect;
+    one suggested improvement). The CSV template adds the new
+    columns (FB-… and Resource: …); import maps them and stays
+    backward-compatible with CO-only files.
+  - Course Report 5.1 gains an "Additional course feedback" table
+    (item, n, avg, % ≥ 4) when responses exist.
+  - All AI prompts receive a "COURSE FEEDBACK (survey, non-CO
+    items)" block with a usage rule: alignment/rubric/pace items
+    corroborate or challenge narratives and actions; per-resource
+    ratings justify resource decisions.
+  - Duplicate for New Semester clears all survey tallies but keeps
+    the item toggles (they are design, not results).
+  - Manual and README regenerated with v1.76 stamps.
+
+v1.75 — July 19, 2026 (minor)
+  Resources woven through the tab, the pools and the prompts:
+  - New "T&L Resources Summary Table" in the T&L tab, directly
+    before the Activities Summary Table: every registered resource
+    with its type, pool-sourced Brief Description and Practical Tip
+    (register Notes when no pool tip), and Related CO from the tags;
+    unmatched titles carry a "free-text" badge.
+  - Data & Backup: the T&L Resource Pool card now precedes the T&L
+    Activity Pool card, matching the T&L tab's resources-first order.
+  - Task-level resource instructions added to the prompts (the data
+    was already included; now the AI is told what to do with it):
+    narratives cite resources as delivery evidence; Report 6.1
+    actions may add/revise/integrate resources by name; the closure
+    prompt counts resources added this offering as IMPLEMENTED
+    actions; the scoped T&L and assessment prompts name a suitable
+    supporting resource per suggestion (rubric banks on the
+    assessment side). Instructions appear only when resources exist.
+  - "📋 Copy resource list (for LMS posting)" in the register —
+    formatted titles, links and CO tags for pasting into Google
+    Classroom / Moodle / a course email.
+  - Link-rot insurance: each register entry carries a Verified date
+    (stamped on creation, re-stamped with ✓); after six months an
+    amber "verify" badge appears. Manual and README regenerated with
+    v1.75 stamps.
+
+v1.74 — July 19, 2026 (minor)
+  T&L Resource Pool (from the reviewed Excel selection):
+  - New curated pool of 16 resource KINDS in Data & Backup, beside
+    the T&L Activity Pool — sorted most-common-first, opening with
+    the newly added "Lecture Slides". The 15 entries kept in the
+    review (incl. the "Virtual Labs" rename) follow: recorded
+    lectures, Google Classroom, NotebookLM companion, interactive
+    e-modules, spreadsheet templates, Q&A forum, interactive video,
+    Colab/Jupyter, PhET, Virtual Labs, MIT OCW, datasheets,
+    standards & codes, rubric banks, e-portfolios. Each carries
+    category, description, engineering-education justification,
+    practical tip and suggested activity pairing.
+  - The Learning Resources register's Title box now autocompletes
+    from the pool; picking an entry prefills the register Type and a
+    practical tip (into empty Notes) — you add your own link and CO
+    tags. Register Type list extended (simulation tool,
+    computational tool, OER, standards/datasheets, forum,
+    e-portfolio).
+  - Custom pool resources can be added in Data & Backup (name,
+    category, type, description, tip); they travel in JSON backups
+    for departmental sharing, like custom activities.
+  - Manual and README regenerated with v1.74 stamps.
+
+v1.73 — July 19, 2026 (minor)
+  Learning Resources linked to COs and auto-copied into the topic
+  plan (per discussion):
+  - The register's free-text "Related topic/CO" field is replaced by
+    Related COs tick-chips (existing text migrates into Notes). Tag
+    a resource with its CO(s) once and it flows automatically into
+    the Resources column of the Topic-wise T&L Plan for every topic
+    ticked with those COs (blue chips).
+  - Per-topic deselection: an auto resource can be deselected for a
+    specific topic (× on the blue chip) — it dims to a grey chip
+    with a + to restore, so exclusions stay visible. Manual green
+    chips work as before; typing an excluded auto title restores it
+    instead of duplicating. Exclusions persist through Duplicate for
+    New Semester and the Topics CSV re-import.
+  - Course Outline 17.3's last column is now "Related CO(s)" (from
+    the tags), and all AI prompts report resources with their CO
+    labels plus each topic's EFFECTIVE resource list (auto minus
+    deselected plus manual).
+  - Manual and README regenerated with v1.73 stamps.
+
+v1.72 — July 19, 2026 (minor)
+  Learning Resources register (per discussion):
+  - New "Learning Resources shared with students" card in the T&L
+    tab, placed directly before the Topic-wise T&L Plan, collapsed
+    by default with a one-line summary. Entries: Type (slides, LMS
+    course site, companion site e.g. NotebookLM, interactive
+    infographic/e-module, video, rubric, tip sheet, other), Title,
+    Link/location, Related topic/CO, Notes. Links only — the LMS
+    stays the host. Kept by ⟳ Duplicate for New Semester; travels in
+    backups.
+  - Topic-wise T&L Plan gains a rightmost "Resources" column:
+    per-topic resource chips with autocomplete from the register
+    (removable; preserved by the Topics CSV re-import).
+  - All AI prompts (the four CQI steps and the two scoped ones) now
+    include a "LEARNING RESOURCES PROVIDED TO STUDENTS" block —
+    register entries plus the per-topic plan — and the low-attainment
+    prompt is told to consider whether weak topics were supported by
+    resources.
+  - Prints as Course Outline 17.3 (Type/Title/Link/Related) only
+    when the register is non-empty; new Annexure H checklist item
+    for the learning-resource register.
+  - Manual and README regenerated with v1.72 stamps.
+
+v1.71 — July 19, 2026 (minor)
+  CQI prompts fully decomposed and placed where they act:
+  - The "5.4.3 action plans" prompt is split in two: "📋 (Report 6.1
+    actions)" drafts only the five forward-looking action rows (for
+    the NEXT offering, from this offering's evidence, chained to the
+    pasted analyses/narratives/working notes); "📋 (Spec 6.1
+    closure)" drafts only the backward-looking "how they were
+    reflected" column (exactly five labelled blocks with the
+    distribution and fallback rules), needs no marks and can be run
+    any time once implementations begin — it declines with a toast
+    when Specifications 6.1 has no previous recommendations.
+  - Every prompt button now lives in the heading of the section it
+    fills: Low Attainment Analysis (Step 1), Narratives (Step 2),
+    the Report 6.1 actions table (Step 3) and the Specifications 6.1
+    closure table (Step 4). The workflow reads diagnose → describe →
+    decide → close, stated in the intro card and Dashboard step 8.
+  - Manual and README regenerated with v1.71 stamps.
+
+v1.70 — July 19, 2026 (minor)
+  Terminology and T&L pool expansion (per discussion + Module 4 TLA):
+  - "Optional" items are now called "choice questions" everywhere a
+    user reads them — the AUST final-exam pattern ("answer any 5 of
+    7") is a compulsory set with internal choice, not optional
+    content. Renamed across the Assessments tab (checkbox tooltip,
+    ⚙ Advanced texts, table header), marks grid, CA tab, summary
+    tables, Vetting Form footnote, Direct CO-PO method notes, and
+    ALL five AI prompts. Data model unchanged — old files unaffected.
+  - New AI-prompt rule (all prompts): on choice questions, a low
+    attempt rate is question/topic avoidance — a perceived-difficulty
+    CQI signal — never disengagement.
+  - "Activity Pool" renamed "T&L Activity Pool" everywhere.
+  - Five new built-in activities (pool now 36), each with description
+    and practical tips: Traditional classroom lecture; Inductive
+    teaching & learning (Prince & Felder 2006); In-class group
+    discussion; Guided inquiry session; Just-in-time teaching (JiTT).
+    Manual Appendix A extended with justifications.
+  - T&L tab: a collapsed "▸ Browse the full T&L Activity Pool (36)"
+    toggle beside Recommendations per CO opens a read-only reference
+    table (activity · Bloom · mode/size · description · tip).
+  - Attainment_Calculation_Methodology.docx terminology aligned
+    ("choice questions"). Manual and README regenerated with v1.70
+    stamps.
+
+  Post-release audit (July 19): manual gap-fixes (Appendix intro
+  count 31→36, pool-browser and avoidance-rule mentions added,
+  version reference in prose removed); both workflow infographics
+  (portrait + widescreen) updated to v1.70 — CQI card now reads
+  "diagnose → describe → decide: 3 AI prompts in order", Assessments
+  card mentions choice questions (k of n). Regenerate the PNGs via
+  svg_to_png.html.
+
+v1.69 — July 18, 2026 (minor)
+  Five improvements (fraction input + colleague feedback):
+  - Marks Entry cells, the assessment items' Max marks field and the
+    marks CSV import now accept decimals (1.67), fractions (2/3) and
+    mixed numbers (1 2/3). Fractions are an input convenience: the
+    value is stored, shown and computed as a decimal (4 places).
+    Unreadable input is rejected with a toast and the cell reverts.
+  - Assessments and their items can be reordered with ▲▼ buttons;
+    the order flows to the marks grid, CSV export, vetting form and
+    blueprint. Safe: marks are keyed by item id.
+  - Marks CSV headers are now short where unambiguous (just the item
+    label, e.g. "PartA_CO5"), qualified only where labels collide
+    ("Quiz 1::Q1"); import accepts the new short, the qualified and
+    the legacy "Assessment :: Item" forms.
+  - Combined-attainment weights can no longer exceed 100%: only the
+    Direct weight is editable (Course Info and the Combined
+    Attainment card); Indirect is always 100 − Direct, shown
+    read-only, and any stored pair not summing to 100 is corrected
+    on load.
+  - Printable documents: empty in-place-editable mapping fields — the
+    A/P Bloom dropdowns (Outline §13, Specifications 3.1) and the
+    K/P/A inputs (Outline §14) — now print as an em-dash (—) instead
+    of an empty dotted box. Screen behavior unchanged; hand-fill
+    blanks (signatures, dates, comments) still print as blanks.
+  - Manual and README regenerated with v1.69 stamps.
+
+v1.68 — July 18, 2026 (minor)
+  CQI tab intro tidied and the print button moved to the finish line:
+  - The intro card no longer mentions the CQI Report three times; it
+    now states the two criteria, the diagnose → describe → decide
+    work order, and the ⛓ shared-data note, ending with a single
+    pointer to the report at the bottom of the tab.
+  - "🖨 Open Printable CQI Report (Annexure H)" moved from the top of
+    the tab to a new closing card after the Annexure H checklist —
+    printing is the last act of the workflow, so the button's
+    position now marks the finish line (mirroring how ⟳ Duplicate
+    ends the Dashboard workflow).
+  - Manual and README regenerated with v1.68 stamps.
+
+v1.67 — July 18, 2026 (bug fix)
+  Marks Entry frozen header fixed: the second header row (item
+  labels) pinned itself mid-table instead of directly below the
+  first row. Cause: the offset measured the first header CELL, but
+  the #/Student ID/Name cells span both header rows (rowspan=2), so
+  the measured height was the whole header. Now the first header ROW
+  is measured instead, and the offset re-measures on window resize
+  (zoom-proof). Documents regenerated with v1.67 stamps.
+
+v1.66 — July 17, 2026 (minor)
+  Two improvements per feedback:
+  - Students & Marks: the Marks Entry grid is now its own scroll box
+    (max ~70% of the window) with a frozen header — both header rows
+    (assessment names and item labels) stay visible while scrolling
+    down — and frozen #, Student ID and Name columns that stay
+    visible while scrolling right through many items.
+  - The low-attainment AI prompt is now tiered instead of covering
+    only not-attained COs: Tier 1 (not attained) gets the full
+    (a)/(b)/(c) diagnosis as before; Tier 2 (attained but borderline
+    — below KPI + 15 points, or carrying an item whose class average
+    is below the pass marks) gets brief 1-2-sentence preventive
+    "improvement watch" notes per box; Tier 3 (strongly attained)
+    gets one collective no-action sentence, with the AI explicitly
+    told not to invent improvements. The button now blocks only when
+    every CO is strongly attained.
+  - Manual and README regenerated with v1.66 stamps.
+
+v1.65 — July 17, 2026 (minor)
+  CQI workflow made strictly diagnose-first (per discussion):
+  - Card order is now Low Attainment Analysis → BAETE 3.8 → BAETE
+    5.4.3 (then Stakeholder Register and Annexure H). The AI prompts
+    renumber accordingly: Step 1 = low-attainment analysis, Step 2 =
+    3.8 narratives, Step 3 = 5.4.3 action plans. The intro card notes
+    that the printable CQI Report re-arranges everything into BAETE's
+    reading order automatically.
+  - The recorded low-attainment findings now flow into the two scoped
+    prompts, lens-matched: the T&L tab's "Suggested Modifications"
+    prompt receives the (a) w.r.t.-T&L findings, the Assessments
+    tab's receives the (b) w.r.t.-assessment findings (each plus the
+    overall comments), and every listed finding must be addressed by
+    at least one suggestion or explicitly deferred with a reason.
+    Those prompts now also run when only a Low Attainment Analysis is
+    recorded (previously they required Specifications 6.1 entries).
+  - The 3.8 narratives prompt marks the analyses as Step-1 input and
+    requires narrative 2 to engage critically with the diagnosed
+    causes; the 5.4.3 prompt's consistency rule now names the working
+    notes too ("the plans are the conclusion of those earlier steps").
+  - Low Attainment card hint documents where its (a)/(b) findings
+    flow; Dashboard step 8 updated.
+  - Manual and README regenerated with v1.65 stamps.
+
+v1.64 — July 17, 2026 (minor)
+  CQI tab restructured to teach the workflow (per discussion):
+  - Card order now mirrors the printable CQI Report and the working
+    logic: BAETE 3.8 (describe & justify) → Low Attainment Analysis
+    (diagnose) → BAETE 5.4.3 loop status + 6.1 action tables (decide
+    & close) → Stakeholder Register → Annexure H checklist.
+  - The combined "📋 Copy AI Prompt (CQI narratives & action plans)"
+    button is retired and split into per-card prompts run in order:
+    Step 1 "📋 (3.8 narratives)" in the 3.8 card — drafts only the
+    four narrative boxes; Step 2 "📋 (low-attainment analysis)"
+    (existing) in its card; Step 3 "📋 (5.4.3 action plans)" in the
+    5.4.3 card — drafts the five Course Report 6.1 loop rows and the
+    Specifications 6.1 closure text. The later prompts embed what
+    was already pasted back (entered narratives, recorded analyses)
+    and require the action plans to be consistent with them, so the
+    split does not lose the old single-generation consistency.
+  - Intro card and Dashboard step 8 now state the order: describe →
+    diagnose → decide. All prompts keep the justification requirement
+    and never include student identities.
+  - Manual and README regenerated with v1.64 stamps.
+
+v1.63 — July 16, 2026 (minor)
+  Two refinements per testing feedback:
+  - COs & CO-PO Mapping tab: the "CO Statement" boxes now auto-grow
+    with their content, so the full statement is always visible
+    (previously a fixed two-line box clipped long statements).
+  - "CQI Inputs from the Previous Offering" card (T&L and Assessments
+    tabs): the five "⛓ Course Report 6.1 — this offering's suggested
+    actions" rows are removed. They were outputs of the current
+    offering, not inputs from the previous one — duplicating what is
+    edited in the CQI tab and Course Report 6.1 and doubling the
+    card's height. The five "⛓ Specifications 6.1" rows (the actual
+    previous-offering recommendations that feed the recommender and
+    the scoped AI prompts) are unchanged, Course Report 6.1 remains
+    editable in the CQI tab and on the Course Report itself, and the
+    card's hint and collapsed summary were reworded to match.
+  - Manual and README regenerated with v1.63 stamps.
+  Manual expansion (July 16, 2026 — documentation only, app unchanged):
+  - New section 4.5 "The CA tab — verifying constructive alignment"
+    (triangles, edge colors, chips, suggestions); sections renumbered.
+  - New section 6 "Using the AI Prompts" (all four buttons, the common
+    workflow, contents/exclusions, guardrails, practical tips).
+  - New section 2.5 (Dashboard Suggested Workflow); 4.3 expanded
+    (Topic-wise T&L Plan, Summary Table); 4.4 expanded (optional
+    questions, groups, choice schemes, item Bloom Level ↑); documents
+    section expanded (Outline §15/§16, report charts, grade paste).
+  - Contents rebuilt with correct page numbers.
+  - Workflow infographic (SVG) updated to v1.63: CA card now shows
+    the per-CO Biggs triangles with one-click Adopt and carries the
+    app's "any time" badge; T&L card mentions the Topic-wise T&L
+    Plan; Students & Marks card mentions bulk paste / ID-matched
+    Replace List; Course Info card notes auto-save; version stamp
+    v1.45 → v1.63. (Regenerate the PNG from the SVG — a
+    svg_to_png.html helper is included in the folder.)
+  - New workflow_infographic_widescreen.svg (1920×1080, 16:9) for
+    projection: steps 1-5 across the top row, 6-9 serpentine on the
+    second row, and an amber "Duplicate for New Semester" loop card
+    closing the cycle back to step 1; same content as the portrait
+    version.
+  - Second audit pass against the app: CA row added to the
+    "interface at a glance" tab table (2.2), "ten tabs" corrected to
+    eleven, and the two remaining "exit-survey" terms renamed to
+    Course Evaluation Survey (settings table and data-formats
+    heading).
+
+v1.62 — July 16, 2026 (minor)
+  Course Outline and CA tab improvements per feedback:
+  - Outline §15 "Percentages of Assessment Methods" is now a
+    standalone, user-managed table (no longer linked to the
+    Assessments tab): add/delete Method + Percentage rows freely
+    (e.g., include Attendance per the approved grading policy).
+    A Total row flags sums that differ from 100%. A screen-only
+    "⛏ Prefill from Assessments tab" button seeds the rows from the
+    course's assessments and their marks shares as a starting point.
+    One-time migration: existing courses keep the values previously
+    shown.
+  - Outline §16 "Week wise distribution": new "⬇ Download Template
+    (CSV)" (Week, Topics, Assessment Method(s) — includes current
+    content, doubling as an export) and "⬆ Import (CSV)" buttons.
+    Weeks present in the file overwrite those weeks after a
+    confirmation; missing weeks keep their content; quoted
+    multi-line cells are supported.
+  - CA tab: the Biggs triangle is now repeated inside every CO card —
+    live from that CO's own adopted activities (⛓ T&L tab) and
+    assessment items (⛓ Assessments tab), each edge colored by that
+    CO's alignment state. The card header shows the CO statement and
+    its Bloom's Domain & Level clearly (e.g., "Cognitive · C6
+    Create"). The course-level triangle stays on top as the overall
+    summary.
+  - Manual and README regenerated with v1.62 stamps.
+
+v1.61 — July 16, 2026 (minor)
+  Feedback fixes in the documents and the new-semester copy:
+  - Course Specifications: "3. Constructive Alignment" and
+    "3.1 Statement of COs" are now separate heading lines.
+  - Specifications 3.1 table: the "Delivery Methods and Activities"
+    column is now an auto-growing box, so every adopted T&L activity
+    is fully visible (previously a single-line field truncated long
+    lists).
+  - Specifications 3.1 table: "Assessment Method" is now auto-filled
+    from the Assessments tab — each CO shows the assessments that
+    measure it (by name, or type when unnamed); a dotted box beneath
+    accepts additional methods. The footnote documents the ⛓ link.
+  - Course Report: "2. Learning Outcomes" and "2.1 Analysis of
+    existing COs, POs, and Bloom's Taxonomy levels" are now separate
+    heading lines.
+  - Duplicate for New Semester now also clears the CQI tab's four
+    narratives (used verbatim in the printable CQI Report) plus the
+    other per-offering CQI records — low-attainment analyses,
+    stakeholder register and evidence ticks — which all refer to the
+    marks and evidence of the offering being copied. The confirmation
+    dialog lists everything cleared.
+  - Manual and README regenerated with v1.61 stamps.
+
+v1.60 — July 16, 2026 (minor)
+  Five refinements per testing feedback:
+  - Duplicate for New Semester now also clears the two per-offering
+    working boxes — "Suggested Modifications in T&L Activities"
+    (T&L tab) and "Suggested Modifications in Assessment Activities"
+    (Assessments tab) — so the copy starts with empty notes.
+  - Course Information and Attainment Settings now save automatically
+    as each field is edited (like the rest of the app); the "Save
+    Course Info" and "Save Settings" buttons are removed.
+  - CQI Report §5 "Closure of the Previous Loop": the "Actions
+    Recommended Previously" and "How They Were Reflected" columns now
+    preserve line breaks (pre-wrap), matching the CQI tab; the §4
+    recommended-actions column likewise.
+  - Course Report 4.1: new screen-only paste box + "⬆ Fill Grades
+    from Pasted Data" button — accepts grade-count lines (e.g., "A+ 5")
+    or a single row of 10 counts in A+…F order, mirroring the paste
+    option in Students & Marks.
+  - About card (Data & Backup) rewritten: release-date line removed;
+    copyright/CC BY 4.0 licence, GitHub repository link and feedback
+    e-mail (mazharul.islam.mpe@aust.edu) added.
+  - Manual and README regenerated with v1.60 stamps.
+
+v1.59 — July 15, 2026 (minor)
+  Topic-wise T&L Plan (T&L tab) refined per testing feedback:
+  - Column widths rebalanced: Topics is now the dominant column
+    (~45%), Related COs the narrowest (95px, checkboxes stacked
+    vertically), T&L Methods a moderate fixed width where chips wrap.
+  - Per-topic activity additions: alongside the auto-filled blue
+    chips (from the ticked COs' adopted activities, removable only by
+    un-adopting), each topic accepts its own activities via an
+    Activity-Pool-autocomplete input — shown as green, removable
+    chips. Stored with the course, kept in backups and carried by
+    Duplicate for New Semester.
+  - "⬇ Topics Template (CSV)" and "⬆ Import Topics (CSV)" buttons now
+    also live in this card (same functions as Specifications 4.1);
+    imports refresh whichever tab they were used from and preserve —
+    for matching topic names — Actual Hours, variation reasons,
+    Related COs and topic-specific activities.
+  - Manual and README regenerated with v1.59 stamps.
+
+v1.58 — July 15, 2026 (minor)
+  - T&L tab: new "Topic-wise T&L Plan" table before the Summary
+    Table. Its first three columns (Sl., Topics, Planned Hours) are
+    ⛓ the same data as Course Specifications 4.1 (and Course Report
+    3.1) — editable in either place, with + Add Topic and per-row
+    Delete here too (the CSV template/import remains in
+    Specifications 4.1). Two new columns automate the lesson plan:
+    "Related COs" (tick-chips per topic — multi-CO, stored with the
+    course, carried by backups and Duplicate for New Semester) and
+    "T&L Methods (auto)" — the union of the adopted activities of
+    the ticked COs, updating live as adoptions change.
+  - The Activity Pool card (pool browser + Add a custom activity)
+    moved from the T&L tab to Data & Backup — the pool is
+    department-shareable data that travels in JSON backups, and the
+    T&L tab is decluttered. The recommender, the autocomplete
+    datalist and the summary-table tips keep reading the same pool;
+    a pointer in the T&L tab names the new home.
+  - Manual and README regenerated with v1.58 stamps.
+
+v1.57 — July 15, 2026 (minor)
+  - New scoped AI prompt in the CQI tab's Low Attainment Analysis
+    section: "Copy AI Prompt (low-attainment analysis)". It covers
+    ONLY the not-attained COs, packaging each one's evidence — score
+    distribution bands, weakest items with class averages and attempt
+    counts (optional items flagged so skipping is never misread as
+    failure), adopted T&L activities with recorded effectiveness —
+    and asks for the section's three fields per CO, labelled exactly
+    for paste-back: (a) Analysis w.r.t. Teaching-Learning activities,
+    (b) Analysis w.r.t. Assessment techniques (referencing the
+    weakest items), (c) Comment on the low attainment level (with
+    the corrective action to carry into Course Report 6.1). Guards:
+    asks for marks first if none exist; reports "all COs attained"
+    instead of producing an empty prompt. The button's tooltip
+    recommends running it before the narratives prompt.
+  - Manual and README regenerated with v1.57 stamps.
+
+v1.56 — July 15, 2026 (minor)
+  - CQI narratives prompt, task item 6 ("Actions reflected") hardened
+    after field testing showed the AI covering only the first loop
+    row: the task now demands EXACTLY five labelled blocks (one per
+    loop row, never merged or omitted); mixed CO/PO material in a
+    single recommendation cell must be distributed to the correct
+    rows (CO actions under row 1, PO-level consequences under row 3);
+    and two distinct fallbacks keep every cell honest — "No previous
+    recommendation for this loop." when the first column is empty,
+    "No specific action this offering." when a recommendation exists
+    but nothing addressed it.
+  - Manual and README regenerated with v1.56 stamps.
+
+v1.55 — July 15, 2026 (minor)
+  - The CQI tab's "Copy AI Prompt (CQI narratives & action plans)"
+    gains task item 6: "Actions from the previous offering & how they
+    were reflected (Course Specifications 6.1, second column)" — one
+    block per previous recommendation, synthesized from the working
+    notes, adopted activities and assessment plan, with the strict
+    "No specific action this offering." fallback and an explicit
+    instruction never to alter the first column (the previous Course
+    Report's text). New evidence sections feed it: the numbered
+    previous recommendations (read-only) and the two "Suggested
+    Modifications" working boxes. Item 6 and its sections appear only
+    when 6.1 has recommendations to close.
+  - The now-redundant "Copy AI Prompt (synthesize 'Actions
+    reflected')" button in Course Specifications 6.1 is retired; the
+    on-screen hints point to the CQI tab's prompt instead.
+  - "CQI Inputs from the Previous Offering" cards (T&L and
+    Assessments tabs) are now EDITABLE when expanded: all five loop
+    rows show paired auto-growing entry boxes — ⛓ Specifications 6.1
+    (previous offering's recommended actions) and ⛓ Course Report 6.1
+    (this offering's suggested actions). Everything writes into the
+    one shared dataset, so entries made here appear instantly in both
+    documents and the CQI tab; editing a Specifications entry
+    refreshes the tab's recommendations live. Empty rows are shown
+    too, so first-time entries can be made right where planning
+    happens. The collapsed one-line summary remains the default view.
+  - Manual and README regenerated with v1.55 stamps.
+
+v1.54 — July 15, 2026 (minor)
+  - "Copy AI Prompt (CQI narratives & action plans)" now asks for
+    exactly what its name promises. The task list previously
+    requested low-attainment analyses (which belong to the Low
+    Attainment Analysis section) and generic actions; it now targets,
+    labelled verbatim for field-by-field paste-back:
+    1) "How the teaching-learning methods and assessment tools
+       address complex engineering problems and the POs"
+    2) "Why these methods and tools are effective and appropriate"
+       (citing attainment, survey findings, TLA effectiveness;
+       honest about the not-attained COs)
+    3) "Process of designing and selecting assessment tools"
+    4) "Question moderation / vetting process"
+    5) "Improvement actions from this offering (Course Report 6.1)"
+       — one block per loop row (CO/PO/PEO, direct/indirect), with
+       the strict "No specific action this offering." fallback.
+    New evidence in the prompt: CP/CEA tags on the COs, per-assessment
+    rubric status, recorded TLA effectiveness, and vetter names from
+    the Vetting Form.
+  - The printable CQI Report is now explicitly fully auto-generated:
+    a screen-only notice states that every section is drawn from the
+    CQI tab, Course Specifications and Course Report — nothing to
+    fill in on the document; complete the sources and print. The
+    narrative boxes preserve line breaks and their empty-state text
+    points to the CQI tab.
+  - Manual and README regenerated with v1.54 stamps.
+
+v1.53 — July 15, 2026 (minor)
+  - Multi-line topics now display correctly. Topic lists pasted from
+    Excel with Alt+Enter line breaks were imported correctly (v1.52)
+    but rendered as one run-on line, because the 4.1 Topics cell was
+    a single-line input. The cell is now an auto-growing multi-line
+    box (line breaks editable, prints in full), and Course Report 3.1
+    renders the same topics with line breaks preserved. Already
+    imported data appears correctly without re-importing; the CSV
+    template round-trip (quoted multi-line cells) was already safe.
+  - Manual and README regenerated with v1.53 stamps.
+
+v1.52 — July 15, 2026 (minor)
+  Course Specifications:
+  - Headings split into two lines: "4. Teaching & Learning
+    Activities" / "4.1 Planned Contact Hours for Different Topics"
+    and "5. Assessments" / "5.1 Assessment Blueprint" (matching the
+    Course Report's 3/3.1 pattern).
+  - Section 4.1: new "⬇ Topics Template (CSV)" download (columns
+    Topic, Planned Contact Hours; includes the current topics, so it
+    doubles as an export for editing in Excel) and "⬆ Import Topics
+    (CSV)" — the imported file becomes the topic list after a
+    confirmation stating the counts; topics whose name matches keep
+    their Actual Hours and variation reasons (protecting Course
+    Report 3.1 mid-semester). Forgiving parsing: blank or non-numeric
+    hours are accepted/skipped and reported.
+  Course Report enrichments:
+  - Sections 4.2 and 4.3 now embed the CO and PO attainment charts
+    (same data and styling as the Attainment tab: bars vs the Target
+    KPI line) immediately before the respective comment boxes; sized
+    for A4 printing, drawn without animation so printing right after
+    opening works, with a quiet placeholder until marks exist.
+  - Section 5.1: the Course Evaluation Survey summary gains an
+    "Attained (vs Target KPI)?" row.
+  - New section 5.3 "Combined Attainment": per-CO and per-PO combined
+    (direct+indirect, editable weights) percentages with Attained
+    rows — the figure BAETE ultimately judges, tying sections 4 and 5
+    together.
+  - Manual and README regenerated with v1.52 stamps.
+
+v1.51 — July 15, 2026 (minor)
+  Students & Marks — list management fixed (reported by a testing
+  colleague: re-pasting a corrected list only appended, and students
+  could only be deleted one by one):
+  - Bulk paste now offers two explicit actions. "+ Add to List"
+    appends pasted students (existing IDs are no longer silently
+    skipped — their names update from the paste; marks untouched).
+    "⟲ Replace List" swaps in the pasted list as the new class list:
+    students whose Student ID matches keep their entered marks (and
+    get the corrected name), students absent from the new list are
+    removed with their marks — a confirmation first states both
+    counts.
+  - New "🗑 Remove All Students" button clears the whole list and all
+    marks after a confirmation (with a reminder to export a JSON
+    backup first).
+  - Manual and README regenerated with v1.51 stamps.
+
+v1.50 — July 15, 2026 (minor)
+  - Dashboard wording: step 5 now reads "Biggs triangle &
+    constructive alignment suggestions" (naming the concept
+    precisely), and step 9 reads "print the 7 documents for
+    reporting" (stating the purpose rather than the mechanism).
+  - Manual and README regenerated with v1.50 stamps.
+
+v1.49 — July 15, 2026 (minor)
+  - Dashboard typography rebalanced to match information hierarchy:
+    the course title is now the largest text on the page (23px), the
+    "Suggested Workflow" heading (renamed from "Suggested workflow",
+    matching the app's other card headings) is a step below (20px),
+    and the five stat-card numbers are reduced (28px -> 21px, labels
+    12px) so the summary strip no longer dominates the page.
+  - Manual and README regenerated with v1.49 stamps.
+
+v1.48 — July 15, 2026 (minor)
+  - Dashboard: the collapsed "CQI loop at a glance" card is removed —
+    the phase-grouped workflow (PLAN/DO/CHECK/ACT with temporal
+    subtitles) now teaches the cycle itself, and the full six-card
+    loop map remains atop the CQI tab. Step 8's expanded detail
+    points to it ("The full loop map is shown atop the CQI tab").
+  - Dashboard split into two rounded cards: the course identity card
+    (code — title, program · semester · teacher(s)) and a separate
+    "Suggested workflow" card containing the phase groups, stepper
+    circles, expandable rows and the Duplicate / Delete buttons.
+  - Manual and README regenerated with v1.48 stamps.
+
+v1.47 — July 15, 2026 (minor)
+  Dashboard redesigned for clarity (progressive disclosure — nothing
+  removed, everything one click away):
+  - The Suggested workflow is now grouped by PDCA phase with temporal
+    subtitles: PLAN (before the semester, steps 1-4), DO (during,
+    5-6), CHECK (when marks are in, 7), ACT (at the end, 8-9).
+  - Each step shows a stepper circle — filled ✓ when its data exists,
+    outlined for the next incomplete step (highlighted row), muted
+    while pending, dashed for the any-time checkpoints (CA,
+    Accreditation Documents) — plus a one-line gist, the familiar
+    status badge, and a ▸ button that expands the full instructions
+    (the previous detailed row texts, verbatim).
+  - "The CQI loop at a glance" moved below the workflow and is
+    collapsed to a single line ("Show the map" expands the six-card
+    strip). The CQI tab keeps its always-visible strip.
+  - The Duplicate for New Semester and Delete This Course buttons are
+    visually separated.
+  - Manual and README regenerated with v1.47 stamps.
+
+v1.46 — July 15, 2026 (minor)
+  - Synthesis prompt (Specifications 6.1, "Actions reflected")
+    rewritten for depth: the previous "2-4 sentences per loop row"
+    cap flattened rich working notes into inadequate summaries. The
+    task now demands the same granularity as the notes — one block
+    PER CO (direct CO row) and one block PER mapped PO (direct PO
+    row), each naming the concrete actions (activities by name,
+    assessment items with type and Bloom level, rubric and
+    similarity-check actions, marks-weight changes) and the
+    recommendation each closes. New constraint: "omit nothing that
+    appears in the notes; do not pad rows that have no matching
+    action". Indirect rows keep the strict "No specific action this
+    offering." fallback. The auto-growing 6.1 boxes accommodate the
+    longer text.
+  - Manual and README regenerated with v1.46 stamps.
+
+v1.45 — July 15, 2026 (minor)
+  - All four AI prompts now require justifications, so faculty can
+    evaluate the AI's advice instead of taking it on trust:
+    * T&L suggestions prompt — one-sentence justification per
+      activity (fit to the CO's Bloom domain/level, which
+      recommendation it addresses, feasibility for the class size);
+    * Assessment suggestions prompt — one-sentence justification per
+      technique (validity / reliability / authenticity gains at that
+      CO's level, recommendation addressed);
+    * Synthesis prompt ("Actions reflected") — each closure statement
+      must explicitly name the recommendation it closes;
+    * CQI narratives prompt — every recommended action must carry a
+      one-sentence justification tied to the specific evidence (CO/PO
+      figures, weak items, survey gaps); no unsupported assertions.
+    A shared rule keeps justifications to one sentence — reusable in
+    the CQI narratives.
+  - CQI tab: the generic "Copy AI Prompt" button is renamed
+    "Copy AI Prompt (CQI narratives & action plans)" to make its role
+    obvious next to the other, specifically-named prompt buttons.
+  - Manual and README regenerated with v1.45 stamps.
+
+v1.44 — July 15, 2026 (minor)
+  - Assessments tab, item rows: the item Delete button is now clearly
+    visible — a red ✕ under a labelled "Delete" column header (it
+    existed before but was too subtle to find). Deleting an item that
+    already has marks now asks for confirmation, stating how many
+    students' marks will be removed; items without marks delete
+    immediately.
+  - Item rows de-cluttered: the repeated word "Mandatory" next to
+    each checkbox is removed — the column header ("Mandatory?") and
+    the checkbox tooltip carry the explanation.
+  - Consistency: the Course Specifications topics table and the CQI
+    stakeholder register now also label their ✕ column "Delete".
+  - Manual and README regenerated with v1.44 stamps.
+
+v1.43 — July 15, 2026 (minor)
+  - Course Report 3.3 (Analysis of the Resources) rebuilt to follow
+    the official AUST template exactly (per the provided document):
+    five sub-tables — 3.3.1 Physical Resources in the Classroom
+    during the Face to Face Sessions, 3.3.2 ICT Hardware Resources,
+    3.3.3 Software Resources, 3.3.4 Network Resources, 3.3.5 Media
+    Resources — each with an editable Items column (pre-listed items
+    exactly as in the template, plus blank rows for the instructor's
+    own additions), separate Yes / No tick columns (mutually
+    exclusive) and Remarks boxes (5 rows, auto-growing). Sub-sections
+    numbered 3.3.1–3.3.5 to avoid clashing with 3.1/3.2.
+  - Data: pre-v1.42 category entries migrate onto the matching rows
+    (including the old software items where filled); v1.42's
+    per-activity resource notes remain in saved files but are no
+    longer displayed. "Duplicate for New Semester" resets 3.3 to a
+    blank template.
+  - Course Info: "Course Teacher" relabelled "Course Teacher(s)".
+  - Housekeeping: three code comments whose historical version
+    numbers had been drifting with each release were reworded.
+  - Manual and README regenerated with v1.43 stamps.
+
+v1.42 — July 15, 2026 (minor)
+  - Course Outline 16 (week-wise distribution): the Topic and
+    Assessment-method cells are now auto-growing boxes (2 rows by
+    default — compact when empty, expanding with the text).
+  - Course Report: the combined heading is split into "3. Teaching &
+    Learning Activities" and "3.1 Analysis of Contact Hours".
+  - Course Report 3.2 (Analysis of T&L Activities): rows are now
+    derived automatically from the adopted activities (same union as
+    the T&L tab's Summary Table) — one row per activity with its
+    CO(s), name read-only; "Was it effective?" and the difficulties
+    box (5 rows, auto-growing) remain editable. Existing entries
+    migrate by name; analyses of activities no longer adopted are
+    preserved and marked "no longer adopted". The T&L recommender's
+    ineffective-activity ranking reads the new structure.
+  - Course Report 3.3 (Analysis of the Resources): likewise one row
+    per adopted activity — Resources Used/Required, Acceptable?, and
+    Remarks (auto-growing boxes) — replacing the fixed
+    physical/ICT/software/network/media category tables. (Old
+    category data remains in saved files but is no longer shown.)
+  - No manual rows in 3.2/3.3: adopt or remove activities in the
+    T&L tab (single source of truth).
+  - "CO Exit Survey" renamed to "Course Evaluation Survey"
+    everywhere — Attainment tab (one parenthetical keeps the
+    familiar "CO exit survey" term), printable document title and
+    navigation, CSV template filename, Dashboard, CQI loop map and
+    status board, evidence checklist, AI prompts, Manual and README.
+    Saved data and previously exported CSVs are unaffected.
+  - Manual and README regenerated with v1.42 stamps.
+
+v1.41 — July 15, 2026 (minor)
+  - Uniform sizing for every multi-line entry box: 5 rows by default,
+    growing automatically as the text exceeds them (and opening fully
+    expanded for previously saved long text). Applies to the
+    "Suggested Modifications" boxes (T&L and Assessments tabs), all
+    narrative and table boxes in the CQI tab, and every editable
+    multi-line field in all seven Accreditation Documents. Single-line
+    dotted fields are unchanged. Supersedes the fixed 10-row boxes of
+    v1.35/v1.40.
+  - Printed documents now size each box to its content (minimum five
+    rows): compact when empty, complete when filled.
+  - Manual and README regenerated with v1.41 stamps.
+
+v1.40 — July 15, 2026 (minor)
+  - The scoped AI-prompt buttons moved into their working-notes cards:
+    "Copy AI Prompt (T&L suggestions only)" now sits inside
+    "Suggested Modifications in T&L Activities", and "Copy AI Prompt
+    (assessment suggestions only)" inside "Suggested Modifications in
+    Assessment Activities" — copy the prompt, paste the AI's output
+    into the box just below it. The collapsed CQI Inputs cards are now
+    purely informational (summary line + Show details).
+  - Both working-notes boxes are full page-width with 10 visible rows
+    and auto-grow: the box expands as text exceeds 10 rows (also on
+    first render of previously saved long text).
+  - Course Specifications 6.1: new "Copy AI Prompt (synthesize
+    'Actions reflected')" button — synthesizes the two working boxes
+    (with the 6.1 recommendations as context) into accreditation-ready
+    closure text for the "Actions reflected in the Current Course
+    Specification" column, one labelled block per loop row; rows with
+    no matching action get "No specific action this offering." Guard:
+    asks to fill the boxes first if both are empty. (Distinct from the
+    combined planning prompt retired in v1.38 — this one closes the
+    loop rather than plans it.)
+  - Faculty Manual: new section 5.1 "The CQI Loop at a Glance" — the
+    six-step loop map as a table (Phase / Where in the app / What you
+    do) followed by step-by-step explanations built around one running
+    example (a Renewable Energy Systems course improving CO1 and CO4
+    across a full cycle), and a "Scholarly basis" note grounding the
+    workflow in PDCA (Shewhart/Deming), the HE outcomes-assessment
+    "closing the loop" literature (Suskie; Banta & Palomba; Prados et
+    al.; CDIO Standard 12) and Biggs' constructive alignment.
+  - README regenerated with v1.40 stamps.
+
+v1.39 — July 15, 2026 (minor)
+  - New working-notes boxes below the CQI Inputs cards:
+    "Suggested Modifications in T&L Activities" (T&L tab) and
+    "Suggested Modifications in Assessment Activities" (Assessments
+    tab). Paste the distilled suggestions (e.g., the scoped AI
+    prompt's output) and act on them while selecting activities and
+    designing assessments. Pool activities named in the T&L box are
+    boosted in the recommendations (green "CQI match" badge, live on
+    save). Stored per course and kept in backups; not printed in any
+    document — closure is still recorded in Specifications 6.1
+    ("Actions reflected").
+  - Dashboard: workflow item 4 (Assessments) now starts from the
+    assessment-related CQI recommendations of the previous offering
+    and names the new working-notes box; item 3 (T&L) likewise names
+    its box.
+  - Manual and README regenerated with v1.39 stamps.
+
+v1.38 — July 15, 2026 (minor)
+  CQI simplification across Dashboard, T&L, Assessments and CQI tabs,
+  after a critical review of duplications:
+  - Dashboard: new "CQI loop at a glance" map above the Suggested
+    workflow — START (previous Course Report 6.1) → PLAN
+    (Specifications 6.1; T&L + Assessments) → DO·CHECK (deliver,
+    marks, attainment, survey) → ACT (Course Report 6.1, CQI
+    narratives/evidence) → ⟳ REPEAT (Duplicate for New Semester),
+    each step naming its tab. The nine workflow items now carry
+    matching PLAN / DO / CHECK / ACT phase tags, so the whole
+    process reads as one continuous CQI story. The same loop map
+    appears atop the CQI tab.
+  - "CQI Inputs from the Previous Offering" cards (T&L and
+    Assessments tabs) are collapsed by default: one summary line
+    ("N recommendation entries recorded · sources") plus the tab's
+    AI-prompt button; "Show details" expands the full panels.
+  - One dataset, clearly marked: every instance of the shared 6.1
+    tables (CQI tab, both documents, the cards' panels) carries a
+    "⛓ linked" badge stating it is the same data, editable in
+    either place.
+  - "⟳ Pull CQI actions from Course Report into Specifications 6.1"
+    now lives only in the CQI tab (the loop's home); removed from
+    the T&L and Assessments cards.
+  - The combined "Copy AI Prompt (T&L + assessment planning)" button
+    in Course Specifications 6.1 is retired — since v1.37 it was
+    exactly the union of the two scoped prompts, which remain in the
+    T&L and Assessments tabs (a note under 6.1 points to them).
+  - Manual and README regenerated with v1.38 stamps.
+
+v1.37 — July 15, 2026 (minor)
+  - Assessments tab: new "CQI Inputs from the Previous Offering" card
+    at the top of the page — identical to the T&L tab's card
+    (labelled, scrollable recommendation panels with source badges,
+    CO sub-headings and bullets). Its button row hosts the "Copy AI
+    Prompt (assessment suggestions only)" button (moved out of the
+    Assessment Plan card), plus Pull CQI actions and the Open
+    Specifications / Open Report shortcuts. Assessments-specific
+    empty state: "fill Course Specifications 6.1 first". The
+    "Marked ineffective last time" line remains T&L-only.
+  - "⟳ Pull CQI actions" now refreshes whichever tab it was pressed
+    from (previously always re-rendered T&L).
+  - AI prompt consistency: all three prompt buttons (T&L-only,
+    assessment-only, and the combined planner in Course
+    Specifications 6.1) are now generated from the same shared
+    building blocks — course header, 6.1 recommendations block, T&L
+    context, assessment context, task texts and constraints. The
+    combined prompt is by construction the exact union of the two
+    scoped prompts, so they can never drift apart.
+  - Manual and README regenerated with v1.37 stamps.
+
+v1.36 — July 15, 2026 (minor)
+  - T&L tab, "CQI Inputs from the Previous Offering": the recorded
+    recommendations are now readable — each filled entry appears in
+    its own labelled, scrollable panel (max ~240 px, source badge:
+    Specifications 6.1 or Course Report 6.1, loop name). Inside the
+    panels, "COn:" prefixes become bold sub-headings, dash-separated
+    items become bullets, dash-runs become separators, and plain
+    prose stays untouched (display only; the recommender still reads
+    the raw text).
+  - New scoped AI prompt in the T&L tab — "Copy AI Prompt (T&L
+    suggestions only)": extracts ONLY the teaching-learning advice
+    from the Specifications 6.1 "Recommended Actions" column,
+    expressed per CO as adoptable Activity-Pool names with one-line
+    classroom tips (assessment advice explicitly excluded).
+  - New scoped AI prompt in the Assessments tab — "Copy AI Prompt
+    (assessment suggestions only)": extracts ONLY the assessment
+    advice, expressed as actions doable in that tab (items with
+    CO/marks/Level, mandatory vs optional and question choice,
+    rubrics incl. the "Rubric prepared" tick, similarity checks,
+    marks distribution). Teaching-delivery advice excluded.
+  - Both new buttons guard against an empty 6.1; the combined
+    planning prompt in Course Specifications 6.1 (v1.34) remains.
+  - Manual and README regenerated with v1.36 stamps.
+
+v1.35 — July 15, 2026 (minor)
+  - Larger entry boxes (10 visible lines each, scroll beyond) for all
+    CQI action fields, to accommodate substantial narratives:
+    * Course Specifications 6.1 — both the "Recommended Actions for
+      Quality Improvement" and "Actions reflected in the Current
+      Course Specification" columns (all five rows);
+    * Course Report 6.1 (Suggested Action Plans) — all five rows;
+    * CQI tab — the two linked tables mirroring the above.
+    Same data paths and auto-save as before; printed documents show
+    the roomier boxes, matching the space given in the AUST paper
+    templates.
+  - Manual and README regenerated with v1.35 stamps.
+
+v1.34 — July 15, 2026 (minor)
+  - Course Specifications, section 6.1: new "Copy AI Prompt (T&L +
+    assessment planning)" button (screen-only; excluded from print).
+    The prompt's recommendation inputs are ONLY the five cells of the
+    "Recommended Actions for Quality Improvement" column (CO direct,
+    CO indirect, PO direct, PO indirect, PEO indirect; empty rows
+    skipped). Course context (COs with domain/level, adopted T&L
+    activities, assessment plan with rubric status, class size) and
+    the Activity Pool names are included as background only, so the
+    AI's suggestions map to specific COs and use adoptable pool names.
+    The task asks for practical, semester-ready tips on (1) T&L
+    activity selection and (2) assessment techniques (authentic
+    tasks, rubrics, similarity checks, question design/moderation).
+  - Guard: if all five cells are empty, the button asks the user to
+    fill 6.1 first instead of producing an empty prompt.
+  - On-screen hint under the 6.1 table explains the flow: adopt
+    suggestions in the T&L tab, adjust techniques in the Assessments
+    tab (they then feed Specifications 3.1 and the CA checks).
+  - Manual and README regenerated with v1.34 stamps.
+
+v1.33 — July 15, 2026 (minor)
+  - Dashboard "Suggested workflow" rewritten to reflect all current
+    features (items 1-9): attainment thresholds under Course Info;
+    BT Domain/Level and tick-matrix under COs; the T&L step now
+    directs users to fill out Course Specifications Table 6.1 (CQI
+    recommendations of the previous offering) and notes that adopted
+    activities auto-fill Table 3.1 (Constructive Alignment), plus the
+    T&L Activities Summary Table; the Assessments step covers item
+    Level warnings, optional questions / ⚙ question choice, the
+    "Rubric prepared" tick and the Assessment Summary Table; CA,
+    Students & Marks (CSV), Attainment (Indirect + Combined), and CQI
+    (low-attainment analysis, rubrics evidence, Copy AI Prompt)
+    updated accordingly.
+  - Item 9 reworded: "... Course Report & CQI Report — several key
+    information are auto-filled and printable."
+  - Manual and README regenerated with v1.33 stamps.
+
+v1.32 — July 15, 2026 (minor)
+  - Practical Tips (Assessment Summary Table) now name the specific
+    assessment(s) each tip concerns (e.g., "Assignment 2: ...",
+    "Term Project, Final Exam: ..."), so there is no ambiguity about
+    which assessment the advice applies to.
+  - Assignments: rubric made mandatory — the tip states that a rubric
+    is a must (attached to the brief) and that submissions should be
+    run through a similarity checker (e.g., Turnitin or the
+    institution's approved platform), with the policy stated up front.
+  - New "Rubric prepared" checkbox on Assignment / Project /
+    Presentation / Viva assessment cards; until ticked, the summary
+    table shows an amber "rubric pending — <name>" badge. Rubrics
+    added to the CQI tab's Annexure H evidence checklist.
+  - New tips: authorship check in the AI era (pair take-home
+    assignments/projects with a short viva or in-class task);
+    individual accountability in group projects (peer assessment /
+    contribution-weighted marks); formative use of quizzes with rapid
+    feedback before the next major assessment (Nicol &
+    Macfarlane-Dick 2006).
+  - Manual and README regenerated with v1.32 stamps.
+
+v1.31 — July 15, 2026 (minor)
+  - Assessment Summary Table (Assessments tab): the "Comments from CA
+    Perspective" column is replaced by "Practical Tips" — short,
+    rule-generated advice on the assessments measuring each CO, from an
+    engineering-education perspective: analytic rubrics shared in
+    advance (projects/assignments, labs, presentations/vivas),
+    authentic exam problems with realistic data and pre-moderated
+    marking schemes, parallel optional questions, observation
+    checklists for affective/psychomotor COs, and formative use of
+    quizzes. Grounded in the assessment literature (Biggs & Tang;
+    Wiggins 1990; Gulikers et al. 2004; Jonsson & Svingby 2007;
+    Panadero & Jonsson 2013) — see the Manual's new "Authentic
+    assessment & rubrics" note. Unassessed COs remain flagged in red;
+    alignment analysis stays in the CA tab (no duplication).
+  - Manual and README regenerated with v1.31 stamps.
+
+v1.30 — July 15, 2026 (minor)
+  - T&L tab: new "T&L Activities Summary Table" at the bottom of the
+    page — every adopted activity with its Brief Description, Practical
+    Tips and Related CO(s). Classroom-ready tips authored for all 31
+    built-in pool activities; custom pool activities accept your own
+    tips (new field in the Add-a-custom-activity form); free-text
+    activities show "—" until matched to a pool entry.
+  - Assessments tab: new "Assessment Summary Table" at the bottom of
+    the page — per CO: the assessments/items measuring it (with the
+    † optional and ↑ exceeds-level markers), % of Total Marks, and
+    Comments from the CA Perspective generated by the same rules as
+    the CA tab (unassessed, exceeds level, optional-only measurement,
+    under-assessed, high-level CO assessed only by quizzes, ✓ Aligned).
+    A totals row flags marks not mapped to any CO.
+  - New marks-distribution chart above the Assessment Summary Table:
+    one stacked horizontal bar showing each CO's share of the total
+    marks, for an at-a-glance check of assessment balance.
+  - Manual and README regenerated with v1.30 stamps.
+
+v1.29 — July 14, 2026 (minor)
+  - CA tab: the triangle's centre now reads "KSA" (larger type) instead
+    of the three words; the legend beneath the figure and a hover
+    tooltip expand it — KSA = Knowledge, Skills, Attitudes.
+  - Change log file renamed to include the version number
+    (change_log_v1.29.txt); it will be renamed at every release.
+  - Manual, README and Methodology guide regenerated with v1.29 stamps.
+
+v1.28 — July 14, 2026 (minor)
+  - "T&L Activities" tab renamed to "T&L".
+  - New "CA" tab (after Assessments): live Biggs constructive-alignment
+    triangle — Course Outcomes / T&L Activities / Assessments with
+    "Knowledge, Skills, Attitudes" at the centre — each edge colored by
+    the course's actual state (green/amber/red). Per-CO alignment cards
+    show adopted activities (verified fit / level mismatch / unverified
+    free-text) and assessment items (marks share, † optional, ↑ exceeds
+    level), with rule-based suggestions: unassessed COs, missing or
+    mismatched activities (one-click Adopt), level-exceeding items,
+    under-assessed COs (<10% of marks), Create/Evaluate COs assessed
+    only by quizzes, and optional-only measurement warnings.
+  - Assessment items gained a Bloom "Level" (options follow the CO's BT
+    domain; defaults to and re-syncs with the CO's declared level).
+    Setting an item's level ABOVE its CO's raises a constructive-
+    alignment warning (override-able; overridden items carry a
+    persistent ↑ marker). Existing items migrated to their CO's level.
+    No attainment calculation is affected.
+  - Vetting Form Level column and the Course Specifications assessment
+    blueprint now show each item's own level.
+  - Dashboard workflow updated (CA inserted as step 5).
+
+v1.27 — July 14, 2026 (minor)
+  - Attainment tab, Indirect Measurement: new "Download Survey CSV
+    Template" button — a header-only CSV (Timestamp + one column per CO
+    with the full CO statement, import-compatible by construction) for
+    filling in Excel or designing a Google Form. Import button renamed
+    from "Import Survey CSV (Google Forms)" to "Import Survey CSV".
+
+v1.26 — July 14, 2026 (minor)
+  - File menu completed: "New Data File…" creates a fresh workspace (no
+    courses) saved to a brand-new .json — the custom T&L Activity Pool
+    carries over; the previous file is flushed before switching, and
+    confirmations guard un-linked or un-reconnected data. "Save As…"
+    added to the linked and reconnect states — writes the current data
+    to a newly chosen file (suggested name: <current>_copy.json) and
+    switches auto-saving to it, leaving the old file as a snapshot.
+
+v1.25 — July 14, 2026 (minor)
+  - AI prompt enriched based on field testing: weakest items now include
+    attempt counts ("attempted by x of N students" — distinguishes
+    non-submission from task difficulty); each not-attained CO gains a
+    five-band score distribution (0-20/20-40/40-60/60-80/80-100%);
+    the IUMS grade distribution is included when entered in the Course
+    Report; and the constraints now state explicitly that attendance/
+    participation data is not tracked, with the blank-vs-zero marks
+    convention restated.
+
+v1.24 — July 14, 2026 (minor)
+  - CQI tab: new "📋 Copy AI Prompt" button. Assembles a complete, curated
+    prompt from the course data — methodology note (with the course's
+    actual thresholds), course context, full CO statements with BT
+    domain/level and mapped POs, Washington Accord names of the mapped
+    POs only, assessment plan (marks, CO tags, optional flags, groups,
+    choice scheme), direct results (per-CO n, averages, verdicts, weakest
+    items, below-threshold counts), indirect survey summary, T&L history
+    (adopted activities, recorded effectiveness, previous CQI actions),
+    a task list auto-focused on the not-attained COs, and evidence-bound
+    constraints. Aggregates only — student names/IDs are never included.
+    Empty sections are omitted. Copies to the clipboard for pasting into
+    any AI tool.
+
+v1.23 — July 14, 2026 (minor)
+  - CQI tab: all analysis fields now allow at least five lines. The
+    narrative and low-attainment textareas gained a five-line minimum
+    height (still resizable), and the single-line inputs in the two
+    linked action tables (Course Report 6.1 / Course Specifications 6.1)
+    were converted to multi-line textareas. The printable documents keep
+    their compact print-style fields.
+
+v1.22 — July 14, 2026 (minor)
+  - CQI tab: all editable fields widened to full width (CSS only) — the
+    BAETE 3.8 narratives, the action tables linked to Course Report 6.1
+    and Course Specifications 6.1, the low-attainment analysis boxes,
+    and the stakeholder register. The Date column keeps its compact
+    width; the printable documents' dotted print-style fields are
+    unaffected. No calculation or content changes.
+
+v1.21 — July 14, 2026 (minor)
+  - Attainment Calculation Methodology guide: applicability line updated
+    to v1.21, noting that calculations are unchanged since v1.20 and
+    that Group/scheme settings now live under the Advanced panel.
+  - Assessments tab simplified by progressive disclosure: item rows show
+    only Label, Max marks, CO and Mandatory. Question Groups and the
+    choice scheme moved into a per-assessment "⚙ Advanced (question
+    choice)" panel — collapsed by default, shown only when the
+    assessment has optional items, auto-opened when its settings are in
+    use (with a "settings in use" badge when collapsed). No change to
+    any calculation; all v1.18–v1.20 fairness rules remain in force.
+
+v1.20 — July 14, 2026 (minor)
+  - Choice scheme per assessment: declare "students must answer k of the
+    optional questions" in the Assessment Plan (question-unit = a group
+    or an ungrouped optional item). Rule R5: a student attempting fewer
+    than k units has the shortfall counted as zeros, drawn from the
+    unattempted units with the highest maximum marks (deterministic,
+    conservative). Attempting more than k counts all attempted units.
+  - Absent rule: with a declared scheme, a student with no marks
+    anywhere in that assessment is treated as absent from it and
+    excluded from its calculations (instead of receiving phantom zeros).
+  - Full methodology with worked examples published in
+    Attainment_Calculation_Methodology.docx (Annex A now implemented).
+
+v1.19 — July 14, 2026 (minor)
+  - Assessment Plan: optional items can share a question Group (e.g.,
+    sub-parts Q3a/Q3b grouped as "Q3"). If a student attempts any item
+    of the group, the whole group counts for that student (unanswered
+    sub-parts = 0) — partial answers to a deliberately chosen question
+    are penalized. If no item of the group is attempted, the whole group
+    is excluded (no penalty). Groups are scoped per assessment; an
+    entered 0 counts as an attempt and engages the group.
+  - Group shown in the assessment blueprint; low-attainment item
+    averages are group-aware.
+
+v1.18 — July 14, 2026 (minor)
+  - Assessment Plan: every item now has a "Mandatory" checkbox (default:
+    ticked). Fair handling of choice-based exams (e.g., "Q1 mandatory,
+    answer any four of Q2-Q7"): a blank mark on a mandatory item counts
+    as 0, while a blank on an optional item is excluded from that
+    student's CO calculation — no penalty for legitimately skipped
+    questions. Students with no assessed marks under a CO are excluded
+    from that CO's cohort (per-CO n shown in the Attainment tab), and
+    per-student PO scores use only the COs the student was assessed on.
+  - Optional items are marked with † in the marks grid and the vetting
+    form, "(optional)" in the assessment blueprint, and an "optional"
+    badge in the low-attainment diagnostics.
+  - Convention: blank = not attempted; an entered 0 = attempted and
+    scored zero.
+
+v1.17 — July 14, 2026 (minor)
+  - T&L Activities: adopted activities can now be deselected. Each CO
+    card shows its delivery methods as removable chips (click × to
+    remove); the recommendation list's "adopted" badge reverts to
+    "+ Adopt" immediately, so choices are fully reversible. Removal does
+    not touch the effectiveness history (Course Report 3.2) or CQI
+    records.
+
+v1.16 — July 14, 2026 (minor)
+  - Ctrl+S / Cmd+S now saves the current session at any moment: commits
+    the field being edited, flushes the pending file write immediately
+    (file linked), prompts reconnection (file awaiting permission), or
+    confirms browser storage (no file). The browser's own "Save page
+    as…" dialog is suppressed. The File menu item now reads
+    "Save Now (Ctrl+S)".
+
+v1.15 — July 14, 2026 (minor)
+  - Accreditation Documents: the "AUST" placeholder circle in the top-left
+    corner of every document is replaced by the official AUST logo. The
+    logo ships as aust_logo.svg next to index.html (upload both to the
+    repository); if the file is missing, documents render without a logo.
+
+v1.14 — July 14, 2026 (minor)
+  - T&L Activities: the "Add your own activity" input now suggests
+    activities from the Activity Pool as you type (autocomplete via
+    datalist) — pick a pool activity, search it, or enter a new one in
+    the same box. Using canonical pool names keeps the CQI
+    effectiveness tracking (name-matched) reliable.
+
+v1.13 — July 14, 2026 (minor)
+  - T&L Activities: each CO card now has an "Add your own activity"
+    input — typed activities are appended directly to that CO's delivery
+    methods (with duplicate protection). An optional tick also saves the
+    activity to the Activity Pool, auto-tagged with the CO's BT domain
+    and level so it participates in future recommendations and sharing.
+  - Recommendation lists gained a "Show all matching" toggle (previously
+    fixed at the top 6).
+
+v1.12 — July 14, 2026 (minor)
+  - CO-PO Mapping Matrix simplified: a click now toggles a check mark (✓)
+    instead of cycling correlation strengths 1/2/3. The strengths were
+    display-only (calculations already treated mapping as binary,
+    weighted by CO marks per the AUST workbook method), so results are
+    unchanged. Existing files with 1-3 values remain fully compatible
+    (any non-zero value shows as ✓).
+
+v1.11 — July 14, 2026 (minor)
+  - Header file chip is now a File menu: with no file linked it shows
+    "File" with Open Data File… / Save to New File…; with a file linked
+    the status chip opens a menu with Open Another File…, Save Now and
+    Stop Using File; the Reconnect state keeps one-click reconnect plus
+    the menu. Opening an existing file is now available directly from
+    the main interface.
+
+v1.10 — July 14, 2026 (minor)
+  - COs & CO-PO Mapping: added a "BT Domain" drop-down per CO (Cognitive /
+    Affective / Psychomotor); the "Level" column (renamed from "Bloom's
+    Level") now offers the levels of the selected domain (C1-C6, A1-A5,
+    P1-P7).
+  - Propagated throughout the app: the T&L Activities recommender now
+    matches Affective/Psychomotor COs to activities covering those
+    domains; the Final Exam Vetting Form's Level column, the CQI tab and
+    the CQI Report show the level of the CO's primary domain.
+  - Course Outline / Specifications keep their three-column C/A/P
+    Bloom's display as per the AUST templates.
+
+v1.9 — July 14, 2026 (minor)
+  - Header icon: restored the v1.6 dark-gradient tile (preferred color
+    scheme) and solved its contrast problem with a mint hairline outline
+    and a stronger drop shadow, so the tile separates cleanly from the
+    teal title bar.
+
+v1.8 — July 14, 2026 (minor)
+  - Header logo redesigned as a tile-less mark: the target rings, CQI
+    orbit arrow and checkmark are now drawn directly on the title bar
+    (white rings with a subtle dark halo, amber accents) instead of
+    sitting on a background tile — better integration and contrast.
+
+v1.7 — July 14, 2026 (minor)
+  - Header icon switched to a light variant (mint-white tile, teal target
+    rings) for sufficient contrast against the teal title bar; the dark
+    variant remains in use for the favicon and standalone icon assets,
+    which sit on light backgrounds.
+
+v1.6 — July 14, 2026 (minor)
+  - Faculty User Manual: app icon added to the cover page above the title.
+  - Added the app icon (target + checkmark + CQI orbit arrow) inline
+    beside the "OBE Course Manager" title in the header — a brand
+    lockup embedded as inline SVG, keeping the app a single file.
+  - Standalone icon assets added to the repository: app_icon.svg,
+    app_icon_1024.png, app_icon_512.png, favicon PNGs.
+
+v1.5 — July 13, 2026 (minor)
+  - Added a favicon (inline SVG data URI, keeping the app a single file):
+    a target symbol with a checkmark at its centre — outcomes attained —
+    in the tool's teal/amber palette. Static (non-animated) by design.
+
+v1.4 — July 13, 2026 (minor)
+  - Course Info: changed the Cohort field's example text from
+    "e.g., Intake Spring 2023 / 39th batch" to "e.g., ME17".
+
+v1.3 — July 13, 2026 (minor)
+  - Added a "Cohort" field in Course Info (between Section and Course
+    Teacher). The value is copied automatically into the Direct
+    Measurements of COs & POs document (between Section and No. of
+    Students) and the CQI Report (between Semester and Course Teacher).
+  - Faculty User Manual updated accordingly.
+
+v1.2 — July 13, 2026 (minor)
+  - Renamed the "AUST Documents" tab to "Accreditation Documents" to make
+    the tool meaningful beyond a single institution; a note in the tab
+    clarifies that the documents follow the AUST OBE templates
+    (BAETE / Washington Accord framework). Updated in the app, README,
+    and the Faculty User Manual.
+
+v1.1 — July 13, 2026 (minor)
+  - Added copyright notice and Creative Commons Attribution (CC BY) 4.0
+    International License line to the app footer, README, and the
+    Faculty User Manual (cover page and page footer).
+  - Introduced this change log file (change_log.txt).
+
+v1 — July 13, 2026 (first release)
+  Core:
+  - Course management (multiple courses), Course Info, attainment settings.
+  - COs with Bloom's taxonomy (C/A/P) and click-to-set CO-PO mapping matrix
+    (12 Washington Accord Program Outcomes, strengths 1-3).
+  - T&L Activities tab: CQI-aware recommender with a pool of 31 pedagogies
+    (extensible with custom activities), per-CO recommendations filtered by
+    mode and class size, one-click adoption into delivery methods.
+  - Assessment plan: assessments with CO-tagged items and maximum marks.
+  - Students & Marks: individual/bulk enrolment (Excel paste), marks grid,
+    Empty Template (CSV) / Import Marks (CSV) / Export Marks (CSV).
+  Attainment:
+  - Direct measurement following the AUST "Direct CO-PO Calculations"
+    workbook method (Target Pass Marks 40, KPI 50, per-student PO scores
+    weighted by CO allocated marks), with charts.
+  - Indirect measurement via CO Exit Survey (tally grid, Google Forms CSV
+    import, printable survey form), Likert threshold configurable.
+  - Combined attainment with user-editable Direct/Indirect weights
+    (default 80/20).
+  CQI (BAETE Criteria 3.8 & 5.4.3):
+  - Auto-compiled per-CO table of T&L methods, assessment tools, CP/CEA;
+    narrative fields (complex problems, effectiveness, tool design,
+    question moderation).
+  - Six-step CQI-loop status board; action tables two-way linked with
+    Course Report 6.1 and Course Specifications 6.1.
+  - Low Attainment Analysis linked to the Attainment tab: threshold filter
+    for low-scoring students per CO, item-wise average diagnostics,
+    analyses w.r.t. (a) T&L activities and (b) assessment techniques,
+    and comments.
+  - Stakeholder Feedback Register and Annexure H evidence checklist.
+  AUST Documents (auto-filled, printable):
+  - Course Outline, Course Specifications, Final Examination Vetting Form,
+    Direct CO-PO Calculations, CO Exit Survey, Course Report, CQI Report.
+  Data:
+  - Work on a real .json file with auto-save (File System Access API,
+    Chrome/Edge), reconnect flow; localStorage cache; JSON export/import;
+    "Duplicate for New Semester (CQI)" carrying action plans forward.
+  Documentation:
+  - Faculty User Manual (docx) with Appendix A: T&L activity pool
+    descriptions and selection justifications.

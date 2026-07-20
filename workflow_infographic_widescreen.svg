@@ -61,9 +61,10 @@
     </g>
     <text x="960" y="322" text-anchor="middle" font-size="21" font-weight="700" fill="#0A4A40">T&amp;L</text>
     <line x1="840" y1="336" x2="1080" y2="336" stroke="#9AB8B2" stroke-width="1.5" stroke-dasharray="2 4"/>
-    <text x="960" y="362" text-anchor="middle" font-size="15" fill="#1F2D3D">CQI-aware recommendations;</text>
-    <text x="960" y="384" text-anchor="middle" font-size="15" fill="#1F2D3D">Topic-wise T&amp;L Plan; summary</text>
-    <text x="960" y="406" text-anchor="middle" font-size="15" fill="#1F2D3D">table with tips; AI prompt</text>
+    <text x="960" y="362" text-anchor="middle" font-size="14" fill="#1F2D3D">CQI-aware recommendations;</text>
+    <text x="960" y="384" text-anchor="middle" font-size="14" fill="#1F2D3D">Learning Resources register —</text>
+    <text x="960" y="406" text-anchor="middle" font-size="14" fill="#1F2D3D">CO ticks auto-fill the Topic Plan</text>
+    <text x="960" y="428" text-anchor="middle" font-size="14" fill="#1F2D3D">(deselectable); tips; AI prompt</text>
   </g>
 
   <!-- 4 Assessments (PLAN) -->
@@ -257,6 +258,6 @@
   <!-- ======== FOOTER ======== -->
   <rect x="640" y="1015" width="640" height="40" rx="20" fill="#E6F2F0"/>
   <rect x="752" y="1023" width="70" height="24" rx="6" fill="#0A4A40"/>
-  <text x="787" y="1040" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">v1.70</text>
+  <text x="787" y="1040" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">v1.78</text>
   <text x="836" y="1041" font-size="17" fill="#0A4A40">·  mazhar17.github.io/obe-course-manager</text>
 </svg>

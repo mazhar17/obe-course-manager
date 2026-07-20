@@ -165,7 +165,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.77</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.78</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -203,14 +203,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.77</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.78</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.77";
+const APP_VERSION = "v1.78";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -258,7 +258,7 @@ function ensureAust(c){
   a.spec = Object.assign({submitDate:"", other:""}, a.spec||{});
   a.spec.slt = Object.assign({lecture:"42", active:"", reading:"", quiz:"", assign:"", finalPrep:"", finalExam:"3", total:"120"}, a.spec.slt||{});
   if(!Array.isArray(a.spec.topics)) a.spec.topics = [];
-  a.spec.topics.forEach(t=>{ if(!Array.isArray(t.cos)) t.cos = []; if(!Array.isArray(t.tla)) t.tla = []; if(!Array.isArray(t.res)) t.res = []; if(!Array.isArray(t.resExcl)) t.resExcl = []; });   // topic -> related CO ids, topic-specific activities, planned resources (T&L tab's topic-wise plan)
+  a.spec.topics.forEach(t=>{ if(!Array.isArray(t.cos)) t.cos = []; if(!Array.isArray(t.tla)) t.tla = []; if(!Array.isArray(t.res)) t.res = []; if(!Array.isArray(t.resExcl)) t.resExcl = []; if(!Array.isArray(t.tlaExcl)) t.tlaExcl = []; });   // topic -> related CO ids, topic-specific activities, planned resources, per-topic deselections (T&L tab's topic-wise plan)
   if(!Array.isArray(a.learnRes)) a.learnRes = [];   // learning resources shared with students: {type,title,url,cos,notes}
   a.learnRes.forEach(r=>{
     if(!Array.isArray(r.cos)) r.cos = [];
@@ -1092,8 +1092,23 @@ function addTopicTLA(i){
   const name = (inp && inp.value || "").trim();
   if(!name){ toast("Type or pick the activity first"); return; }
   if(!Array.isArray(t.tla)) t.tla = [];
+  const autoM = [...new Set((t.cos||[]).flatMap(id=>{ const co = c.cos.find(x=>x.id===id); return co? deliveryList(co) : []; }))];
+  if(autoM.some(m=>m.toLowerCase()===name.toLowerCase())){
+    const excl = Array.isArray(t.tlaExcl)? t.tlaExcl : (t.tlaExcl = []);
+    const k = excl.findIndex(e=>e.toLowerCase()===name.toLowerCase());
+    if(k>=0){ excl.splice(k,1); save(); renderTLA(); return; }   // restore a deselected auto method
+    toast("Already included automatically via the ticked CO(s)"); return;
+  }
   if(t.tla.some(n=>n.toLowerCase()===name.toLowerCase())){ toast("Already added to this topic"); return; }
   t.tla.push(name);
+  save(); renderTLA();
+}
+function toggleTopicTlaExcl(i, name){
+  const c = activeCourse(); if(!c) return;
+  const t = c.aust.spec.topics[i]; if(!t) return;
+  if(!Array.isArray(t.tlaExcl)) t.tlaExcl = [];
+  const k = t.tlaExcl.findIndex(e=>e.toLowerCase()===String(name).toLowerCase());
+  if(k>=0) t.tlaExcl.splice(k,1); else t.tlaExcl.push(String(name));
   save(); renderTLA();
 }
 function removeTopicTLA(i, k){
@@ -1140,6 +1155,12 @@ function delLearnRes(i){
   const c = activeCourse(); if(!c) return;
   c.aust.learnRes.splice(i,1);
   save(); renderTLA();
+}
+function setLearnResType(i, v){
+  const c = activeCourse(); if(!c) return;
+  const r = c.aust.learnRes[i]; if(!r) return;
+  r.type = v;
+  save(); renderTLA();   // re-render so the row's Title suggestions follow the new Type
 }
 function setLearnResTitle(i, v){
   const c = activeCourse(); if(!c) return;
@@ -1212,8 +1233,8 @@ function learnResCard(c){
   const list = c.aust.learnRes;
   const n = list.filter(r=>(r.title||"").trim()||(r.url||"").trim()).length;
   const rows = list.map((r,i)=>`<tr>
-    <td><select class="di" style="width:100%" onchange="austSet('learnRes.${i}.type',this.value)">${LEARN_RES_TYPES.map(t=>`<option ${r.type===t?"selected":""}>${t}</option>`).join("")}</select></td>
-    <td><input class="di" list="resPoolList" value="${esc(r.title)}" placeholder="type, or pick from the T&L Resource Pool…" onchange="setLearnResTitle(${i}, this.value)"></td>
+    <td><select class="di" style="width:100%" onchange="setLearnResType(${i},this.value)">${LEARN_RES_TYPES.map(t=>`<option ${r.type===t?"selected":""}>${t}</option>`).join("")}</select></td>
+    <td><input class="di" list="resPoolList_${i}" value="${esc(r.title)}" placeholder="type, or pick a pool entry of this Type…" onchange="setLearnResTitle(${i}, this.value)"><datalist id="resPoolList_${i}">${(r.type==="Other"? resPool() : resPool().filter(x=>x.t===r.type)).map(x=>`<option value="${esc(x.n)}">`).join("")}</datalist></td>
     <td>${di('learnRes.'+i+'.url', r.url, 'https://…  or LMS path')}</td>
     <td>${c.cos.length? `<div style="display:flex;flex-direction:column;gap:2px">${c.cos.map((co,j)=>`<label style="font-size:11.5px;white-space:nowrap"><input type="checkbox" ${Array.isArray(r.cos)&&r.cos.includes(co.id)?"checked":""} onchange="toggleLearnResCO(${i},'${co.id}')"> CO${j+1}</label>`).join("")}</div>` : '<span class="badge grey">define COs first</span>'}</td>
     <td>${di('learnRes.'+i+'.notes', r.notes, '')}</td>
@@ -1223,7 +1244,7 @@ function learnResCard(c){
   <div class="card">
     <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Learning Resources shared with students <button class="btn secondary small" onclick="toggleLearnRes()">${open? "▾ Hide":"▸ Show / edit"}</button></h2>
     ${open? `
-    <p class="hint">A register of the materials you share with students to aid the T&L activities — class session slides, the LMS course site, companion sites (e.g., NotebookLM), interactive infographics, videos, rubrics and tip sheets. The Title box autocompletes from the <b>T&L Resource Pool</b> (Data &amp; Backup) — picking a pool entry prefills the Type and a practical tip. Re-verify links each offering — the Verified column dims to an amber badge after six months. <b>Links only:</b> the LMS (or hosting site) remains where the material lives; this register records what exists and where. It is kept by ⟳ Duplicate for New Semester, prints as <b>Course Outline 17.3</b> when non-empty, is cited by the CQI AI prompts, Tick each resource's <b>Related COs</b> and it flows automatically into the Resources column of the Topic-wise T&L Plan below for every topic ticked with those COs (deselectable per topic there); further topic-specific resources can be added manually.</p>
+    <p class="hint">A register of the materials you share with students to aid the T&L activities — class session slides, the LMS course site, companion sites (e.g., NotebookLM), interactive infographics, videos, rubrics and tip sheets. Choose the <b>Type</b> first — the Title box then suggests only the matching entries of the <b>T&L Resource Pool</b> (Data &amp; Backup); Type <b>Other</b> shows the full pool, and free-typed titles are always accepted. Picking a pool entry prefills a practical tip. Re-verify links each offering — the Verified column dims to an amber badge after six months. <b>Links only:</b> the LMS (or hosting site) remains where the material lives; this register records what exists and where. It is kept by ⟳ Duplicate for New Semester, prints as <b>Course Outline 17.3</b> when non-empty, is cited by the CQI AI prompts, Tick each resource's <b>Related COs</b> and it flows automatically into the Resources column of the Topic-wise T&L Plan below for every topic ticked with those COs (deselectable per topic there); further topic-specific resources can be added manually.</p>
     <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th style="width:210px">Type</th><th style="width:180px">Title</th><th>Link / location</th><th style="width:95px">Related COs</th><th style="width:140px">Notes</th><th style="width:110px" title="Links rot — re-verify each offering">Verified</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="7" class="empty">No resources yet.</td></tr>'}</tbody>
@@ -1247,9 +1268,17 @@ function topicPlanCard(c){
       <td style="text-align:center"><input class="di" style="width:56px;text-align:center" value="${esc(t.planned)}" placeholder="hrs" onchange="austSet('spec.topics.${i}.planned',this.value)"></td>
       <td>${chips}</td>
       <td style="font-size:12px">
-        ${autoM.map(m=>`<span class="badge blue" style="margin:1px 3px 1px 0" title="Auto — from the adopted activities of the ticked CO(s); remove by un-adopting in the CO cards above">${esc(m)}</span>`).join("")}
-        ${own.map((m,k)=>`<span class="badge green" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0" title="Topic-specific addition">${esc(m)}<button onclick="removeTopicTLA(${i},${k})" title="Remove from this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">×</button></span>`).join("")}
-        ${!autoM.length && !own.length? `<span class="badge grey">${(t.cos||[]).length? "no adopted activities for the ticked CO(s)":"tick the related CO(s)"}</span>`:""}
+        ${(()=>{
+          const exclA = Array.isArray(t.tlaExcl)? t.tlaExcl : [];
+          const isExA = m => exclA.some(e=>e.toLowerCase()===m.toLowerCase());
+          const bits = [];
+          autoM.forEach(m=>{
+            if(isExA(m)) bits.push(`<span class="badge grey" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0;opacity:.55" title="Deselected for this topic — click + to restore">${esc(m)}<button onclick="toggleTopicTlaExcl(${i},${JSON.stringify(m).replace(/"/g,"&quot;")})" title="Restore for this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">+</button></span>`);
+            else bits.push(`<span class="badge blue" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0" title="Auto — from the adopted activities of the ticked CO(s); × deselects it for this topic only (un-adopt in the CO cards above to remove it everywhere)">${esc(m)}<button onclick="toggleTopicTlaExcl(${i},${JSON.stringify(m).replace(/"/g,"&quot;")})" title="Deselect for this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">×</button></span>`);
+          });
+          own.forEach((m,k)=>bits.push(`<span class="badge green" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0" title="Topic-specific addition">${esc(m)}<button onclick="removeTopicTLA(${i},${k})" title="Remove from this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">×</button></span>`));
+          return bits.join("") || `<span class="badge grey">${(t.cos||[]).length? "no adopted activities for the ticked CO(s)":"tick the related CO(s)"}</span>`;
+        })()}
         <div class="no-print" style="display:flex;gap:4px;margin-top:4px">
           <input id="topicTla_${i}" list="tlaPoolList" placeholder="add for this topic…" style="flex:1;min-width:0;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:11.5px">
           <button class="btn secondary small" style="padding:2px 9px" title="Add a topic-specific activity (from the T&L Activity Pool or your own)" onclick="addTopicTLA(${i})">+</button>
@@ -1269,7 +1298,7 @@ function topicPlanCard(c){
             if(auto.some(a=>a.toLowerCase()===r.toLowerCase())) return;
             bits.push(`<span class="badge green" style="display:inline-flex;align-items:center;gap:4px;margin:1px 3px 1px 0" title="Topic-specific resource">${esc(r)}<button onclick="removeTopicRes(${i},${k})" title="Remove from this topic" style="background:none;border:none;color:inherit;cursor:pointer;font-weight:700;padding:0;font-size:12px;line-height:1">×</button></span>`);
           });
-          return bits.join("") || '<span class="badge grey">none planned</span>';
+          return bits.join("") || `<span class="badge grey">${!(t.cos||[]).length? "tick the related CO(s)" : ((c.aust.learnRes||[]).some(r=>(r.title||"").trim() && Array.isArray(r.cos) && r.cos.length)? "no register resources tagged with these CO(s)" : "none planned")}</span>`;
         })()}
         <div class="no-print" style="display:flex;gap:4px;margin-top:4px">
           <input id="topicRes_${i}" list="lrTitleList" placeholder="add a resource…" style="flex:1;min-width:0;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:11.5px">
@@ -1282,7 +1311,7 @@ function topicPlanCard(c){
   return `
   <div class="card">
     <h2>Topic-wise T&amp;L Plan <span class="badge blue" title="Sl./Topics/Planned Hours are the same data as Course Specifications 4.1 (and Course Report 3.1) — edit in either place">⛓ linked — same data as Course Specifications 4.1</span></h2>
-    <p class="hint">Plan each topic's teaching: tick the related CO(s) — the <b>blue</b> method chips fill in automatically from the activities adopted above — and add <b>topic-specific</b> activities (green chips, removable) from the pool or your own. Topics and planned hours are shared with Course Specifications 4.1; Related COs and topic-specific activities are planning fields kept with the course data (not printed in the Specifications table).</p>
+    <p class="hint">Plan each topic's teaching: tick the related CO(s) — the <b>blue</b> method chips fill in automatically from the activities adopted above (× deselects one for that topic only; the dimmed chip's + restores it) — and add <b>topic-specific</b> activities (green chips, removable) from the pool or your own. Topics and planned hours are shared with Course Specifications 4.1; Related COs and topic-specific activities are planning fields kept with the course data (not printed in the Specifications table).</p>
     <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th style="width:40px">Sl.</th><th style="width:38%">Topics</th><th style="width:70px">Planned Hours</th><th style="width:95px">Related COs</th><th style="width:230px">T&amp;L Methods</th><th style="width:200px">Resources</th><th class="no-print" style="width:54px;font-size:11px">Delete</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="7" class="empty">No topics yet — add one below, or import the list from a CSV.</td></tr>'}</tbody>
@@ -1515,7 +1544,6 @@ function renderTLA(){
   ${topicPlanCard(c)}
   ${resSummaryCard}
   <datalist id="lrTitleList">${c.aust.learnRes.filter(r=>(r.title||"").trim()).map(r=>`<option value="${esc(r.title)}">`).join("")}</datalist>
-  <datalist id="resPoolList">${resPool().map(r=>`<option value="${esc(r.n)}">`).join("")}</datalist>
   ${tlaSummaryCard}`;
   autoGrowAll("tab-tla");
 }
@@ -4238,7 +4266,8 @@ function importTopicsCSV(input){
       return { name: p.name, planned: p.planned, actual: old? old.actual : "", reason: old? old.reason : "",
                cos: (old && Array.isArray(old.cos))? old.cos : [], tla: (old && Array.isArray(old.tla))? old.tla : [],
                res: (old && Array.isArray(old.res))? old.res : [],
-               resExcl: (old && Array.isArray(old.resExcl))? old.resExcl : [] };
+               resExcl: (old && Array.isArray(old.resExcl))? old.resExcl : [],
+               tlaExcl: (old && Array.isArray(old.tlaExcl))? old.tlaExcl : [] };
     });
     save(); renderTab(window._currentTab || "docs");
     toast(`${parsed.length} topic(s) imported${matched? " — "+matched+" kept their actual hours":""}${skipped? " · "+skipped+" line(s)/value(s) skipped":""}`);
