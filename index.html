@@ -165,7 +165,7 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
     </svg>
     <div>
       <h1>OBE Course Manager</h1>
-      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.78</span></span>
+      <span class="sub">Teaching, Learning &amp; Assessment — Outcome-Based Education · <span id="verChip">v1.80</span></span>
     </div>
   </div>
   <div class="header-right">
@@ -203,14 +203,14 @@ footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;te
   <section class="tab" id="tab-data"></section>
 </main>
 
-<footer>OBE Course Manager <b>v1.78</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
+<footer>OBE Course Manager <b>v1.80</b> (First release: July 13, 2026) · runs fully in your browser · data stays on your device · export backups regularly from <b>Data &amp; Backup</b>
 <br>© 2026 Prof. Mazharul Islam · Distributed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:var(--primary)">Creative Commons Attribution (CC BY) 4.0 International License</a></footer>
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
 /* ============ Constants ============ */
-const APP_VERSION = "v1.78";
+const APP_VERSION = "v1.80";
 const APP_RELEASE = "July 13, 2026";
 const PO_INFO = {
   1:"Engineering Knowledge", 2:"Problem Analysis", 3:"Design/Development of Solutions",
@@ -220,7 +220,9 @@ const PO_INFO = {
 };
 const N_PO = 12;
 const BLOOMS = ["Remember","Understand","Apply","Analyze","Evaluate","Create"];
-const ASSESS_TYPES = ["Quiz","Class Test","Assignment","Mid Term","Final Exam","Lab/Sessional","Project","Presentation","Viva","Attendance","Other"];
+const ASSESS_TYPES = ["Class Performance","Quiz","Assignment","Mid Term","Final Exam","Lab/Sessional","Project","Presentation","Viva","Attendance","Other"];
+/* "Class Test" was retired from the list — assessments already saved with it keep working,
+   and the type dropdown still shows it for those assessments only. */
 const STORE_KEY = "obe_course_manager_v1";
 
 /* ============ State ============ */
@@ -1888,7 +1890,9 @@ function renderAssess(){
     return;
   }
   const coOptions = coId => c.cos.map((co,i)=>`<option value="${co.id}" ${co.id===coId?"selected":""}>CO${i+1}</option>`).join("");
+  c.assessments.filter(isCP).forEach(a=>cpSync(c, a));   // keep CP labels/levels/shares in step with CO edits
   const blocks = c.assessments.map(a=>{
+    if(a.type==="Class Performance") return cpAssessCard(c, a);
     const rows = a.items.map(it=>`
       <div class="item-row">
         <input value="${esc(it.label)}" placeholder="Item / question label (e.g., Q1a)" onchange="updateItem('${a.id}','${it.id}','label',this.value)">
@@ -1919,7 +1923,7 @@ function renderAssess(){
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <input value="${esc(a.name)}" placeholder="Assessment name (e.g., Quiz 1)" style="font-weight:600;font-size:15px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;flex:1;min-width:180px;font-family:inherit" onchange="updateAssessment('${a.id}','name',this.value)">
         <select style="padding:7px;border:1px solid var(--border);border-radius:8px;font-family:inherit" onchange="updateAssessment('${a.id}','type',this.value)">
-          ${ASSESS_TYPES.map(t=>`<option ${a.type===t?"selected":""}>${t}</option>`).join("")}
+          ${(ASSESS_TYPES.includes(a.type)? ASSESS_TYPES : [a.type, ...ASSESS_TYPES]).map(t=>`<option ${a.type===t?"selected":""}>${t}</option>`).join("")}
         </select>
         <span class="badge blue">Total: ${total} marks</span>
         ${rubricTypes().includes(a.type)? `<label style="font-size:12.5px;white-space:nowrap;color:var(--muted)" title="Analytic rubric prepared and shared with students — required for assignments, projects and oral assessments"><input type="checkbox" ${a.rubric?"checked":""} onchange="updateAssessment('${a.id}','rubric',this.checked)"> Rubric prepared</label>`:""}
@@ -1959,7 +1963,7 @@ function renderAssess(){
   ${suggestBox(c, "assess")}
   <div class="card">
     <h2>Assessment Plan</h2>
-    <p class="hint">Create assessments (quizzes, tests, exams, labs...) and break each into items/questions, each tagged with a CO, maximum marks, and a Mandatory tick (untick for questions the students may choose to skip). Exams offering a choice of questions can be configured further under <b>⚙ Advanced (question choice)</b> — most courses never need it. Edits save automatically.</p>
+    <p class="hint">Create assessments (quizzes, exams, labs...) and break each into items/questions, each tagged with a CO, maximum marks, and a Mandatory tick (untick for questions the students may choose to skip). Exams offering a choice of questions can be configured further under <b>⚙ Advanced (question choice)</b> — most courses never need it. The <b>Class Performance</b> type is special: no questions — set its total (typically 10), tick the COs it covers and the marks split equally among them; you enter one CP mark per student. Edits save automatically.</p>
     <div class="btn-row" style="margin-top:0"><button class="btn" onclick="addAssessment()">+ Add Assessment</button></div>
   </div>
   ${blocks || '<div class="empty">No assessments yet.</div>'}
@@ -2026,6 +2030,104 @@ function toggleAdv(aid){
   window._advA[aid] = !cur;
   renderAssess();
 }
+/* ===== Class Performance (CP) =====
+   A CP assessment has no authored questions. The teacher sets a TOTAL (default 10) and ticks
+   the COs it covers; the app maintains one internal item per ticked CO (equal share of the
+   total, level inherited from the CO). Marks entry is a single value per student, stored raw
+   under cpRawKey(a) and distributed equally into the per-CO items — so every CO receives the
+   same percentage, and all downstream calculations (attainment, documents, prompts) work
+   unchanged. Multi-teacher courses simply add one CP assessment per course part. */
+function isCP(a){ return a.type==="Class Performance"; }
+function cpTotalOf(a){ const v = parseFloat(a.cpTotal); return (isFinite(v) && v>0)? v : 10; }
+function cpRawKey(a){ return "cpraw_" + a.id; }
+/* Re-split item maxes/labels/levels and re-distribute every student's raw CP mark. */
+function cpSync(c, a){
+  const n = a.items.length;
+  a.items.forEach(it=>{
+    const co = c.cos.find(x=>x.id===it.coId);
+    it.max = n? round4(cpTotalOf(a)/n) : 0;
+    it.label = "CP · " + coLabel(c, it.coId);
+    it.level = co? primeLevelName(co) : "";
+    it.mandatory = true; it.group = "";
+  });
+  Object.values(c.marks).forEach(m=>{
+    const raw = m[cpRawKey(a)];
+    if(raw===undefined || raw===""){ a.items.forEach(it=>delete m[it.id]); return; }
+    const capped = Math.max(0, Math.min(cpTotalOf(a), parseFloat(raw)||0));
+    a.items.forEach(it=>{ m[it.id] = n? round4(capped/n) : 0; });
+  });
+}
+function setCpTotal(aid, val, el){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===aid); if(!a || !isCP(a)) return;
+  const v = parseMarkInput(val);
+  if(v===null || isNaN(v) || v<=0){
+    toast(`Could not read “${val}” — enter the CP total marks, e.g. 10`);
+    if(el) el.value = cpTotalOf(a);
+    return;
+  }
+  a.cpTotal = round4(v);
+  cpSync(c, a);
+  save(); renderAssess(); toast("Saved — shares re-split");
+}
+function toggleCpCO(aid, coId){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===aid); if(!a || !isCP(a)) return;
+  const ex = a.items.find(it=>it.coId===coId);
+  if(ex) a.items = a.items.filter(it=>it.id!==ex.id);
+  else a.items.push({ id: a.id+"_cp_"+coId, coId, label:"", max:0, level:"", mandatory:true, group:"" });
+  if(ex) Object.values(c.marks).forEach(m=>delete m[ex.id]);
+  cpSync(c, a);   // entered CP marks are preserved (raw) and re-distributed over the new CO set
+  save(); renderAssess();
+}
+function setCpMark(sid, aid, val, el){
+  const c = activeCourse(); if(!c) return;
+  const a = c.assessments.find(x=>x.id===aid); if(!a || !isCP(a)) return;
+  if(!c.marks[sid]) c.marks[sid] = {};
+  const m = c.marks[sid];
+  const v0 = parseMarkInput(val);
+  if(v0===null){ delete m[cpRawKey(a)]; a.items.forEach(it=>delete m[it.id]); save(); return; }
+  if(isNaN(v0)){
+    toast(`Could not read “${val}” — use e.g. 8, 7.5 or 7 1/2`);
+    if(el) el.value = m[cpRawKey(a)] ?? "";
+    return;
+  }
+  const v = round4(Math.max(0, Math.min(cpTotalOf(a), v0)));
+  m[cpRawKey(a)] = v;
+  const n = a.items.length;
+  a.items.forEach(it=>{ m[it.id] = n? round4(v/n) : 0; });
+  if(el) el.value = v;
+  save();
+}
+function cpAssessCard(c, a){
+  const n = a.items.length;
+  const share = n? round4(cpTotalOf(a)/n) : 0;
+  const boxes = c.cos.map((co,i)=>{
+    const on = a.items.some(it=>it.coId===co.id);
+    return `<label style="display:inline-flex;align-items:center;gap:6px;margin:4px 14px 4px 0;font-size:13.5px;white-space:nowrap">
+      <input type="checkbox" ${on?"checked":""} onchange="toggleCpCO('${a.id}','${co.id}')"> CO${i+1}
+      ${on? `<span class="badge blue" title="Equal share of the CP total">${share}</span>`:""}</label>`;
+  }).join("");
+  return `
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <input value="${esc(a.name)}" placeholder="Assessment name (e.g., Class Performance — Part A)" style="font-weight:600;font-size:15px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;flex:1;min-width:180px;font-family:inherit" onchange="updateAssessment('${a.id}','name',this.value)">
+      <select style="padding:7px;border:1px solid var(--border);border-radius:8px;font-family:inherit" onchange="updateAssessment('${a.id}','type',this.value)">
+        ${ASSESS_TYPES.map(t=>`<option ${a.type===t?"selected":""}>${t}</option>`).join("")}
+      </select>
+      <label style="font-size:13px;white-space:nowrap">Total marks
+        <input type="text" inputmode="decimal" value="${esc(cpTotalOf(a))}" style="width:64px;padding:6px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:inherit" title="The CP total (typically 10) — divided equally among the ticked COs" onchange="setCpTotal('${a.id}',this.value,this)">
+      </label>
+      <span class="badge blue">Total: ${n? cpTotalOf(a) : 0} marks</span>
+      <span style="display:flex;gap:4px"><button class="icon-btn" title="Move assessment up (the order flows to the marks grid and CSV)" onclick="moveAssessment('${a.id}',-1)">▲</button><button class="icon-btn" title="Move assessment down" onclick="moveAssessment('${a.id}',1)">▼</button></span>
+      <button class="btn danger small" onclick="deleteAssessment('${a.id}')">Delete</button>
+    </div>
+    <h3>Related COs (marks split equally)</h3>
+    <p class="hint" style="margin-bottom:4px">Class performance is hard to pin to a single CO, so tick every CO this CP covers — the total is divided equally among them${n? ` (${cpTotalOf(a)} ÷ ${n} = <b>${share}</b> each)`:""}. In Students &amp; Marks you enter <b>one CP mark per student</b>; the app spreads it across the ticked COs so each receives the same percentage. For a course taught in parts, add one CP assessment per part (e.g., “CP — Part A”, “CP — Part B”), each with its own total and COs.</p>
+    <div>${boxes || '<span class="badge grey">define COs first</span>'}</div>
+    ${n? "" : '<p class="hint" style="color:var(--warn)">Tick at least one CO — until then this CP carries no marks.</p>'}
+  </div>`;
+}
 function addAssessment(){
   const c = activeCourse(); if(!c) return;
   c.assessments.push({ id: uid(), name:"", type:"Quiz", items:[] });
@@ -2034,6 +2136,20 @@ function addAssessment(){
 function updateAssessment(id, field, val){
   const c = activeCourse(); if(!c) return;
   const a = c.assessments.find(x=>x.id===id); if(!a) return;
+  if(field==="type" && val!==a.type && (isCP(a) || val==="Class Performance")){
+    // switching into or out of Class Performance rebuilds the item structure
+    const nMarks = Object.values(c.marks).filter(m=> a.items.some(it=>m[it.id]!==undefined) || m[cpRawKey(a)]!==undefined).length;
+    if((a.items.length || nMarks) && !confirm(`Change "${a.name||a.type}" to ${val}?\n\nIts ${a.items.length} item(s)${nMarks? " and marks for "+nMarks+" student(s)":""} will be removed — the two structures are incompatible (${val==="Class Performance"? "CP has no authored questions" : "regular assessments need authored questions"}).`)){
+      renderAssess(); return;
+    }
+    a.items.forEach(it=>Object.values(c.marks).forEach(m=>delete m[it.id]));
+    Object.values(c.marks).forEach(m=>delete m[cpRawKey(a)]);
+    a.items = [];
+    a.type = val;
+    if(val==="Class Performance" && a.cpTotal===undefined) a.cpTotal = 10;
+    save(); renderAssess(); toast("Saved");
+    return;
+  }
   a[field] = val.trim ? val.trim() : val;
   save(); toast("Saved");
 }
@@ -2042,6 +2158,7 @@ function deleteAssessment(id){
   const a = c.assessments.find(x=>x.id===id); if(!a) return;
   if(!confirm(`Delete "${a.name||"(untitled)"}" and all its marks?`)) return;
   a.items.forEach(it=>{ Object.values(c.marks).forEach(m=>delete m[it.id]); });
+  Object.values(c.marks).forEach(m=>delete m[cpRawKey(a)]);
   c.assessments = c.assessments.filter(x=>x.id!==id);
   save(); renderAssess();
 }
@@ -2113,10 +2230,23 @@ function renderMarks(){
   if(!c){ el.innerHTML = `<div class="empty">No course selected.</div>`; return; }
   const items = allItems(c);
   const groups = c.assessments.filter(a=>a.items.length);
-  const head1 = groups.map(a=>`<th colspan="${a.items.length}" style="text-align:center">${esc(a.name||a.type)}</th>`).join("");
-  const head2 = items.map(it=>`<th style="text-align:center" title="Max ${it.max} · ${coLabel(c,it.coId)}${it.mandatory===false?" · choice question — leave blank if not attempted":""}">${esc(it.label)}${it.mandatory===false?"†":""}<br><span style="font-weight:400;color:var(--muted)">${coLabel(c,it.coId)} /${it.max}</span></th>`).join("");
+  /* Column model: a Class Performance assessment contributes ONE column (raw CP mark,
+     auto-distributed across its per-CO items); other assessments one column per item. */
+  const cols = groups.flatMap(a=> isCP(a)? [{cp:a}] : a.items.map(it=>({it})));
+  const head1 = groups.map(a=>`<th colspan="${isCP(a)?1:a.items.length}" style="text-align:center">${esc(a.name||a.type)}</th>`).join("");
+  const head2 = cols.map(col=>{
+    if(col.cp){ const a=col.cp;
+      const coList = a.items.map(it=>coLabel(c,it.coId)).join(", ");
+      return `<th style="text-align:center" title="One CP mark out of ${cpTotalOf(a)} — split equally across ${coList||"the ticked COs"}">CP<br><span style="font-weight:400;color:var(--muted)">${coList||"—"} /${cpTotalOf(a)}</span></th>`; }
+    const it=col.it;
+    return `<th style="text-align:center" title="Max ${it.max} · ${coLabel(c,it.coId)}${it.mandatory===false?" · choice question — leave blank if not attempted":""}">${esc(it.label)}${it.mandatory===false?"†":""}<br><span style="font-weight:400;color:var(--muted)">${coLabel(c,it.coId)} /${it.max}</span></th>`;
+  }).join("");
   const rows = c.students.map((s,si)=>{
-    const cells = items.map(it=>{
+    const cells = cols.map(col=>{
+      if(col.cp){ const a=col.cp;
+        const v = c.marks[s.id]?.[cpRawKey(a)];
+        return `<td style="text-align:center"><input class="marks-input" type="text" inputmode="decimal" title="One CP mark (max ${cpTotalOf(a)}) — split equally across the ticked COs" value="${v??""}" onchange="setCpMark('${s.id}','${a.id}',this.value,this)"></td>`; }
+      const it=col.it;
       const v = c.marks[s.id]?.[it.id];
       return `<td style="text-align:center"><input class="marks-input" type="text" inputmode="decimal" title="e.g., 12, 1.67, 2/3 or 1 2/3 (max ${it.max})" value="${v??""}" onchange="setMark('${s.id}','${it.id}',this.value,${it.max},this)"></td>`;
     }).join("");
@@ -2143,7 +2273,7 @@ function renderMarks(){
   </div>
   <div class="card">
     <h2>Marks Entry</h2>
-    <p class="hint">${items.length? "Enter marks per item. Cells save automatically. Leave a cell blank when the student did not attempt the item: on a mandatory item a blank counts as 0, while on a choice question (marked †) the student is not penalized — the item is simply excluded from that student's CO calculation." : "Define assessment items first (Assessments tab)."}</p>
+    <p class="hint">${items.length? "Enter marks per item. Cells save automatically. Leave a cell blank when the student did not attempt the item: on a mandatory item a blank counts as 0, while on a choice question (marked †) the student is not penalized — the item is simply excluded from that student's CO calculation. A <b>Class Performance</b> assessment shows a single CP column: enter one mark per student and it is split equally across the CP's ticked COs." : "Define assessment items first (Assessments tab)."}</p>
     ${items.length && c.students.length ? `
     <div class="tbl-wrap marks-wrap"><table class="tbl">
       <thead>
@@ -2275,26 +2405,37 @@ function itemHeader(c, it){
   const dup = allItems(c).filter(x=>String(x.label||"").trim().toLowerCase()===lbl.toLowerCase()).length > 1;
   return dup? `${it.aName}::${it.label}` : (lbl || `${it.aName}::?`);
 }
+/* Shared CSV column model — one column per CP assessment (raw mark), one per item otherwise. */
+function marksCols(c){
+  /* Items must carry aName/aId (as allItems provides) — itemHeader's qualified form
+     ("Quiz 1::Q1", used when a label appears in several assessments) depends on it. */
+  return c.assessments.filter(a=>a.items.length).flatMap(a=> isCP(a)? [{cp:a}]
+    : a.items.map(it=>({it: { ...it, aName: a.name||a.type, aId: a.id }})));
+}
+function colHeader(c, col){ return col.cp? (col.cp.name||"Class Performance") : itemHeader(c, col.it); }
+function colValue(c, s, col){
+  return col.cp? (c.marks[s.id]?.[cpRawKey(col.cp)] ?? "") : (c.marks[s.id]?.[col.it.id] ?? "");
+}
 function exportMarksCSV(){
   const c = activeCourse(); if(!c) return;
-  const items = allItems(c);
-  const head = ["StudentID","Name", ...items.map(it=>itemHeader(c,it))];
+  const cols = marksCols(c);
+  const head = ["StudentID","Name", ...cols.map(col=>colHeader(c,col))];
   const lines = [head.map(csvCell).join(",")];
   c.students.forEach(s=>{
-    const row = [s.sid, s.name, ...items.map(it=>c.marks[s.id]?.[it.id] ?? "")];
+    const row = [s.sid, s.name, ...cols.map(col=>colValue(c,s,col))];
     lines.push(row.map(csvCell).join(","));
   });
   downloadFile(`${(c.code||"course").replace(/\s+/g,"_")}_marks.csv`, lines.join("\n"), "text/csv");
 }
 function exportMarksTemplateCSV(){
   const c = activeCourse(); if(!c) return;
-  const items = allItems(c);
-  const head = ["StudentID","Name", ...items.map(it=>itemHeader(c,it))];
+  const cols = marksCols(c);
+  const head = ["StudentID","Name", ...cols.map(col=>colHeader(c,col))];
   const lines = [head.map(csvCell).join(",")];
   c.students.forEach(s=>{
-    lines.push([s.sid, s.name, ...items.map(()=> "")].map(csvCell).join(","));
+    lines.push([s.sid, s.name, ...cols.map(()=> "")].map(csvCell).join(","));
   });
-  if(!c.students.length) lines.push(["(student id)","(name)", ...items.map(()=> "")].map(csvCell).join(","));
+  if(!c.students.length) lines.push(["(student id)","(name)", ...cols.map(()=> "")].map(csvCell).join(","));
   downloadFile(`${(c.code||"course").replace(/\s+/g,"_")}_marks_template.csv`, lines.join("\n"), "text/csv");
   toast("Template downloaded — fill it in Excel, then Import Marks (CSV)");
 }
@@ -2322,14 +2463,17 @@ function importMarksCSV(input){
   reader.onload = e => {
     const rows = parseCSV(e.target.result);
     if(rows.length<2){ toast("CSV appears empty"); return; }
-    const items = allItems(c);
+    const items = allItems(c).filter(it=>!c.assessments.some(a=>isCP(a) && a.id===it.aId));
+    const cpAss = c.assessments.filter(a=>isCP(a) && a.items.length);
     const head = rows[0];
-    const colToItem = {};
+    const colToItem = {}, colToCp = {};
     const norm = s => String(s||"").trim().toLowerCase();
     const byLabel = {};
     items.forEach(it=>{ const k = norm(it.label); (byLabel[k] = byLabel[k]||[]).push(it); });
     head.forEach((h,ci)=>{
       const hn = norm(h);
+      const cp = cpAss.find(a=> norm(a.name||"Class Performance")===hn || hn==="class performance" && !a.name);
+      if(cp){ colToCp[ci] = cp; return; }
       // accept the current header, the qualified form, and the legacy "Assessment :: Item" form
       let it = items.find(x=> norm(itemHeader(c,x))===hn || norm(`${x.aName}::${x.label}`)===hn || norm(`${x.aName} :: ${x.label}`)===hn);
       if(!it){ const cand = byLabel[hn]; if(cand && cand.length===1) it = cand[0]; }
@@ -2345,6 +2489,17 @@ function importMarksCSV(input){
         if(v!==null && !isNaN(v)){
           if(!c.marks[s.id]) c.marks[s.id] = {};
           c.marks[s.id][it.id] = round4(Math.max(0, Math.min(it.max, v)));
+          applied++;
+        }
+      });
+      Object.entries(colToCp).forEach(([ci,a])=>{
+        const v0 = parseMarkInput(r[ci]);
+        if(v0!==null && !isNaN(v0)){
+          if(!c.marks[s.id]) c.marks[s.id] = {};
+          const m = c.marks[s.id], n = a.items.length;
+          const v = round4(Math.max(0, Math.min(cpTotalOf(a), v0)));
+          m[cpRawKey(a)] = v;
+          a.items.forEach(it=>{ m[it.id] = n? round4(v/n) : 0; });
           applied++;
         }
       });
